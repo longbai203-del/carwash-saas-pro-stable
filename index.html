@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
@@ -22,6 +22,8 @@
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(22,163,74,0.4); }
         .btn-danger { background: linear-gradient(105deg, #dc2626, #f87171); color: white; padding: 10px 20px; border-radius: 14px; border: none; cursor: pointer; }
         .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(220,38,38,0.4); }
+        .btn-outline { background: transparent; color: #0091D5; padding: 10px 20px; border-radius: 14px; border: 2px solid #0091D5; cursor: pointer; }
+        .btn-outline:hover { background: #0091D5; color: white; }
         .sidebar-link { transition: all 0.2s; border-radius: 14px; margin: 4px 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; color: #64748b; cursor: pointer; }
         .sidebar-link:hover { background: rgba(0,145,213,0.08); color: #0091D5; }
         .nav-item-active { background: rgba(0,145,213,0.12); border-right: 4px solid #0091D5; color: #0284c7; font-weight: 600; }
@@ -36,13 +38,26 @@
         .sync-online { background: #dcfce7; color: #16a34a; }
         .sync-offline { background: #fee2e2; color: #dc2626; }
         .sync-syncing { background: #fef3c7; color: #d97706; }
+        .register-form { background: #f8fafc; border-radius: 16px; padding: 20px; margin-top: 16px; border: 1px solid #e2e8f0; }
+        .role-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+        .role-option { padding: 8px 16px; border-radius: 20px; border: 2px solid #e2e8f0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .role-option:hover { border-color: #0091D5; }
+        .role-option.active { border-color: #0091D5; background: #eff6ff; color: #0091D5; }
+        .role-option.owner { border-color: #7c3aed; }
+        .role-option.manager { border-color: #f59e0b; }
+        .role-option.cashier { border-color: #3b82f6; }
+        .role-option.employee { border-color: #8b5cf6; }
+        .role-option.owner.active { background: #ede9fe; color: #7c3aed; }
+        .role-option.manager.active { background: #fef3c7; color: #f59e0b; }
+        .role-option.cashier.active { background: #dbeafe; color: #3b82f6; }
+        .role-option.employee.active { background: #ede9fe; color: #8b5cf6; }
     </style>
 </head>
 <body>
 
 <!-- 登录模态框 -->
 <div id="loginModal" class="modal-glass">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
             <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <i class="fas fa-car-wash text-4xl text-white"></i>
@@ -51,17 +66,59 @@
             <p class="text-gray-500 mt-1">☁️ Cloud Edition</p>
             <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ Connecting...</span>
         </div>
-        <div>
+        
+        <!-- 登录表单 -->
+        <div id="loginView">
             <div class="mb-3">
-                <label class="text-sm font-medium text-gray-600">Username</label>
-                <input type="text" id="loginUsername" value="admin" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                <label class="text-sm font-medium text-gray-600">用户名 / Username</label>
+                <input type="text" id="loginUsername" value="boss" placeholder="请输入用户名" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
             </div>
             <div class="mb-3">
-                <label class="text-sm font-medium text-gray-600">Password</label>
-                <input type="password" id="loginPassword" value="admin123" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                <label class="text-sm font-medium text-gray-600">密码 / Password</label>
+                <input type="password" id="loginPassword" value="admin123" placeholder="请输入密码" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
             </div>
-            <button onclick="authLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition">Login</button>
-            <div class="text-center mt-3 text-xs text-gray-400">Default: admin / admin123</div>
+            <button onclick="authLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition">登录 / Login</button>
+            <div class="mt-3 text-center">
+                <span class="text-xs text-gray-400">还没有账号？</span>
+                <button onclick="showRegister()" class="text-xs text-blue-600 hover:underline font-medium">立即注册 / Register</button>
+            </div>
+            <div class="mt-2 text-center text-xs text-gray-400">默认账号: boss / admin123</div>
+        </div>
+
+        <!-- 注册表单 -->
+        <div id="registerView" class="hidden">
+            <h3 class="text-lg font-bold text-gray-800 mb-3">📝 注册新账号</h3>
+            <div class="register-form">
+                <div class="mb-3">
+                    <label class="text-sm font-medium text-gray-600">用户名 / Username</label>
+                    <input type="text" id="regUsername" placeholder="请输入用户名" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                </div>
+                <div class="mb-3">
+                    <label class="text-sm font-medium text-gray-600">姓名 / Name</label>
+                    <input type="text" id="regName" placeholder="请输入姓名" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                </div>
+                <div class="mb-3">
+                    <label class="text-sm font-medium text-gray-600">密码 / Password</label>
+                    <input type="password" id="regPassword" placeholder="请输入密码（至少6位）" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                </div>
+                <div class="mb-3">
+                    <label class="text-sm font-medium text-gray-600">确认密码 / Confirm Password</label>
+                    <input type="password" id="regPasswordConfirm" placeholder="请再次输入密码" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                </div>
+                <div class="mb-3">
+                    <label class="text-sm font-medium text-gray-600 block mb-2">选择角色 / Select Role</label>
+                    <div class="role-selector">
+                        <button class="role-option owner" data-role="owner" onclick="selectRole('owner')">👑 老板</button>
+                        <button class="role-option manager" data-role="manager" onclick="selectRole('manager')">📋 店长</button>
+                        <button class="role-option cashier active" data-role="cashier" onclick="selectRole('cashier')">💰 收银员</button>
+                        <button class="role-option employee" data-role="employee" onclick="selectRole('employee')">👤 员工</button>
+                    </div>
+                    <input type="hidden" id="regRole" value="cashier">
+                    <p class="text-xs text-gray-400 mt-1">* 老板账号需要管理员审批后才能开通全部权限</p>
+                </div>
+                <button onclick="registerUser()" class="w-full btn-success py-3 rounded-xl font-bold text-lg">立即注册 / Register</button>
+                <button onclick="showLogin()" class="w-full text-gray-500 mt-2 text-sm hover:text-gray-700">← 返回登录</button>
+            </div>
         </div>
     </div>
 </div>
@@ -76,30 +133,30 @@
             </div>
             <div>
                 <h1 class="text-xl font-bold text-blue-600">CarWash Pro</h1>
-                <p class="text-xs text-gray-400">☁️ Cloud Sync</p>
+                <p class="text-xs text-gray-400" id="userRoleDisplay">☁️ Cloud Sync</p>
             </div>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+        <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1" id="mainNav">
             <a href="#" data-nav="dashboard" class="sidebar-link nav-item-active"><i class="fas fa-chart-line w-5"></i><span>Dashboard</span></a>
-            <a href="#" data-nav="cashier" class="sidebar-link"><i class="fas fa-cash-register w-5"></i><span>POS</span></a>
-            <a href="#" data-nav="services" class="sidebar-link"><i class="fas fa-wrench w-5"></i><span>Services</span></a>
-            <a href="#" data-nav="members" class="sidebar-link"><i class="fas fa-users w-5"></i><span>Customers</span></a>
-            <a href="#" data-nav="inventory" class="sidebar-link"><i class="fas fa-boxes w-5"></i><span>Inventory</span></a>
-            <a href="#" data-nav="attendance" class="sidebar-link"><i class="fas fa-clock w-5"></i><span>Attendance</span></a>
-            <a href="#" data-nav="reports" class="sidebar-link"><i class="fas fa-chart-bar w-5"></i><span>Reports</span></a>
-            <a href="#" data-nav="employees" class="sidebar-link"><i class="fas fa-user-tie w-5"></i><span>Employees</span></a>
-            <a href="#" data-nav="settings" class="sidebar-link"><i class="fas fa-cog w-5"></i><span>Settings</span></a>
+            <a href="#" data-nav="cashier" class="sidebar-link" id="navCashier"><i class="fas fa-cash-register w-5"></i><span>POS / 收银</span></a>
+            <a href="#" data-nav="services" class="sidebar-link" id="navServices"><i class="fas fa-wrench w-5"></i><span>Services</span></a>
+            <a href="#" data-nav="members" class="sidebar-link" id="navCustomers"><i class="fas fa-users w-5"></i><span>Customers</span></a>
+            <a href="#" data-nav="inventory" class="sidebar-link" id="navInventory"><i class="fas fa-boxes w-5"></i><span>Inventory</span></a>
+            <a href="#" data-nav="attendance" class="sidebar-link" id="navAttendance"><i class="fas fa-clock w-5"></i><span>Attendance</span></a>
+            <a href="#" data-nav="reports" class="sidebar-link" id="navReports"><i class="fas fa-chart-bar w-5"></i><span>Reports</span></a>
+            <a href="#" data-nav="employees" class="sidebar-link" id="navEmployees"><i class="fas fa-user-tie w-5"></i><span>Employees</span></a>
+            <a href="#" data-nav="settings" class="sidebar-link" id="navSettings"><i class="fas fa-cog w-5"></i><span>Settings</span></a>
         </nav>
         <div class="p-4 border-t border-gray-100">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-cloud text-blue-500 text-xl"></i>
                     <div>
-                        <p class="text-xs text-gray-400">Sync Status</p>
+                        <p class="text-xs text-gray-400">同步状态</p>
                         <p class="text-sm font-semibold" id="syncStatusText">🟢 Online</p>
                     </div>
                 </div>
-                <button onclick="manualSync()" class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100">🔄 Sync</button>
+                <button onclick="manualSync()" class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100">🔄 同步</button>
             </div>
         </div>
     </aside>
@@ -111,26 +168,26 @@
             <div class="flex items-center gap-4">
                 <span id="currentUserSpan" class="text-sm font-semibold">Admin</span>
                 <span id="currentRoleSpan" class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">owner</span>
-                <button onclick="logout()" class="text-xs text-red-500 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100">Logout</button>
+                <button onclick="logout()" class="text-xs text-red-500 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100">退出</button>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+        <main class="flex-1 overflow-y-auto p-6 space-y-6" id="mainContent">
             <!-- Dashboard -->
             <div id="moduleDashboard" class="module-content space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">Total Sales</p><h3 class="stat-number" id="totalSalesValue">0.00 SAR</h3></div>
-                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">Today's Orders</p><h3 class="stat-number" id="todayOrdersValue">0</h3></div>
-                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">Customers</p><h3 class="stat-number" id="customersValue">0</h3></div>
-                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">Inventory</p><h3 class="stat-number" id="inventoryValue">0</h3></div>
+                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">总销售额</p><h3 class="stat-number" id="totalSalesValue">0.00 SAR</h3></div>
+                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">今日订单</p><h3 class="stat-number" id="todayOrdersValue">0</h3></div>
+                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">客户数</p><h3 class="stat-number" id="customersValue">0</h3></div>
+                    <div class="glass-card p-5"><p class="text-gray-500 text-sm">库存</p><h3 class="stat-number" id="inventoryValue">0</h3></div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">Service Statistics</h3><canvas id="serviceStatsChart" height="180"></canvas></div>
-                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">Revenue Trend</h3><canvas id="monthlyRevenueChart" height="180"></canvas></div>
+                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">服务统计</h3><canvas id="serviceStatsChart" height="180"></canvas></div>
+                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">收入趋势</h3><canvas id="monthlyRevenueChart" height="180"></canvas></div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">Today's Orders</h3><div id="todayOrdersPreview" class="space-y-2"></div></div>
-                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">Top Services</h3><div id="topServicesContent" class="space-y-3"></div></div>
+                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">今日订单</h3><div id="todayOrdersPreview" class="space-y-2"></div></div>
+                    <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">热门服务</h3><div id="topServicesContent" class="space-y-3"></div></div>
                 </div>
             </div>
 
@@ -138,49 +195,49 @@
             <div id="moduleCashier" class="module-content hidden max-w-6xl mx-auto">
                 <div class="glass-card p-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label class="text-sm font-medium">Vehicle Type</label><select id="vehicleSelect" class="w-full mt-1 p-3 border rounded-xl bg-gray-50"></select></div>
-                        <div><label class="text-sm font-medium">Extra Service</label><select id="serviceSelect" class="w-full mt-1 p-3 border rounded-xl"></select></div>
-                        <div><label class="text-sm font-medium">Custom Amount (SAR)</label><input type="number" id="priceInput" class="w-full mt-1 p-3 border-2 border-blue-300 rounded-xl text-xl font-bold" placeholder="0"></div>
+                        <div><label class="text-sm font-medium">车型</label><select id="vehicleSelect" class="w-full mt-1 p-3 border rounded-xl bg-gray-50"></select></div>
+                        <div><label class="text-sm font-medium">附加服务</label><select id="serviceSelect" class="w-full mt-1 p-3 border rounded-xl"></select></div>
+                        <div><label class="text-sm font-medium">自定义金额 (SAR)</label><input type="number" id="priceInput" class="w-full mt-1 p-3 border-2 border-blue-300 rounded-xl text-xl font-bold" placeholder="0"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                        <div><label class="text-sm font-medium">Payment Method</label><select id="paymentSelect" class="w-full p-3 border rounded-xl"><option>Cash</option><option>Card</option><option>mada</option><option>Apple Pay</option></select></div>
-                        <div><label class="text-sm font-medium">Employee</label><select id="staffSelect" class="w-full p-3 border rounded-xl"></select></div>
-                        <div><label class="text-sm font-medium">License Plate</label><input id="plateInput" class="w-full p-3 border rounded-xl uppercase" placeholder="ABC123"></div>
+                        <div><label class="text-sm font-medium">支付方式</label><select id="paymentSelect" class="w-full p-3 border rounded-xl"><option>现金</option><option>银行卡</option><option>mada</option><option>Apple Pay</option></select></div>
+                        <div><label class="text-sm font-medium">员工</label><select id="staffSelect" class="w-full p-3 border rounded-xl"></select></div>
+                        <div><label class="text-sm font-medium">车牌号</label><input id="plateInput" class="w-full p-3 border rounded-xl uppercase" placeholder="ABC123"></div>
                     </div>
                     <div class="mt-6 bg-blue-50 p-5 rounded-2xl">
-                        <div class="flex justify-between"><span>Subtotal</span><span id="subtotalSpan" class="font-mono">0.00 SAR</span></div>
-                        <div class="flex justify-between"><span>VAT (15%)</span><span id="vatSpan">0.00 SAR</span></div>
-                        <div class="flex justify-between text-2xl font-bold text-blue-600 pt-2 border-t"><span>Total</span><span id="totalSpan">0.00 SAR</span></div>
+                        <div class="flex justify-between"><span>小计</span><span id="subtotalSpan" class="font-mono">0.00 SAR</span></div>
+                        <div class="flex justify-between"><span>增值税 (15%)</span><span id="vatSpan">0.00 SAR</span></div>
+                        <div class="flex justify-between text-2xl font-bold text-blue-600 pt-2 border-t"><span>总计</span><span id="totalSpan">0.00 SAR</span></div>
                     </div>
                     <div class="grid grid-cols-3 gap-4 mt-6">
-                        <button onclick="saveOrder()" class="btn-primary py-3 rounded-xl font-bold"><i class="fas fa-save"></i> Save</button>
-                        <button onclick="printReceipt()" class="bg-purple-600 hover:bg-purple-700 py-3 rounded-xl text-white font-bold"><i class="fas fa-print"></i> Invoice</button>
-                        <button onclick="voiceTotal()" class="bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl text-white font-bold"><i class="fas fa-volume-up"></i> Voice</button>
+                        <button onclick="saveOrder()" class="btn-primary py-3 rounded-xl font-bold"><i class="fas fa-save"></i> 保存</button>
+                        <button onclick="printReceipt()" class="bg-purple-600 hover:bg-purple-700 py-3 rounded-xl text-white font-bold"><i class="fas fa-print"></i> 打印</button>
+                        <button onclick="voiceTotal()" class="bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl text-white font-bold"><i class="fas fa-volume-up"></i> 语音</button>
                     </div>
                 </div>
-                <div class="glass-card p-5 mt-5"><h3 class="font-bold">Today's Orders</h3><div id="todayOrdersList" class="max-h-72 overflow-auto mt-2 space-y-2"></div></div>
+                <div class="glass-card p-5 mt-5"><h3 class="font-bold">今日订单</h3><div id="todayOrdersList" class="max-h-72 overflow-auto mt-2 space-y-2"></div></div>
             </div>
 
             <!-- Services -->
-            <div id="moduleServices" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold mb-4 text-blue-600">Service Management</h2><div class="flex gap-3 mb-4"><input id="newServiceName" placeholder="Service Name" class="flex-1 p-3 border rounded-xl"><input id="newServicePrice" placeholder="Price" class="w-28 p-3 border rounded-xl" type="number"><button onclick="addService()" class="btn-primary px-4 rounded-xl">Add</button></div><div id="servicesList" class="space-y-2"></div></div></div>
+            <div id="moduleServices" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold mb-4 text-blue-600">服务管理</h2><div class="flex gap-3 mb-4"><input id="newServiceName" placeholder="服务名称" class="flex-1 p-3 border rounded-xl"><input id="newServicePrice" placeholder="价格" class="w-28 p-3 border rounded-xl" type="number"><button onclick="addService()" class="btn-primary px-4 rounded-xl">添加</button></div><div id="servicesList" class="space-y-2"></div></div></div>
 
             <!-- Customers -->
-            <div id="moduleMembers" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">Customer Management</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><input id="memberPhone" placeholder="Phone" class="p-3 border rounded-xl"><input id="memberName" placeholder="Name" class="p-3 border rounded-xl"><input id="memberPlate" placeholder="Plate" class="p-3 border rounded-xl"><input id="rechargeAmount" placeholder="Recharge" class="p-3 border rounded-xl" type="number"><button onclick="addCustomer()" class="btn-success py-3 rounded-xl font-bold col-span-2">Add / Recharge</button></div><div id="membersList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div></div></div>
+            <div id="moduleMembers" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">客户管理</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><input id="memberPhone" placeholder="电话" class="p-3 border rounded-xl"><input id="memberName" placeholder="姓名" class="p-3 border rounded-xl"><input id="memberPlate" placeholder="车牌" class="p-3 border rounded-xl"><input id="rechargeAmount" placeholder="充值金额" class="p-3 border rounded-xl" type="number"><button onclick="addCustomer()" class="btn-success py-3 rounded-xl font-bold col-span-2">添加 / 充值</button></div><div id="membersList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div></div></div>
 
             <!-- Inventory -->
-            <div id="moduleInventory" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">Inventory Management</h2><div class="flex gap-3 mt-4"><input id="stockName" placeholder="Product" class="flex-1 p-3 border rounded-xl"><input id="stockQty" placeholder="Qty" class="w-28 p-3 border rounded-xl" type="number"><input id="stockCost" placeholder="Cost" class="w-28 p-3 border rounded-xl" type="number"><button onclick="addStockItem()" class="btn-primary px-5 rounded-xl">Add</button></div><div id="inventoryList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div></div></div>
+            <div id="moduleInventory" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">库存管理</h2><div class="flex gap-3 mt-4"><input id="stockName" placeholder="产品名称" class="flex-1 p-3 border rounded-xl"><input id="stockQty" placeholder="数量" class="w-28 p-3 border rounded-xl" type="number"><input id="stockCost" placeholder="成本" class="w-28 p-3 border rounded-xl" type="number"><button onclick="addStockItem()" class="btn-primary px-5 rounded-xl">添加</button></div><div id="inventoryList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div></div></div>
 
             <!-- Attendance -->
-            <div id="moduleAttendance" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">Attendance</h2><select id="attendanceStaff" class="w-full p-3 border rounded-xl mt-3"></select><div class="flex gap-3 mt-3"><button onclick="clockIn()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl">Clock In</button><button onclick="clockOut()" class="bg-amber-500 text-white px-5 py-2 rounded-xl">Clock Out</button></div><div id="attendanceList" class="mt-5 space-y-1 max-h-72 overflow-auto"></div></div></div>
+            <div id="moduleAttendance" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">考勤管理</h2><select id="attendanceStaff" class="w-full p-3 border rounded-xl mt-3"></select><div class="flex gap-3 mt-3"><button onclick="clockIn()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl">上班打卡</button><button onclick="clockOut()" class="bg-amber-500 text-white px-5 py-2 rounded-xl">下班打卡</button></div><div id="attendanceList" class="mt-5 space-y-1 max-h-72 overflow-auto"></div></div></div>
 
             <!-- Reports -->
-            <div id="moduleReports" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">Reports</h2><div class="flex gap-3 mt-4"><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">Export Excel</button><button onclick="clearAllOrders()" class="bg-red-500 text-white px-4 py-2 rounded-lg">Clear Orders</button></div><div id="reportTableBody" class="mt-4 text-sm max-h-72 overflow-auto"></div></div></div>
+            <div id="moduleReports" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">财务报表</h2><div class="flex gap-3 mt-4"><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">导出Excel</button><button onclick="clearAllOrders()" class="bg-red-500 text-white px-4 py-2 rounded-lg">清空订单</button></div><div id="reportTableBody" class="mt-4 text-sm max-h-72 overflow-auto"></div></div></div>
 
             <!-- Employees -->
-            <div id="moduleEmployees" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">Employee Management</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><input id="empUsername" placeholder="Username" class="p-3 border rounded-xl"><input id="empPassword" placeholder="Password" class="p-3 border rounded-xl" type="password"><select id="empRole" class="p-3 border rounded-xl"><option value="owner">Owner</option><option value="manager">Manager</option><option value="cashier">Cashier</option><option value="employee">Employee</option></select><button onclick="addEmployee()" class="btn-primary py-3 rounded-xl font-bold">Add</button></div><div id="employeesList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div></div></div>
+            <div id="moduleEmployees" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">员工管理</h2><div id="employeesList" class="mt-3 space-y-2 max-h-96 overflow-auto"></div></div></div>
 
             <!-- Settings -->
-            <div id="moduleSettings" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">Settings</h2><div class="space-y-3 mt-4"><div><label class="text-sm font-medium">Shop Name</label><input id="shopName" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">Tax Number</label><input id="shopTaxId" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">VAT Rate (%)</label><input id="vatRateInput" class="w-full p-2 border rounded" type="number"></div><button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full">Save Settings</button><button onclick="resetAll()" class="btn-danger py-2 rounded-lg w-full">Reset All Data</button></div></div></div>
+            <div id="moduleSettings" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">系统设置</h2><div class="space-y-3 mt-4"><div><label class="text-sm font-medium">店铺名称</label><input id="shopName" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">税号</label><input id="shopTaxId" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">增值税率 (%)</label><input id="vatRateInput" class="w-full p-2 border rounded" type="number"></div><button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full">保存设置</button></div></div></div>
         </main>
     </div>
 </div>
@@ -208,21 +265,136 @@ let config = {
     shopName: 'Car Wash Pro',
     shopTaxId: '310245678900003',
     vehicleTypes: [
-        { name: 'Small Car', price: 30 },
-        { name: 'Medium Car', price: 45 },
-        { name: 'Large Car', price: 60 },
+        { name: '小型车', price: 30 },
+        { name: '中型车', price: 45 },
+        { name: '大型车', price: 60 },
         { name: 'SUV', price: 75 }
     ],
     serviceTypes: [
-        { name: 'Basic', price: 0 },
-        { name: 'Deep Wash', price: 25 },
-        { name: 'Exterior Polish', price: 35 },
-        { name: 'Interior Shine', price: 40 },
-        { name: 'Full Detail', price: 80 }
+        { name: '基础清洗', price: 0 },
+        { name: '深度清洗', price: 25 },
+        { name: '外部抛光', price: 35 },
+        { name: '内部护理', price: 40 },
+        { name: '全车精洗', price: 80 }
     ]
 };
 let serviceChart = null;
 let revenueChart = null;
+
+// 角色权限定义
+const ROLE_PERMISSIONS = {
+    owner: { 
+        dashboard: true, cashier: true, services: true, 
+        customers: true, inventory: true, attendance: true, 
+        reports: true, employees: true, settings: true,
+        label: '老板', icon: '👑'
+    },
+    manager: { 
+        dashboard: true, cashier: true, services: true, 
+        customers: true, inventory: true, attendance: true, 
+        reports: true, employees: false, settings: false,
+        label: '店长', icon: '📋'
+    },
+    cashier: { 
+        dashboard: true, cashier: true, services: false, 
+        customers: true, inventory: false, attendance: false, 
+        reports: false, employees: false, settings: false,
+        label: '收银员', icon: '💰'
+    },
+    employee: { 
+        dashboard: true, cashier: false, services: false, 
+        customers: false, inventory: false, attendance: true, 
+        reports: false, employees: false, settings: false,
+        label: '员工', icon: '👤'
+    }
+};
+
+// ================================================================
+//  角色选择
+// ================================================================
+function selectRole(role) {
+    document.querySelectorAll('.role-option').forEach(el => {
+        el.classList.remove('active');
+        if (el.dataset.role === role) el.classList.add('active');
+    });
+    document.getElementById('regRole').value = role;
+}
+
+// ================================================================
+//  显示/隐藏登录注册
+// ================================================================
+function showRegister() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.remove('hidden');
+}
+
+function showLogin() {
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+}
+
+// ================================================================
+//  注册功能
+// ================================================================
+async function registerUser() {
+    const username = document.getElementById('regUsername').value.trim();
+    const name = document.getElementById('regName').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+    const role = document.getElementById('regRole').value;
+
+    // 验证
+    if (!username || !name || !password) {
+        showToast('请填写完整信息');
+        return;
+    }
+    if (password.length < 6) {
+        showToast('密码至少6位');
+        return;
+    }
+    if (password !== passwordConfirm) {
+        showToast('两次密码不一致');
+        return;
+    }
+
+    try {
+        // 检查用户名是否已存在
+        const { data: existing } = await supabaseClient
+            .from('users')
+            .select('username')
+            .eq('username', username);
+
+        if (existing && existing.length > 0) {
+            showToast('用户名已存在');
+            return;
+        }
+
+        // 创建用户
+        const passwordHash = CryptoJS.SHA256(password).toString();
+        const { data, error } = await supabaseClient
+            .from('users')
+            .insert([{
+                username: username,
+                password_hash: passwordHash,
+                role: role,
+                name: name
+            }])
+            .select();
+
+        if (error) throw new Error(error.message);
+
+        showToast('✅ 注册成功！请登录');
+        showLogin();
+        document.getElementById('loginUsername').value = username;
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regName').value = '';
+        document.getElementById('regPassword').value = '';
+        document.getElementById('regPasswordConfirm').value = '';
+
+    } catch (error) {
+        showToast('❌ 注册失败: ' + error.message);
+    }
+}
 
 // ================================================================
 //  数据加载
@@ -232,7 +404,7 @@ async function loadData() {
         updateSyncStatus('syncing');
         
         const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes] = await Promise.all([
-            supabaseClient.from('users').select('*'),
+            supabaseClient.from('users').select('*').order('created_at', { ascending: true }),
             supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
             supabaseClient.from('customers').select('*').order('created_at', { ascending: false }),
             supabaseClient.from('inventory').select('*'),
@@ -256,7 +428,7 @@ async function loadData() {
     } catch (error) {
         console.error('Load data error:', error);
         updateSyncStatus(false, error.message);
-        showToast('⚠️ Failed to load data: ' + error.message);
+        showToast('⚠️ 加载数据失败: ' + error.message);
         return false;
     }
 }
@@ -267,25 +439,25 @@ function updateSyncStatus(status, message) {
     if (!el) return;
 
     if (status === true) {
-        el.textContent = '🟢 Online';
+        el.textContent = '🟢 在线';
         el.className = 'text-sm font-semibold text-green-600';
-        if (badge) { badge.textContent = '✅ Connected'; badge.className = 'sync-status sync-online'; }
+        if (badge) { badge.textContent = '✅ 已连接'; badge.className = 'sync-status sync-online'; }
     } else if (status === 'syncing') {
-        el.textContent = '🔄 Syncing...';
+        el.textContent = '🔄 同步中...';
         el.className = 'text-sm font-semibold text-amber-600';
-        if (badge) { badge.textContent = '⏳ Syncing...'; badge.className = 'sync-status sync-syncing'; }
+        if (badge) { badge.textContent = '⏳ 同步中...'; badge.className = 'sync-status sync-syncing'; }
     } else {
-        el.textContent = '🔴 Offline: ' + (message || 'error');
+        el.textContent = '🔴 离线: ' + (message || 'error');
         el.className = 'text-sm font-semibold text-red-600';
-        if (badge) { badge.textContent = '❌ ' + (message || 'Disconnected'); badge.className = 'sync-status sync-offline'; }
+        if (badge) { badge.textContent = '❌ ' + (message || '断开连接'); badge.className = 'sync-status sync-offline'; }
     }
 }
 
 async function manualSync() {
-    showToast('🔄 Syncing...');
+    showToast('🔄 同步中...');
     await loadData();
     refreshAll();
-    showToast('✅ Sync complete');
+    showToast('✅ 同步完成');
 }
 
 // ================================================================
@@ -295,29 +467,32 @@ async function authLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
 
-    if (!username || !password) { showToast('Enter username and password'); return; }
+    if (!username || !password) { showToast('请输入用户名和密码'); return; }
 
     try {
         await loadData();
         const user = allUsers.find(u => u.username === username);
-        if (!user) { showToast('User not found'); return; }
+        if (!user) { showToast('用户不存在'); return; }
 
         const hash = CryptoJS.SHA256(password).toString();
-        if (user.password_hash !== hash) { showToast('Wrong password'); return; }
+        if (user.password_hash !== hash) { showToast('密码错误'); return; }
 
         currentUser = user;
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById('appContainer').classList.remove('hidden');
         document.getElementById('currentUserSpan').textContent = user.name || user.username;
-        document.getElementById('currentRoleSpan').textContent = user.role;
+        document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
+
+        // 根据角色更新UI
+        updateUIByRole(user.role);
 
         refreshAll();
         switchTab('dashboard');
-        showToast('Welcome ' + (user.name || user.username));
+        showToast('👋 欢迎 ' + (user.name || user.username));
 
         localStorage.setItem('cw_session', JSON.stringify({ id: user.id, username: user.username }));
     } catch (error) {
-        showToast('Login error: ' + error.message);
+        showToast('登录错误: ' + error.message);
     }
 }
 
@@ -326,13 +501,39 @@ function logout() {
     localStorage.removeItem('cw_session');
     document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('loginModal').style.display = 'flex';
-    showToast('Logged out');
+    showToast('已退出');
+}
+
+// ================================================================
+//  根据角色更新UI
+// ================================================================
+function updateUIByRole(role) {
+    const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.employee;
+    
+    // 更新侧边栏显示
+    document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
+    document.getElementById('navServices').style.display = permissions.services ? 'flex' : 'none';
+    document.getElementById('navCustomers').style.display = permissions.customers ? 'flex' : 'none';
+    document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
+    document.getElementById('navAttendance').style.display = permissions.attendance ? 'flex' : 'none';
+    document.getElementById('navReports').style.display = permissions.reports ? 'flex' : 'none';
+    document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
+    document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
+
+    // 更新角色显示
+    document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
 }
 
 // ================================================================
 //  导航
 // ================================================================
 function switchTab(tab) {
+    const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
+    if (!permissions[tab]) {
+        showToast('⚠️ 您没有权限访问此页面');
+        return;
+    }
+
     document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('module' + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (target) target.classList.remove('hidden');
@@ -340,7 +541,14 @@ function switchTab(tab) {
         el.classList.remove('nav-item-active');
         if (el.dataset.nav === tab) el.classList.add('nav-item-active');
     });
-    document.getElementById('currentPageTitle').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+    
+    const titles = {
+        dashboard: '仪表盘', cashier: '收银台', services: '服务管理',
+        members: '客户管理', inventory: '库存管理', attendance: '考勤管理',
+        reports: '财务报表', employees: '员工管理', settings: '系统设置'
+    };
+    document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
+    
     if (tab === 'dashboard') refreshDashboard();
     if (tab === 'cashier') { renderSelects(); updatePrice(); refreshOrders(); }
     if (tab === 'members') refreshCustomers();
@@ -373,14 +581,14 @@ function refreshDashboard() {
     const preview = document.getElementById('todayOrdersPreview');
     preview.innerHTML = todayOrders.slice(0, 5).map(o =>
         `<div class="flex justify-between p-2 bg-gray-50 rounded-lg"><span>${o.plate_number || 'N/A'}</span><span>${o.total || 0} SAR</span></div>`
-    ).join('') || '<div class="text-gray-400 text-center">No orders today</div>';
+    ).join('') || '<div class="text-gray-400 text-center">今日暂无订单</div>';
 
     const counts = {};
     allOrders.forEach(o => { const n = o.service_name || 'Basic'; counts[n] = (counts[n] || 0) + 1; });
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
     document.getElementById('topServicesContent').innerHTML = sorted.map(([name, count]) =>
-        `<div class="flex justify-between"><span>${name}</span><span>${count} orders</span></div>`
-    ).join('') || '<div class="text-gray-400 text-center">No data</div>';
+        `<div class="flex justify-between"><span>${name}</span><span>${count} 单</span></div>`
+    ).join('') || '<div class="text-gray-400 text-center">暂无数据</div>';
 
     initCharts();
 }
@@ -391,42 +599,42 @@ function refreshOrders() {
     const list = document.getElementById('todayOrdersList');
     list.innerHTML = todayOrders.slice(0, 20).map(o =>
         `<div class="flex justify-between p-2 border-b"><span>${o.created_at ? new Date(o.created_at).toLocaleTimeString() : ''}</span><span>${o.plate_number || 'N/A'}</span><span>${o.total || 0} SAR</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">No orders</div>';
+    ).join('') || '<div class="text-center text-gray-400">今日暂无订单</div>';
 }
 
 function refreshCustomers() {
     const list = document.getElementById('membersList');
     list.innerHTML = allCustomers.map(c =>
         `<div class="flex justify-between bg-gray-50 p-3 rounded-xl"><span><strong>${c.name || 'Unknown'}</strong><br><small>${c.phone || ''} | ${c.plate_number || ''}</small></span><span>${c.balance || 0} SAR</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">No customers</div>';
+    ).join('') || '<div class="text-center text-gray-400">暂无客户</div>';
 }
 
 function refreshInventory() {
     const list = document.getElementById('inventoryList');
     list.innerHTML = allInventory.map(i =>
-        `<div class="flex justify-between bg-gray-50 p-3 rounded"><span>${i.name}</span><span>Qty: ${i.quantity || 0} | Cost: ${i.cost || 0}</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">No inventory</div>';
+        `<div class="flex justify-between bg-gray-50 p-3 rounded"><span>${i.name}</span><span>数量: ${i.quantity || 0} | 成本: ${i.cost || 0}</span></div>`
+    ).join('') || '<div class="text-center text-gray-400">暂无库存</div>';
 }
 
 function refreshAttendance() {
     const list = document.getElementById('attendanceList');
     list.innerHTML = allAttendance.slice(0, 20).map(a =>
         `<div class="text-sm p-2 bg-gray-50 rounded">${a.staff_name} · ${a.type} · ${a.time ? new Date(a.time).toLocaleString() : ''}</div>`
-    ).join('') || '<div class="text-center text-gray-400">No records</div>';
+    ).join('') || '<div class="text-center text-gray-400">暂无记录</div>';
 }
 
 function refreshEmployees() {
     const list = document.getElementById('employeesList');
     list.innerHTML = allUsers.map(u =>
-        `<div class="flex justify-between bg-gray-50 p-3 rounded-xl"><span><strong>${u.name || u.username}</strong> <span class="role-badge role-${u.role}">${u.role}</span></span><span>${u.username}</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">No employees</div>';
+        `<div class="flex justify-between bg-gray-50 p-3 rounded-xl"><span><strong>${u.name || u.username}</strong> <span class="role-badge role-${u.role}">${ROLE_PERMISSIONS[u.role]?.label || u.role}</span></span><span>${u.username}</span></div>`
+    ).join('');
 }
 
 function refreshReports() {
     const table = document.getElementById('reportTableBody');
     table.innerHTML = allOrders.slice(0, 50).map(o =>
         `<div class="flex justify-between p-1 border-b text-sm"><span>${o.date || ''}</span><span>${o.plate_number || 'N/A'}</span><span>${o.total || 0} SAR</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">No data</div>';
+    ).join('') || '<div class="text-center text-gray-400">暂无数据</div>';
 }
 
 function refreshServices() {
@@ -462,7 +670,7 @@ function renderSelects() {
 
     const sSel = document.getElementById('serviceSelect');
     const services = config.serviceTypes || [];
-    sSel.innerHTML = '<option value="0">None</option>' +
+    sSel.innerHTML = '<option value="0">无</option>' +
         services.map(s => `<option value="${s.price}">${s.name} (+${s.price} SAR)</option>`).join('');
     updatePrice();
 }
@@ -473,7 +681,7 @@ function updateStaffSelects() {
         const sel = document.getElementById(id);
         if (sel) {
             sel.innerHTML = staff.map(s => `<option value="${s}">${s}</option>`).join('') ||
-                '<option value="">No staff</option>';
+                '<option value="">暂无员工</option>';
         }
     });
 }
@@ -494,11 +702,14 @@ document.getElementById('serviceSelect')?.addEventListener('change', updatePrice
 document.getElementById('priceInput')?.addEventListener('input', updatePrice);
 
 async function saveOrder() {
-    if (!currentUser) { showToast('Please login'); return; }
+    if (!currentUser) { showToast('请先登录'); return; }
+    const permissions = ROLE_PERMISSIONS[currentUser.role];
+    if (!permissions.cashier) { showToast('您没有收银权限'); return; }
+
     const plate = document.getElementById('plateInput').value.trim().toUpperCase();
-    if (!plate) { showToast('Enter plate number'); return; }
+    if (!plate) { showToast('请输入车牌号'); return; }
     const total = parseFloat(document.getElementById('totalSpan').textContent) || 0;
-    if (total <= 0) { showToast('Amount must be > 0'); return; }
+    if (total <= 0) { showToast('金额必须大于0'); return; }
 
     try {
         const orderData = {
@@ -507,7 +718,7 @@ async function saveOrder() {
             amount: parseFloat(document.getElementById('subtotalSpan').textContent) || 0,
             vat: parseFloat(document.getElementById('vatSpan').textContent) || 0,
             payment_method: document.getElementById('paymentSelect').value,
-            staff_name: document.getElementById('staffSelect').value,
+            staff_name: document.getElementById('staffSelect').value || currentUser.name,
             service_name: document.getElementById('serviceSelect').selectedOptions[0]?.text || 'None',
             date: new Date().toISOString().split('T')[0]
         };
@@ -517,12 +728,12 @@ async function saveOrder() {
         if (data && data.length > 0) allOrders.unshift(data[0]);
 
         refreshAll();
-        showToast('✅ Order saved: ' + total.toFixed(2) + ' SAR');
+        showToast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR');
         document.getElementById('plateInput').value = '';
         document.getElementById('priceInput').value = '';
         updatePrice();
     } catch (error) {
-        showToast('❌ Save error: ' + error.message);
+        showToast('❌ 保存失败: ' + error.message);
     }
 }
 
@@ -530,15 +741,15 @@ async function saveOrder() {
 //  客户管理
 // ================================================================
 async function addCustomer() {
-    if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
-        showToast('Only manager+ can add customers');
-        return;
-    }
+    if (!currentUser) { showToast('请先登录'); return; }
+    const permissions = ROLE_PERMISSIONS[currentUser.role];
+    if (!permissions.customers) { showToast('您没有客户管理权限'); return; }
+
     const phone = document.getElementById('memberPhone').value.trim();
     const name = document.getElementById('memberName').value.trim();
     const plate = document.getElementById('memberPlate').value.trim().toUpperCase();
     const amount = parseFloat(document.getElementById('rechargeAmount').value) || 0;
-    if (!phone || !name || !plate) { showToast('Fill all fields'); return; }
+    if (!phone || !name || !plate) { showToast('请填写完整信息'); return; }
 
     try {
         let existing = allCustomers.find(c => c.phone === phone || c.plate_number === plate);
@@ -553,13 +764,13 @@ async function addCustomer() {
             if (data && data.length > 0) allCustomers.unshift(data[0]);
         }
         refreshCustomers();
-        showToast('Customer saved / Recharged ' + amount + ' SAR');
+        showToast('✅ 客户已保存 / 充值 ' + amount + ' SAR');
         document.getElementById('memberPhone').value = '';
         document.getElementById('memberName').value = '';
         document.getElementById('memberPlate').value = '';
         document.getElementById('rechargeAmount').value = '';
     } catch (error) {
-        showToast('❌ Error: ' + error.message);
+        showToast('❌ 操作失败: ' + error.message);
     }
 }
 
@@ -567,14 +778,14 @@ async function addCustomer() {
 //  库存管理
 // ================================================================
 async function addStockItem() {
-    if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
-        showToast('Only manager+ can manage inventory');
-        return;
-    }
+    if (!currentUser) { showToast('请先登录'); return; }
+    const permissions = ROLE_PERMISSIONS[currentUser.role];
+    if (!permissions.inventory) { showToast('您没有库存管理权限'); return; }
+
     const name = document.getElementById('stockName').value.trim();
     const qty = parseInt(document.getElementById('stockQty').value) || 0;
     const cost = parseFloat(document.getElementById('stockCost').value) || 0;
-    if (!name || qty <= 0) { showToast('Enter valid product'); return; }
+    if (!name || qty <= 0) { showToast('请输入有效的产品名称和数量'); return; }
 
     try {
         let existing = allInventory.find(i => i.name === name);
@@ -589,12 +800,12 @@ async function addStockItem() {
             if (data && data.length > 0) allInventory.unshift(data[0]);
         }
         refreshInventory();
-        showToast('Stock updated: ' + name + ' +' + qty);
+        showToast('✅ 库存已更新: ' + name + ' +' + qty);
         document.getElementById('stockName').value = '';
         document.getElementById('stockQty').value = '';
         document.getElementById('stockCost').value = '';
     } catch (error) {
-        showToast('❌ Error: ' + error.message);
+        showToast('❌ 操作失败: ' + error.message);
     }
 }
 
@@ -602,60 +813,30 @@ async function addStockItem() {
 //  考勤管理
 // ================================================================
 async function clockIn() {
-    const staff = document.getElementById('attendanceStaff').value;
-    if (!staff) { showToast('Select staff'); return; }
+    if (!currentUser) { showToast('请先登录'); return; }
+    const staff = document.getElementById('attendanceStaff').value || currentUser.name;
     try {
-        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: 'Clock In', time: new Date().toISOString() }]).select();
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '上班打卡', time: new Date().toISOString() }]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allAttendance.unshift(data[0]);
         refreshAttendance();
-        showToast(staff + ' Clocked In');
+        showToast('✅ ' + staff + ' 上班打卡成功');
     } catch (error) {
-        showToast('❌ Error: ' + error.message);
+        showToast('❌ 打卡失败: ' + error.message);
     }
 }
 
 async function clockOut() {
-    const staff = document.getElementById('attendanceStaff').value;
-    if (!staff) { showToast('Select staff'); return; }
+    if (!currentUser) { showToast('请先登录'); return; }
+    const staff = document.getElementById('attendanceStaff').value || currentUser.name;
     try {
-        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: 'Clock Out', time: new Date().toISOString() }]).select();
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '下班打卡', time: new Date().toISOString() }]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allAttendance.unshift(data[0]);
         refreshAttendance();
-        showToast(staff + ' Clocked Out');
+        showToast('✅ ' + staff + ' 下班打卡成功');
     } catch (error) {
-        showToast('❌ Error: ' + error.message);
-    }
-}
-
-// ================================================================
-//  员工管理
-// ================================================================
-async function addEmployee() {
-    if (!currentUser || currentUser.role !== 'owner') { showToast('Only owner can add employees'); return; }
-    const username = document.getElementById('empUsername').value.trim();
-    const password = document.getElementById('empPassword').value.trim();
-    const role = document.getElementById('empRole').value;
-    if (!username || !password) { showToast('Enter username and password'); return; }
-    if (allUsers.find(u => u.username === username)) { showToast('Username exists'); return; }
-
-    try {
-        const { data, error } = await supabaseClient.from('users').insert([{
-            username: username,
-            password_hash: CryptoJS.SHA256(password).toString(),
-            role: role,
-            name: username
-        }]).select();
-        if (error) throw new Error(error.message);
-        if (data && data.length > 0) allUsers.push(data[0]);
-        refreshEmployees();
-        updateStaffSelects();
-        showToast('Employee added: ' + username);
-        document.getElementById('empUsername').value = '';
-        document.getElementById('empPassword').value = '';
-    } catch (error) {
-        showToast('❌ Error: ' + error.message);
+        showToast('❌ 打卡失败: ' + error.message);
     }
 }
 
@@ -663,20 +844,20 @@ async function addEmployee() {
 //  服务管理
 // ================================================================
 function addService() {
-    if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
-        showToast('Only manager+ can add services');
-        return;
-    }
+    if (!currentUser) { showToast('请先登录'); return; }
+    const permissions = ROLE_PERMISSIONS[currentUser.role];
+    if (!permissions.services) { showToast('您没有服务管理权限'); return; }
+
     const name = document.getElementById('newServiceName').value.trim();
     const price = parseFloat(document.getElementById('newServicePrice').value);
-    if (!name || isNaN(price)) { showToast('Enter name and price'); return; }
+    if (!name || isNaN(price)) { showToast('请输入服务名称和价格'); return; }
 
     config.serviceTypes = config.serviceTypes || [];
     config.serviceTypes.push({ name, price });
     localStorage.setItem('cw_config', JSON.stringify(config));
     refreshServices();
     renderSelects();
-    showToast('Service added: ' + name);
+    showToast('✅ 服务已添加: ' + name);
     document.getElementById('newServiceName').value = '';
     document.getElementById('newServicePrice').value = '';
 }
@@ -692,8 +873,8 @@ function removeService(index) {
 //  报表功能
 // ================================================================
 function exportExcel() {
-    if (allOrders.length === 0) { showToast('No data'); return; }
-    const data = [['Date', 'Time', 'Plate', 'Service', 'Total', 'Payment', 'Staff']];
+    if (allOrders.length === 0) { showToast('暂无数据'); return; }
+    const data = [['日期', '时间', '车牌', '服务', '总计', '支付方式', '员工']];
     allOrders.forEach(o => data.push([
         o.date || '',
         o.created_at ? new Date(o.created_at).toLocaleTimeString() : '',
@@ -707,19 +888,25 @@ function exportExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Orders');
     XLSX.writeFile(wb, 'carwash_report.xlsx');
-    showToast('Excel exported');
+    showToast('✅ Excel已导出');
 }
 
 async function clearAllOrders() {
-    if (!currentUser || currentUser.role !== 'owner') { showToast('Only owner can clear'); return; }
-    if (confirm('Delete all orders?')) {
+    if (!currentUser) { showToast('请先登录'); return; }
+    const permissions = ROLE_PERMISSIONS[currentUser.role];
+    if (!permissions.reports) { showToast('您没有报表权限'); return; }
+    if (currentUser.role !== 'owner' && currentUser.role !== 'manager') {
+        showToast('只有老板和店长可以清空订单');
+        return;
+    }
+    if (confirm('⚠️ 确定要删除所有订单吗？')) {
         try {
             await supabaseClient.from('orders').delete().neq('id', '');
             allOrders = [];
             refreshAll();
-            showToast('Orders cleared');
+            showToast('✅ 所有订单已清空');
         } catch (error) {
-            showToast('❌ Error: ' + error.message);
+            showToast('❌ 操作失败: ' + error.message);
         }
     }
 }
@@ -728,7 +915,9 @@ async function clearAllOrders() {
 //  设置功能
 // ================================================================
 function saveSettings() {
-    if (!currentUser || currentUser.role !== 'owner') { showToast('Only owner'); return; }
+    if (!currentUser) { showToast('请先登录'); return; }
+    if (currentUser.role !== 'owner') { showToast('只有老板可以修改设置'); return; }
+
     const name = document.getElementById('shopName').value.trim();
     const tax = document.getElementById('shopTaxId').value.trim();
     const vat = parseFloat(document.getElementById('vatRateInput').value);
@@ -736,28 +925,8 @@ function saveSettings() {
     if (tax) config.shopTaxId = tax;
     if (!isNaN(vat) && vat >= 0) config.vatRate = vat;
     localStorage.setItem('cw_config', JSON.stringify(config));
-    showToast('Settings saved');
+    showToast('✅ 设置已保存');
     updatePrice();
-}
-
-async function resetAll() {
-    if (!currentUser || currentUser.role !== 'owner') { showToast('Only owner'); return; }
-    if (confirm('⚠️ DELETE ALL DATA from cloud?')) {
-        try {
-            await supabaseClient.from('orders').delete().neq('id', '');
-            await supabaseClient.from('customers').delete().neq('id', '');
-            await supabaseClient.from('inventory').delete().neq('id', '');
-            await supabaseClient.from('attendance').delete().neq('id', '');
-            allOrders = [];
-            allCustomers = [];
-            allInventory = [];
-            allAttendance = [];
-            refreshAll();
-            showToast('All data cleared from cloud');
-        } catch (error) {
-            showToast('❌ Error: ' + error.message);
-        }
-    }
 }
 
 // ================================================================
@@ -775,11 +944,11 @@ function printReceipt() {
 </style></head><body>
 <div class="inv"><h2>🧼 CarWash Pro</h2>
 <p>${config.shopName || 'Car Wash Pro'}</p>
-<p>Tax: ${config.shopTaxId || 'N/A'}</p><hr>
-<p><strong>Plate:</strong> ${plate}</p>
-<p><strong>Date:</strong> ${new Date().toLocaleString()}</p><hr>
-<p class="tot">Total: ${total}</p>
-<p style="font-size:12px;color:#999;">Thank you</p></div>
+<p>税号: ${config.shopTaxId || 'N/A'}</p><hr>
+<p><strong>车牌:</strong> ${plate}</p>
+<p><strong>日期:</strong> ${new Date().toLocaleString()}</p><hr>
+<p class="tot">总计: ${total}</p>
+<p style="font-size:12px;color:#999;">感谢光临</p></div>
 <script>setTimeout(()=>window.print(),300)<\/script>
 </body></html>`);
     win.document.close();
@@ -787,7 +956,7 @@ function printReceipt() {
 
 function voiceTotal() {
     const total = document.getElementById('totalSpan').textContent;
-    const msg = new SpeechSynthesisUtterance('Total amount ' + total);
+    const msg = new SpeechSynthesisUtterance('总计 ' + total);
     window.speechSynthesis.speak(msg);
 }
 
@@ -806,22 +975,22 @@ function initCharts() {
     const ctx1 = document.getElementById('serviceStatsChart');
     if (ctx1) {
         if (serviceChart) serviceChart.destroy();
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         const counts = days.map(() => Math.floor(Math.random() * 12) + 2);
         serviceChart = new Chart(ctx1, {
             type: 'bar',
-            data: { labels: days, datasets: [{ label: 'Orders', data: counts, backgroundColor: '#0091D5', borderRadius: 6 }] },
+            data: { labels: days, datasets: [{ label: '订单数', data: counts, backgroundColor: '#0091D5', borderRadius: 6 }] },
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     }
     const ctx2 = document.getElementById('monthlyRevenueChart');
     if (ctx2) {
         if (revenueChart) revenueChart.destroy();
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const months = ['1月', '2月', '3月', '4月', '5月', '6月'];
         const revenues = months.map(() => Math.floor(Math.random() * 8000) + 2000);
         revenueChart = new Chart(ctx2, {
             type: 'line',
-            data: { labels: months, datasets: [{ label: 'Revenue', data: revenues, borderColor: '#0091D5', fill: true, tension: 0.3 }] },
+            data: { labels: months, datasets: [{ label: '收入', data: revenues, borderColor: '#0091D5', fill: true, tension: 0.3 }] },
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     }
@@ -852,7 +1021,8 @@ async function init() {
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
                 document.getElementById('currentUserSpan').textContent = user.name || user.username;
-                document.getElementById('currentRoleSpan').textContent = user.role;
+                document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
+                updateUIByRole(user.role);
                 refreshAll();
                 switchTab('dashboard');
                 renderSelects();
@@ -867,11 +1037,10 @@ async function init() {
 
 init();
 
-console.log('✅ CarWash Pro Cloud Edition loaded');
-console.log('📊 Connected to Supabase');
-console.log('👤 Users:', allUsers.length);
-console.log('📦 Orders:', allOrders.length);
-console.log('🔑 Default: admin/admin123');
+console.log('✅ CarWash Pro 已加载');
+console.log('👤 用户数:', allUsers.length);
+console.log('📦 订单数:', allOrders.length);
+console.log('🔑 默认账号: boss / admin123');
 </script>
 </body>
 </html>
