@@ -9,6 +9,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { transition: all 0.2s ease; }
@@ -43,14 +44,28 @@
         .role-option { padding: 8px 16px; border-radius: 20px; border: 2px solid #e2e8f0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
         .role-option:hover { border-color: #0091D5; }
         .role-option.active { border-color: #0091D5; background: #eff6ff; color: #0091D5; }
-        .role-option.owner { border-color: #7c3aed; }
-        .role-option.manager { border-color: #f59e0b; }
-        .role-option.cashier { border-color: #3b82f6; }
-        .role-option.employee { border-color: #8b5cf6; }
-        .role-option.owner.active { background: #ede9fe; color: #7c3aed; }
-        .role-option.manager.active { background: #fef3c7; color: #f59e0b; }
-        .role-option.cashier.active { background: #dbeafe; color: #3b82f6; }
-        .role-option.employee.active { background: #ede9fe; color: #8b5cf6; }
+        .setting-section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .setting-section h4 { font-weight: 600; color: #1f2937; margin-bottom: 12px; }
+        .setting-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .setting-row label { min-width: 100px; font-size: 14px; color: #4b5563; }
+        .setting-row input, .setting-row select { flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
+        .setting-row input:focus, .setting-row select:focus { outline: none; border-color: #0091D5; box-shadow: 0 0 0 3px rgba(0,145,213,0.1); }
+        .btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 8px; }
+        .report-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .report-toolbar select, .report-toolbar input { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 8px; }
+        .report-toolbar button { padding: 8px 18px; border-radius: 8px; font-size: 13px; }
+        .export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .export-buttons button { padding: 8px 16px; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; color: white; }
+        .btn-excel { background: #217346; }
+        .btn-excel:hover { background: #1a5c38; }
+        .btn-pdf { background: #dc2626; }
+        .btn-pdf:hover { background: #b91c1c; }
+        .btn-json { background: #6b7280; }
+        .btn-json:hover { background: #4b5563; }
+        .stat-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-item { background: #f8fafc; padding: 12px; border-radius: 10px; text-align: center; }
+        .stat-item .number { font-size: 20px; font-weight: bold; color: #0091D5; }
+        .stat-item .label { font-size: 12px; color: #6b7280; }
     </style>
 </head>
 <body>
@@ -63,11 +78,9 @@
                 <i class="fas fa-car-wash text-4xl text-white"></i>
             </div>
             <h1 class="text-3xl font-extrabold text-blue-600">CarWash Pro</h1>
-            <p class="text-gray-500 mt-1">☁️ Cloud Edition</p>
-            <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ Connecting...</span>
+            <p class="text-gray-500 mt-1">☁️ 云端版</p>
+            <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ 连接中...</span>
         </div>
-        
-        <!-- 登录表单 -->
         <div id="loginView">
             <div class="mb-3">
                 <label class="text-sm font-medium text-gray-600">用户名 / Username</label>
@@ -84,8 +97,6 @@
             </div>
             <div class="mt-2 text-center text-xs text-gray-400">默认账号: boss / admin123</div>
         </div>
-
-        <!-- 注册表单 -->
         <div id="registerView" class="hidden">
             <h3 class="text-lg font-bold text-gray-800 mb-3">📝 注册新账号</h3>
             <div class="register-form">
@@ -133,19 +144,19 @@
             </div>
             <div>
                 <h1 class="text-xl font-bold text-blue-600">CarWash Pro</h1>
-                <p class="text-xs text-gray-400" id="userRoleDisplay">☁️ Cloud Sync</p>
+                <p class="text-xs text-gray-400" id="userRoleDisplay">☁️ 云端同步</p>
             </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1" id="mainNav">
-            <a href="#" data-nav="dashboard" class="sidebar-link nav-item-active"><i class="fas fa-chart-line w-5"></i><span>Dashboard</span></a>
+            <a href="#" data-nav="dashboard" class="sidebar-link nav-item-active"><i class="fas fa-chart-line w-5"></i><span>仪表板</span></a>
             <a href="#" data-nav="cashier" class="sidebar-link" id="navCashier"><i class="fas fa-cash-register w-5"></i><span>POS / 收银</span></a>
-            <a href="#" data-nav="services" class="sidebar-link" id="navServices"><i class="fas fa-wrench w-5"></i><span>Services</span></a>
-            <a href="#" data-nav="members" class="sidebar-link" id="navCustomers"><i class="fas fa-users w-5"></i><span>Customers</span></a>
-            <a href="#" data-nav="inventory" class="sidebar-link" id="navInventory"><i class="fas fa-boxes w-5"></i><span>Inventory</span></a>
-            <a href="#" data-nav="attendance" class="sidebar-link" id="navAttendance"><i class="fas fa-clock w-5"></i><span>Attendance</span></a>
-            <a href="#" data-nav="reports" class="sidebar-link" id="navReports"><i class="fas fa-chart-bar w-5"></i><span>Reports</span></a>
-            <a href="#" data-nav="employees" class="sidebar-link" id="navEmployees"><i class="fas fa-user-tie w-5"></i><span>Employees</span></a>
-            <a href="#" data-nav="settings" class="sidebar-link" id="navSettings"><i class="fas fa-cog w-5"></i><span>Settings</span></a>
+            <a href="#" data-nav="services" class="sidebar-link" id="navServices"><i class="fas fa-wrench w-5"></i><span>服务</span></a>
+            <a href="#" data-nav="members" class="sidebar-link" id="navCustomers"><i class="fas fa-users w-5"></i><span>顾客</span></a>
+            <a href="#" data-nav="inventory" class="sidebar-link" id="navInventory"><i class="fas fa-boxes w-5"></i><span>存货</span></a>
+            <a href="#" data-nav="attendance" class="sidebar-link" id="navAttendance"><i class="fas fa-clock w-5"></i><span>出勤率</span></a>
+            <a href="#" data-nav="reports" class="sidebar-link" id="navReports"><i class="fas fa-chart-bar w-5"></i><span>报告</span></a>
+            <a href="#" data-nav="employees" class="sidebar-link" id="navEmployees"><i class="fas fa-user-tie w-5"></i><span>雇员</span></a>
+            <a href="#" data-nav="settings" class="sidebar-link" id="navSettings"><i class="fas fa-cog w-5"></i><span>设置</span></a>
         </nav>
         <div class="p-4 border-t border-gray-100">
             <div class="flex items-center justify-between">
@@ -153,7 +164,7 @@
                     <i class="fas fa-cloud text-blue-500 text-xl"></i>
                     <div>
                         <p class="text-xs text-gray-400">同步状态</p>
-                        <p class="text-sm font-semibold" id="syncStatusText">🟢 Online</p>
+                        <p class="text-sm font-semibold" id="syncStatusText">🟢 在线</p>
                     </div>
                 </div>
                 <button onclick="manualSync()" class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100">🔄 同步</button>
@@ -164,10 +175,10 @@
     <!-- 主内容 -->
     <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
         <header class="bg-white shadow-sm py-3 px-6 flex justify-between items-center border-b border-gray-100">
-            <h2 id="currentPageTitle" class="text-xl font-bold text-gray-800">Dashboard</h2>
+            <h2 id="currentPageTitle" class="text-xl font-bold text-gray-800">仪表板</h2>
             <div class="flex items-center gap-4">
                 <span id="currentUserSpan" class="text-sm font-semibold">Admin</span>
-                <span id="currentRoleSpan" class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">owner</span>
+                <span id="currentRoleSpan" class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">老板</span>
                 <button onclick="logout()" class="text-xs text-red-500 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100">退出</button>
             </div>
         </header>
@@ -231,13 +242,164 @@
             <div id="moduleAttendance" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">考勤管理</h2><select id="attendanceStaff" class="w-full p-3 border rounded-xl mt-3"></select><div class="flex gap-3 mt-3"><button onclick="clockIn()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl">上班打卡</button><button onclick="clockOut()" class="bg-amber-500 text-white px-5 py-2 rounded-xl">下班打卡</button></div><div id="attendanceList" class="mt-5 space-y-1 max-h-72 overflow-auto"></div></div></div>
 
             <!-- Reports -->
-            <div id="moduleReports" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">财务报表</h2><div class="flex gap-3 mt-4"><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">导出Excel</button><button onclick="clearAllOrders()" class="bg-red-500 text-white px-4 py-2 rounded-lg">清空订单</button></div><div id="reportTableBody" class="mt-4 text-sm max-h-72 overflow-auto"></div></div></div>
+            <div id="moduleReports" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">📊 财务报表</h2>
+                    
+                    <!-- 统计摘要 -->
+                    <div class="stat-summary">
+                        <div class="stat-item"><div class="number" id="reportTotalOrders">0</div><div class="label">总订单</div></div>
+                        <div class="stat-item"><div class="number" id="reportTotalRevenue">0 SAR</div><div class="label">总收入</div></div>
+                        <div class="stat-item"><div class="number" id="reportAvgOrder">0 SAR</div><div class="label">平均订单</div></div>
+                        <div class="stat-item"><div class="number" id="reportTotalCustomers">0</div><div class="label">总客户</div></div>
+                    </div>
+
+                    <!-- 工具栏 -->
+                    <div class="report-toolbar">
+                        <select id="reportFilter">
+                            <option value="all">全部订单</option>
+                            <option value="today">今日</option>
+                            <option value="week">本周</option>
+                            <option value="month">本月</option>
+                        </select>
+                        <input type="date" id="reportStartDate">
+                        <span>至</span>
+                        <input type="date" id="reportEndDate">
+                        <button onclick="applyReportFilter()" class="btn-primary btn-sm">筛选</button>
+                        <button onclick="resetReportFilter()" class="btn-outline btn-sm">重置</button>
+                    </div>
+
+                    <!-- 导出按钮 -->
+                    <div class="export-buttons mb-4">
+                        <button onclick="exportExcel()" class="btn-excel"><i class="fas fa-file-excel"></i> 导出Excel</button>
+                        <button onclick="exportPDF()" class="btn-pdf"><i class="fas fa-file-pdf"></i> 导出PDF</button>
+                        <button onclick="exportJSON()" class="btn-json"><i class="fas fa-file-code"></i> 导出JSON</button>
+                        <button onclick="printReport()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"><i class="fas fa-print"></i> 打印</button>
+                    </div>
+
+                    <!-- 报表表格 -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b bg-gray-50">
+                                    <th class="p-2 text-right">日期</th>
+                                    <th class="p-2 text-right">车牌</th>
+                                    <th class="p-2 text-right">服务</th>
+                                    <th class="p-2 text-right">金额</th>
+                                    <th class="p-2 text-right">增值税</th>
+                                    <th class="p-2 text-right">总计</th>
+                                    <th class="p-2 text-right">支付方式</th>
+                                    <th class="p-2 text-right">员工</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="reportPagination" class="mt-3 flex justify-between items-center text-sm text-gray-500">
+                        <span id="reportCount">共 0 条记录</span>
+                        <div class="flex gap-2">
+                            <button onclick="prevReportPage()" class="px-3 py-1 border rounded hover:bg-gray-50">上一页</button>
+                            <span id="reportPageInfo" class="px-3 py-1">第 1 页</span>
+                            <button onclick="nextReportPage()" class="px-3 py-1 border rounded hover:bg-gray-50">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Employees -->
             <div id="moduleEmployees" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">员工管理</h2><div id="employeesList" class="mt-3 space-y-2 max-h-96 overflow-auto"></div></div></div>
 
             <!-- Settings -->
-            <div id="moduleSettings" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">系统设置</h2><div class="space-y-3 mt-4"><div><label class="text-sm font-medium">店铺名称</label><input id="shopName" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">税号</label><input id="shopTaxId" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">增值税率 (%)</label><input id="vatRateInput" class="w-full p-2 border rounded" type="number"></div><button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full">保存设置</button></div></div></div>
+            <div id="moduleSettings" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">⚙️ 系统设置</h2>
+                    
+                    <!-- 基本设置 -->
+                    <div class="setting-section">
+                        <h4>🏪 店铺信息</h4>
+                        <div class="setting-row">
+                            <label>店铺名称</label>
+                            <input id="shopName" placeholder="请输入店铺名称">
+                        </div>
+                        <div class="setting-row">
+                            <label>店铺地址</label>
+                            <input id="shopAddress" placeholder="请输入店铺地址">
+                        </div>
+                        <div class="setting-row">
+                            <label>联系电话</label>
+                            <input id="shopPhone" placeholder="请输入联系电话">
+                        </div>
+                        <div class="setting-row">
+                            <label>税号</label>
+                            <input id="shopTaxId" placeholder="请输入税号">
+                        </div>
+                    </div>
+
+                    <!-- 税务设置 -->
+                    <div class="setting-section">
+                        <h4>💰 税务设置</h4>
+                        <div class="setting-row">
+                            <label>增值税率 (%)</label>
+                            <input id="vatRateInput" type="number" step="0.5" placeholder="15">
+                        </div>
+                        <div class="setting-row">
+                            <label>发票抬头</label>
+                            <input id="invoiceHeader" placeholder="发票抬头">
+                        </div>
+                    </div>
+
+                    <!-- 服务设置 -->
+                    <div class="setting-section">
+                        <h4>🔧 默认服务</h4>
+                        <div class="setting-row">
+                            <label>默认车型</label>
+                            <select id="defaultVehicle">
+                                <option value="小型车">小型车</option>
+                                <option value="中型车">中型车</option>
+                                <option value="大型车">大型车</option>
+                                <option value="SUV">SUV</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>默认服务</label>
+                            <select id="defaultService">
+                                <option value="基础清洗">基础清洗</option>
+                                <option value="深度清洗">深度清洗</option>
+                                <option value="外部抛光">外部抛光</option>
+                                <option value="内部护理">内部护理</option>
+                                <option value="全车精洗">全车精洗</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 通知设置 -->
+                    <div class="setting-section">
+                        <h4>🔔 通知设置</h4>
+                        <div class="setting-row">
+                            <label>低库存预警</label>
+                            <input id="lowStockAlert" type="number" placeholder="5" style="width:80px;">
+                            <span class="text-xs text-gray-400">件以下提醒</span>
+                        </div>
+                        <div class="setting-row">
+                            <label>自动备份</label>
+                            <select id="autoBackup">
+                                <option value="daily">每日</option>
+                                <option value="weekly">每周</option>
+                                <option value="monthly">每月</option>
+                                <option value="never">关闭</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 保存按钮 -->
+                    <div class="flex gap-3 mt-4">
+                        <button onclick="saveAllSettings()" class="btn-primary py-2 px-6 rounded-lg"><i class="fas fa-save"></i> 保存所有设置</button>
+                        <button onclick="resetSettings()" class="btn-outline py-2 px-6 rounded-lg"><i class="fas fa-undo"></i> 恢复默认</button>
+                        <button onclick="exportSettings()" class="bg-gray-600 text-white py-2 px-6 rounded-lg"><i class="fas fa-download"></i> 导出设置</button>
+                        <button onclick="importSettings()" class="bg-gray-500 text-white py-2 px-6 rounded-lg"><i class="fas fa-upload"></i> 导入设置</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </div>
@@ -263,7 +425,14 @@ let allAttendance = [];
 let config = {
     vatRate: 15,
     shopName: 'Car Wash Pro',
+    shopAddress: '',
+    shopPhone: '',
     shopTaxId: '310245678900003',
+    invoiceHeader: 'CarWash Pro 洗车店',
+    defaultVehicle: '中型车',
+    defaultService: '深度清洗',
+    lowStockAlert: 5,
+    autoBackup: 'weekly',
     vehicleTypes: [
         { name: '小型车', price: 30 },
         { name: '中型车', price: 45 },
@@ -280,34 +449,20 @@ let config = {
 };
 let serviceChart = null;
 let revenueChart = null;
+let reportPage = 1;
+const REPORT_PAGE_SIZE = 20;
 
-// 角色权限定义
+// 角色权限
 const ROLE_PERMISSIONS = {
-    owner: { 
-        dashboard: true, cashier: true, services: true, 
-        customers: true, inventory: true, attendance: true, 
-        reports: true, employees: true, settings: true,
-        label: '老板', icon: '👑'
-    },
-    manager: { 
-        dashboard: true, cashier: true, services: true, 
-        customers: true, inventory: true, attendance: true, 
-        reports: true, employees: false, settings: false,
-        label: '店长', icon: '📋'
-    },
-    cashier: { 
-        dashboard: true, cashier: true, services: false, 
-        customers: true, inventory: false, attendance: false, 
-        reports: false, employees: false, settings: false,
-        label: '收银员', icon: '💰'
-    },
-    employee: { 
-        dashboard: true, cashier: false, services: false, 
-        customers: false, inventory: false, attendance: true, 
-        reports: false, employees: false, settings: false,
-        label: '员工', icon: '👤'
-    }
+    owner: { dashboard: true, cashier: true, services: true, customers: true, inventory: true, attendance: true, reports: true, employees: true, settings: true, label: '老板', icon: '👑' },
+    manager: { dashboard: true, cashier: true, services: true, customers: true, inventory: true, attendance: true, reports: true, employees: false, settings: false, label: '店长', icon: '📋' },
+    cashier: { dashboard: true, cashier: true, services: false, customers: true, inventory: false, attendance: false, reports: false, employees: false, settings: false, label: '收银员', icon: '💰' },
+    employee: { dashboard: true, cashier: false, services: false, customers: false, inventory: false, attendance: true, reports: false, employees: false, settings: false, label: '员工', icon: '👤' }
 };
+
+// 报表筛选状态
+let reportFilter = { type: 'all', startDate: null, endDate: null };
+let filteredOrders = [];
 
 // ================================================================
 //  角色选择
@@ -320,9 +475,6 @@ function selectRole(role) {
     document.getElementById('regRole').value = role;
 }
 
-// ================================================================
-//  显示/隐藏登录注册
-// ================================================================
 function showRegister() {
     document.getElementById('loginView').classList.add('hidden');
     document.getElementById('registerView').classList.remove('hidden');
@@ -343,46 +495,20 @@ async function registerUser() {
     const passwordConfirm = document.getElementById('regPasswordConfirm').value;
     const role = document.getElementById('regRole').value;
 
-    // 验证
-    if (!username || !name || !password) {
-        showToast('请填写完整信息');
-        return;
-    }
-    if (password.length < 6) {
-        showToast('密码至少6位');
-        return;
-    }
-    if (password !== passwordConfirm) {
-        showToast('两次密码不一致');
-        return;
-    }
+    if (!username || !name || !password) { showToast('请填写完整信息'); return; }
+    if (password.length < 6) { showToast('密码至少6位'); return; }
+    if (password !== passwordConfirm) { showToast('两次密码不一致'); return; }
 
     try {
-        // 检查用户名是否已存在
-        const { data: existing } = await supabaseClient
-            .from('users')
-            .select('username')
-            .eq('username', username);
+        const { data: existing } = await supabaseClient.from('users').select('username').eq('username', username);
+        if (existing && existing.length > 0) { showToast('用户名已存在'); return; }
 
-        if (existing && existing.length > 0) {
-            showToast('用户名已存在');
-            return;
-        }
-
-        // 创建用户
         const passwordHash = CryptoJS.SHA256(password).toString();
-        const { data, error } = await supabaseClient
-            .from('users')
-            .insert([{
-                username: username,
-                password_hash: passwordHash,
-                role: role,
-                name: name
-            }])
-            .select();
+        const { data, error } = await supabaseClient.from('users').insert([{
+            username, password_hash: passwordHash, role, name
+        }]).select();
 
         if (error) throw new Error(error.message);
-
         showToast('✅ 注册成功！请登录');
         showLogin();
         document.getElementById('loginUsername').value = username;
@@ -390,7 +516,6 @@ async function registerUser() {
         document.getElementById('regName').value = '';
         document.getElementById('regPassword').value = '';
         document.getElementById('regPasswordConfirm').value = '';
-
     } catch (error) {
         showToast('❌ 注册失败: ' + error.message);
     }
@@ -402,7 +527,6 @@ async function registerUser() {
 async function loadData() {
     try {
         updateSyncStatus('syncing');
-        
         const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes] = await Promise.all([
             supabaseClient.from('users').select('*').order('created_at', { ascending: true }),
             supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
@@ -423,6 +547,12 @@ async function loadData() {
         allInventory = inventoryRes.data || [];
         allAttendance = attendanceRes.data || [];
 
+        // 加载本地配置
+        try {
+            const savedConfig = JSON.parse(localStorage.getItem('cw_config'));
+            if (savedConfig) config = { ...config, ...savedConfig };
+        } catch(e) {}
+
         updateSyncStatus(true);
         return true;
     } catch (error) {
@@ -437,7 +567,6 @@ function updateSyncStatus(status, message) {
     const el = document.getElementById('syncStatusText');
     const badge = document.getElementById('syncStatusBadge');
     if (!el) return;
-
     if (status === true) {
         el.textContent = '🟢 在线';
         el.className = 'text-sm font-semibold text-green-600';
@@ -466,7 +595,6 @@ async function manualSync() {
 async function authLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-
     if (!username || !password) { showToast('请输入用户名和密码'); return; }
 
     try {
@@ -483,9 +611,7 @@ async function authLogin() {
         document.getElementById('currentUserSpan').textContent = user.name || user.username;
         document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
 
-        // 根据角色更新UI
         updateUIByRole(user.role);
-
         refreshAll();
         switchTab('dashboard');
         showToast('👋 欢迎 ' + (user.name || user.username));
@@ -505,12 +631,10 @@ function logout() {
 }
 
 // ================================================================
-//  根据角色更新UI
+//  UI更新
 // ================================================================
 function updateUIByRole(role) {
     const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.employee;
-    
-    // 更新侧边栏显示
     document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
     document.getElementById('navServices').style.display = permissions.services ? 'flex' : 'none';
     document.getElementById('navCustomers').style.display = permissions.customers ? 'flex' : 'none';
@@ -519,8 +643,6 @@ function updateUIByRole(role) {
     document.getElementById('navReports').style.display = permissions.reports ? 'flex' : 'none';
     document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
     document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
-
-    // 更新角色显示
     document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
 }
 
@@ -529,10 +651,7 @@ function updateUIByRole(role) {
 // ================================================================
 function switchTab(tab) {
     const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
-    if (!permissions[tab]) {
-        showToast('⚠️ 您没有权限访问此页面');
-        return;
-    }
+    if (!permissions[tab]) { showToast('⚠️ 您没有权限访问此页面'); return; }
 
     document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('module' + tab.charAt(0).toUpperCase() + tab.slice(1));
@@ -542,11 +661,7 @@ function switchTab(tab) {
         if (el.dataset.nav === tab) el.classList.add('nav-item-active');
     });
     
-    const titles = {
-        dashboard: '仪表盘', cashier: '收银台', services: '服务管理',
-        members: '客户管理', inventory: '库存管理', attendance: '考勤管理',
-        reports: '财务报表', employees: '员工管理', settings: '系统设置'
-    };
+    const titles = { dashboard: '仪表板', cashier: '收银台', services: '服务管理', members: '客户管理', inventory: '库存管理', attendance: '考勤管理', reports: '财务报表', employees: '员工管理', settings: '系统设置' };
     document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
     
     if (tab === 'dashboard') refreshDashboard();
@@ -557,6 +672,7 @@ function switchTab(tab) {
     if (tab === 'employees') refreshEmployees();
     if (tab === 'reports') refreshReports();
     if (tab === 'services') refreshServices();
+    if (tab === 'settings') loadSettings();
 }
 
 document.querySelectorAll('[data-nav]').forEach(el => {
@@ -628,13 +744,6 @@ function refreshEmployees() {
     list.innerHTML = allUsers.map(u =>
         `<div class="flex justify-between bg-gray-50 p-3 rounded-xl"><span><strong>${u.name || u.username}</strong> <span class="role-badge role-${u.role}">${ROLE_PERMISSIONS[u.role]?.label || u.role}</span></span><span>${u.username}</span></div>`
     ).join('');
-}
-
-function refreshReports() {
-    const table = document.getElementById('reportTableBody');
-    table.innerHTML = allOrders.slice(0, 50).map(o =>
-        `<div class="flex justify-between p-1 border-b text-sm"><span>${o.date || ''}</span><span>${o.plate_number || 'N/A'}</span><span>${o.total || 0} SAR</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">暂无数据</div>';
 }
 
 function refreshServices() {
@@ -870,63 +979,276 @@ function removeService(index) {
 }
 
 // ================================================================
-//  报表功能
+//  报表功能（完善版）
 // ================================================================
+function getFilteredOrders() {
+    let orders = [...allOrders];
+    const filter = reportFilter;
+    
+    if (filter.type === 'today') {
+        const today = new Date().toISOString().split('T')[0];
+        orders = orders.filter(o => (o.date || '').startsWith(today));
+    } else if (filter.type === 'week') {
+        const now = new Date();
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        const startStr = weekStart.toISOString().split('T')[0];
+        orders = orders.filter(o => (o.date || '') >= startStr);
+    } else if (filter.type === 'month') {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startStr = monthStart.toISOString().split('T')[0];
+        orders = orders.filter(o => (o.date || '') >= startStr);
+    }
+    
+    if (filter.startDate) {
+        orders = orders.filter(o => (o.date || '') >= filter.startDate);
+    }
+    if (filter.endDate) {
+        orders = orders.filter(o => (o.date || '') <= filter.endDate);
+    }
+    
+    return orders;
+}
+
+function refreshReports() {
+    filteredOrders = getFilteredOrders();
+    const total = filteredOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const totalOrders = filteredOrders.length;
+    
+    // 更新统计摘要
+    document.getElementById('reportTotalOrders').textContent = totalOrders;
+    document.getElementById('reportTotalRevenue').textContent = total.toFixed(2) + ' SAR';
+    document.getElementById('reportAvgOrder').textContent = totalOrders > 0 ? (total / totalOrders).toFixed(2) + ' SAR' : '0 SAR';
+    document.getElementById('reportTotalCustomers').textContent = allCustomers.length;
+    
+    // 分页
+    const start = (reportPage - 1) * REPORT_PAGE_SIZE;
+    const end = start + REPORT_PAGE_SIZE;
+    const pageOrders = filteredOrders.slice(start, end);
+    
+    const table = document.getElementById('reportTableBody');
+    table.innerHTML = pageOrders.map(o =>
+        `<tr class="border-b hover:bg-gray-50">
+            <td class="p-2">${o.date || ''}</td>
+            <td class="p-2">${o.plate_number || 'N/A'}</td>
+            <td class="p-2">${o.service_name || 'N/A'}</td>
+            <td class="p-2">${o.amount || 0}</td>
+            <td class="p-2">${o.vat || 0}</td>
+            <td class="p-2 font-bold">${o.total || 0}</td>
+            <td class="p-2">${o.payment_method || 'N/A'}</td>
+            <td class="p-2">${o.staff_name || 'N/A'}</td>
+        </tr>`
+    ).join('') || '<tr><td colspan="8" class="p-4 text-center text-gray-400">暂无数据</td></tr>';
+    
+    // 更新分页信息
+    const totalPages = Math.ceil(filteredOrders.length / REPORT_PAGE_SIZE) || 1;
+    document.getElementById('reportCount').textContent = `共 ${filteredOrders.length} 条记录`;
+    document.getElementById('reportPageInfo').textContent = `第 ${reportPage} / ${totalPages} 页`;
+}
+
+function applyReportFilter() {
+    const filterType = document.getElementById('reportFilter').value;
+    const startDate = document.getElementById('reportStartDate').value;
+    const endDate = document.getElementById('reportEndDate').value;
+    
+    reportFilter = { type: filterType, startDate, endDate };
+    reportPage = 1;
+    refreshReports();
+}
+
+function resetReportFilter() {
+    reportFilter = { type: 'all', startDate: null, endDate: null };
+    document.getElementById('reportFilter').value = 'all';
+    document.getElementById('reportStartDate').value = '';
+    document.getElementById('reportEndDate').value = '';
+    reportPage = 1;
+    refreshReports();
+}
+
+function prevReportPage() {
+    if (reportPage > 1) { reportPage--; refreshReports(); }
+}
+
+function nextReportPage() {
+    const totalPages = Math.ceil(filteredOrders.length / REPORT_PAGE_SIZE) || 1;
+    if (reportPage < totalPages) { reportPage++; refreshReports(); }
+}
+
 function exportExcel() {
-    if (allOrders.length === 0) { showToast('暂无数据'); return; }
-    const data = [['日期', '时间', '车牌', '服务', '总计', '支付方式', '员工']];
-    allOrders.forEach(o => data.push([
+    if (filteredOrders.length === 0) { showToast('暂无数据可导出'); return; }
+    const data = [['日期', '时间', '车牌', '服务', '金额', '增值税', '总计', '支付方式', '员工']];
+    filteredOrders.forEach(o => data.push([
         o.date || '',
         o.created_at ? new Date(o.created_at).toLocaleTimeString() : '',
         o.plate_number || '',
         o.service_name || '',
+        o.amount || 0,
+        o.vat || 0,
         o.total || 0,
         o.payment_method || '',
         o.staff_name || ''
     ]));
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-    XLSX.writeFile(wb, 'carwash_report.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, '报表');
+    XLSX.writeFile(wb, `报表_${new Date().toISOString().split('T')[0]}.xlsx`);
     showToast('✅ Excel已导出');
 }
 
-async function clearAllOrders() {
-    if (!currentUser) { showToast('请先登录'); return; }
-    const permissions = ROLE_PERMISSIONS[currentUser.role];
-    if (!permissions.reports) { showToast('您没有报表权限'); return; }
-    if (currentUser.role !== 'owner' && currentUser.role !== 'manager') {
-        showToast('只有老板和店长可以清空订单');
-        return;
-    }
-    if (confirm('⚠️ 确定要删除所有订单吗？')) {
-        try {
-            await supabaseClient.from('orders').delete().neq('id', '');
-            allOrders = [];
-            refreshAll();
-            showToast('✅ 所有订单已清空');
-        } catch (error) {
-            showToast('❌ 操作失败: ' + error.message);
-        }
-    }
+function exportPDF() {
+    if (filteredOrders.length === 0) { showToast('暂无数据可导出'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    
+    doc.setFontSize(18);
+    doc.text('CarWash Pro 财务报表', 14, 20);
+    doc.setFontSize(10);
+    doc.text(`导出日期: ${new Date().toLocaleString()}`, 14, 28);
+    doc.text(`总订单: ${filteredOrders.length}`, 14, 34);
+    const total = filteredOrders.reduce((s, o) => s + (o.total || 0), 0);
+    doc.text(`总收入: ${total.toFixed(2)} SAR`, 14, 40);
+    
+    const headers = ['日期', '车牌', '服务', '金额', '总计', '支付方式', '员工'];
+    const rows = filteredOrders.slice(0, 50).map(o => [
+        o.date || '',
+        o.plate_number || '',
+        o.service_name || '',
+        String(o.amount || 0),
+        String(o.total || 0),
+        o.payment_method || '',
+        o.staff_name || ''
+    ]);
+    
+    doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 48,
+        theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [0, 145, 213] }
+    });
+    
+    doc.save(`报表_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('✅ PDF已导出');
+}
+
+function exportJSON() {
+    if (filteredOrders.length === 0) { showToast('暂无数据可导出'); return; }
+    const blob = new Blob([JSON.stringify(filteredOrders, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `报表_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    showToast('✅ JSON已导出');
+}
+
+function printReport() {
+    window.print();
 }
 
 // ================================================================
-//  设置功能
+//  设置功能（完善版）
 // ================================================================
-function saveSettings() {
-    if (!currentUser) { showToast('请先登录'); return; }
-    if (currentUser.role !== 'owner') { showToast('只有老板可以修改设置'); return; }
+function loadSettings() {
+    document.getElementById('shopName').value = config.shopName || '';
+    document.getElementById('shopAddress').value = config.shopAddress || '';
+    document.getElementById('shopPhone').value = config.shopPhone || '';
+    document.getElementById('shopTaxId').value = config.shopTaxId || '';
+    document.getElementById('vatRateInput').value = config.vatRate || 15;
+    document.getElementById('invoiceHeader').value = config.invoiceHeader || '';
+    document.getElementById('defaultVehicle').value = config.defaultVehicle || '中型车';
+    document.getElementById('defaultService').value = config.defaultService || '深度清洗';
+    document.getElementById('lowStockAlert').value = config.lowStockAlert || 5;
+    document.getElementById('autoBackup').value = config.autoBackup || 'weekly';
+}
 
-    const name = document.getElementById('shopName').value.trim();
-    const tax = document.getElementById('shopTaxId').value.trim();
-    const vat = parseFloat(document.getElementById('vatRateInput').value);
-    if (name) config.shopName = name;
-    if (tax) config.shopTaxId = tax;
-    if (!isNaN(vat) && vat >= 0) config.vatRate = vat;
+function saveAllSettings() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以修改设置'); return; }
+    
+    config.shopName = document.getElementById('shopName').value.trim() || config.shopName;
+    config.shopAddress = document.getElementById('shopAddress').value.trim();
+    config.shopPhone = document.getElementById('shopPhone').value.trim();
+    config.shopTaxId = document.getElementById('shopTaxId').value.trim();
+    config.vatRate = parseFloat(document.getElementById('vatRateInput').value) || 15;
+    config.invoiceHeader = document.getElementById('invoiceHeader').value.trim();
+    config.defaultVehicle = document.getElementById('defaultVehicle').value;
+    config.defaultService = document.getElementById('defaultService').value;
+    config.lowStockAlert = parseInt(document.getElementById('lowStockAlert').value) || 5;
+    config.autoBackup = document.getElementById('autoBackup').value;
+    
     localStorage.setItem('cw_config', JSON.stringify(config));
-    showToast('✅ 设置已保存');
     updatePrice();
+    showToast('✅ 所有设置已保存');
+}
+
+function resetSettings() {
+    if (!confirm('确定要恢复默认设置吗？')) return;
+    config = {
+        vatRate: 15,
+        shopName: 'Car Wash Pro',
+        shopAddress: '',
+        shopPhone: '',
+        shopTaxId: '310245678900003',
+        invoiceHeader: 'CarWash Pro 洗车店',
+        defaultVehicle: '中型车',
+        defaultService: '深度清洗',
+        lowStockAlert: 5,
+        autoBackup: 'weekly',
+        vehicleTypes: [
+            { name: '小型车', price: 30 },
+            { name: '中型车', price: 45 },
+            { name: '大型车', price: 60 },
+            { name: 'SUV', price: 75 }
+        ],
+        serviceTypes: [
+            { name: '基础清洗', price: 0 },
+            { name: '深度清洗', price: 25 },
+            { name: '外部抛光', price: 35 },
+            { name: '内部护理', price: 40 },
+            { name: '全车精洗', price: 80 }
+        ]
+    };
+    localStorage.setItem('cw_config', JSON.stringify(config));
+    loadSettings();
+    renderSelects();
+    updatePrice();
+    refreshServices();
+    showToast('✅ 已恢复默认设置');
+}
+
+function exportSettings() {
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `settings_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    showToast('✅ 设置已导出');
+}
+
+function importSettings() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                config = { ...config, ...data };
+                localStorage.setItem('cw_config', JSON.stringify(config));
+                loadSettings();
+                renderSelects();
+                updatePrice();
+                refreshServices();
+                showToast('✅ 设置已导入');
+            } catch(err) { showToast('❌ 文件格式错误'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 }
 
 // ================================================================
@@ -937,13 +1259,16 @@ function printReceipt() {
     const plate = document.getElementById('plateInput').value || 'N/A';
     const win = window.open('', '_blank');
     win.document.write(`
-        <html><head><title>Invoice</title>
+        <html><head><title>发票</title>
         <style>body{font-family:sans-serif;padding:40px;text-align:center;}
         .inv{max-width:400px;margin:auto;border:1px solid #ddd;padding:30px;border-radius:12px;}
         .tot{font-size:28px;font-weight:bold;color:#0091D5;}
-</style></head><body>
+        .header{color:#666;font-size:14px;}</style>
+</head><body>
 <div class="inv"><h2>🧼 CarWash Pro</h2>
-<p>${config.shopName || 'Car Wash Pro'}</p>
+<p class="header">${config.shopName || 'Car Wash Pro'}</p>
+<p class="header">${config.shopAddress || ''}</p>
+<p class="header">电话: ${config.shopPhone || ''}</p>
 <p>税号: ${config.shopTaxId || 'N/A'}</p><hr>
 <p><strong>车牌:</strong> ${plate}</p>
 <p><strong>日期:</strong> ${new Date().toLocaleString()}</p><hr>
@@ -1000,16 +1325,10 @@ function initCharts() {
 //  启动
 // ================================================================
 async function init() {
-    try {
-        const savedConfig = JSON.parse(localStorage.getItem('cw_config'));
-        if (savedConfig) config = { ...config, ...savedConfig };
-    } catch(e) {}
-    
-    document.getElementById('shopName').value = config.shopName || '';
-    document.getElementById('shopTaxId').value = config.shopTaxId || '';
-    document.getElementById('vatRateInput').value = config.vatRate || 15;
-
     await loadData();
+    
+    // 设置输入框默认值
+    loadSettings();
 
     const session = localStorage.getItem('cw_session');
     if (session) {
