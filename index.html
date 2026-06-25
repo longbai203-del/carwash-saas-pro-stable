@@ -22,8 +22,6 @@
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(22,163,74,0.4); }
         .btn-danger { background: linear-gradient(105deg, #dc2626, #f87171); color: white; padding: 10px 20px; border-radius: 14px; border: none; cursor: pointer; }
         .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(220,38,38,0.4); }
-        .form-input { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: white; }
-        .form-input:focus { outline: none; border-color: #0091D5; box-shadow: 0 0 0 3px rgba(0,145,213,0.1); }
         .sidebar-link { transition: all 0.2s; border-radius: 14px; margin: 4px 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; color: #64748b; cursor: pointer; }
         .sidebar-link:hover { background: rgba(0,145,213,0.08); color: #0091D5; }
         .nav-item-active { background: rgba(0,145,213,0.12); border-right: 4px solid #0091D5; color: #0284c7; font-weight: 600; }
@@ -50,7 +48,7 @@
                 <i class="fas fa-car-wash text-4xl text-white"></i>
             </div>
             <h1 class="text-3xl font-extrabold text-blue-600">CarWash Pro</h1>
-            <p class="text-gray-500 mt-1">☁️ Cloud Edition | 云端版</p>
+            <p class="text-gray-500 mt-1">☁️ Cloud Edition</p>
             <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ Connecting...</span>
         </div>
         <div>
@@ -83,7 +81,7 @@
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
             <a href="#" data-nav="dashboard" class="sidebar-link nav-item-active"><i class="fas fa-chart-line w-5"></i><span>Dashboard</span></a>
-            <a href="#" data-nav="cashier" class="sidebar-link"><i class="fas fa-cash-register w-5"></i><span>POS / 收银</span></a>
+            <a href="#" data-nav="cashier" class="sidebar-link"><i class="fas fa-cash-register w-5"></i><span>POS</span></a>
             <a href="#" data-nav="services" class="sidebar-link"><i class="fas fa-wrench w-5"></i><span>Services</span></a>
             <a href="#" data-nav="members" class="sidebar-link"><i class="fas fa-users w-5"></i><span>Customers</span></a>
             <a href="#" data-nav="inventory" class="sidebar-link"><i class="fas fa-boxes w-5"></i><span>Inventory</span></a>
@@ -108,7 +106,6 @@
 
     <!-- 主内容 -->
     <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <!-- 顶部栏 -->
         <header class="bg-white shadow-sm py-3 px-6 flex justify-between items-center border-b border-gray-100">
             <h2 id="currentPageTitle" class="text-xl font-bold text-gray-800">Dashboard</h2>
             <div class="flex items-center gap-4">
@@ -190,12 +187,11 @@
 
 <script>
 // ================================================================
-//  Supabase配置 - 已替换为你的
+//  Supabase配置
 // ================================================================
 const SUPABASE_URL = 'https://fhwsbdokxgjqyrbvstxq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZod3NiZG9reGdqcXlyYnZzdHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQzNjAsImV4cCI6MjA5Nzk2MDM2MH0.XXR5BhhOuF0t6lzOkeYl6OPyva_QCwcV482TzOFV_84';
 
-// 创建Supabase客户端
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ================================================================
@@ -227,16 +223,14 @@ let config = {
 };
 let serviceChart = null;
 let revenueChart = null;
-let isSyncing = false;
 
 // ================================================================
-//  从Supabase加载数据
+//  数据加载
 // ================================================================
 async function loadData() {
     try {
         updateSyncStatus('syncing');
         
-        // 并行加载所有数据
         const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes] = await Promise.all([
             supabaseClient.from('users').select('*'),
             supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
@@ -256,15 +250,6 @@ async function loadData() {
         allCustomers = customersRes.data || [];
         allInventory = inventoryRes.data || [];
         allAttendance = attendanceRes.data || [];
-
-        // 如果没有用户，创建默认管理员
-        if (allUsers.length === 0) {
-            const adminHash = CryptoJS.SHA256('admin123').toString();
-            const { data, error } = await supabaseClient.from('users').insert([
-                { username: 'admin', password_hash: adminHash, role: 'owner', name: 'Admin' }
-            ]).select();
-            if (!error && data) allUsers = data;
-        }
 
         updateSyncStatus(true);
         return true;
@@ -466,7 +451,7 @@ function refreshAll() {
 }
 
 // ================================================================
-//  POS功能（使用Supabase API）
+//  POS功能
 // ================================================================
 function renderSelects() {
     const vSel = document.getElementById('vehicleSelect');
@@ -529,22 +514,7 @@ async function saveOrder() {
 
         const { data, error } = await supabaseClient.from('orders').insert([orderData]).select();
         if (error) throw new Error(error.message);
-        
-        if (data && data.length > 0) {
-            allOrders.unshift(data[0]);
-        }
-
-        // 更新客户积分
-        const customer = allCustomers.find(c => c.plate_number === plate);
-        if (customer) {
-            const { error: updateError } = await supabaseClient
-                .from('customers')
-                .update({ points: (customer.points || 0) + 1 })
-                .eq('id', customer.id);
-            if (!updateError) {
-                customer.points = (customer.points || 0) + 1;
-            }
-        }
+        if (data && data.length > 0) allOrders.unshift(data[0]);
 
         refreshAll();
         showToast('✅ Order saved: ' + total.toFixed(2) + ' SAR');
@@ -574,22 +544,13 @@ async function addCustomer() {
         let existing = allCustomers.find(c => c.phone === phone || c.plate_number === plate);
         if (existing) {
             const newBalance = (existing.balance || 0) + amount;
-            const { error } = await supabaseClient
-                .from('customers')
-                .update({ balance: newBalance, name: name })
-                .eq('id', existing.id);
-            if (error) throw new Error(error.message);
+            await supabaseClient.from('customers').update({ balance: newBalance, name: name }).eq('id', existing.id);
             existing.balance = newBalance;
             existing.name = name;
         } else {
-            const { data, error } = await supabaseClient
-                .from('customers')
-                .insert([{ phone, name, plate_number: plate, balance: amount, points: 0 }])
-                .select();
+            const { data, error } = await supabaseClient.from('customers').insert([{ phone, name, plate_number: plate, balance: amount, points: 0 }]).select();
             if (error) throw new Error(error.message);
-            if (data && data.length > 0) {
-                allCustomers.unshift(data[0]);
-            }
+            if (data && data.length > 0) allCustomers.unshift(data[0]);
         }
         refreshCustomers();
         showToast('Customer saved / Recharged ' + amount + ' SAR');
@@ -619,22 +580,13 @@ async function addStockItem() {
         let existing = allInventory.find(i => i.name === name);
         if (existing) {
             const newQty = (existing.quantity || 0) + qty;
-            const { error } = await supabaseClient
-                .from('inventory')
-                .update({ quantity: newQty, cost: cost || existing.cost })
-                .eq('id', existing.id);
-            if (error) throw new Error(error.message);
+            await supabaseClient.from('inventory').update({ quantity: newQty, cost: cost || existing.cost }).eq('id', existing.id);
             existing.quantity = newQty;
             if (cost) existing.cost = cost;
         } else {
-            const { data, error } = await supabaseClient
-                .from('inventory')
-                .insert([{ name, quantity: qty, cost }])
-                .select();
+            const { data, error } = await supabaseClient.from('inventory').insert([{ name, quantity: qty, cost }]).select();
             if (error) throw new Error(error.message);
-            if (data && data.length > 0) {
-                allInventory.unshift(data[0]);
-            }
+            if (data && data.length > 0) allInventory.unshift(data[0]);
         }
         refreshInventory();
         showToast('Stock updated: ' + name + ' +' + qty);
@@ -653,14 +605,9 @@ async function clockIn() {
     const staff = document.getElementById('attendanceStaff').value;
     if (!staff) { showToast('Select staff'); return; }
     try {
-        const { data, error } = await supabaseClient
-            .from('attendance')
-            .insert([{ staff_name: staff, type: 'Clock In', time: new Date().toISOString() }])
-            .select();
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: 'Clock In', time: new Date().toISOString() }]).select();
         if (error) throw new Error(error.message);
-        if (data && data.length > 0) {
-            allAttendance.unshift(data[0]);
-        }
+        if (data && data.length > 0) allAttendance.unshift(data[0]);
         refreshAttendance();
         showToast(staff + ' Clocked In');
     } catch (error) {
@@ -672,14 +619,9 @@ async function clockOut() {
     const staff = document.getElementById('attendanceStaff').value;
     if (!staff) { showToast('Select staff'); return; }
     try {
-        const { data, error } = await supabaseClient
-            .from('attendance')
-            .insert([{ staff_name: staff, type: 'Clock Out', time: new Date().toISOString() }])
-            .select();
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: 'Clock Out', time: new Date().toISOString() }]).select();
         if (error) throw new Error(error.message);
-        if (data && data.length > 0) {
-            allAttendance.unshift(data[0]);
-        }
+        if (data && data.length > 0) allAttendance.unshift(data[0]);
         refreshAttendance();
         showToast(staff + ' Clocked Out');
     } catch (error) {
@@ -699,19 +641,14 @@ async function addEmployee() {
     if (allUsers.find(u => u.username === username)) { showToast('Username exists'); return; }
 
     try {
-        const { data, error } = await supabaseClient
-            .from('users')
-            .insert([{
-                username: username,
-                password_hash: CryptoJS.SHA256(password).toString(),
-                role: role,
-                name: username
-            }])
-            .select();
+        const { data, error } = await supabaseClient.from('users').insert([{
+            username: username,
+            password_hash: CryptoJS.SHA256(password).toString(),
+            role: role,
+            name: username
+        }]).select();
         if (error) throw new Error(error.message);
-        if (data && data.length > 0) {
-            allUsers.push(data[0]);
-        }
+        if (data && data.length > 0) allUsers.push(data[0]);
         refreshEmployees();
         updateStaffSelects();
         showToast('Employee added: ' + username);
@@ -725,7 +662,7 @@ async function addEmployee() {
 // ================================================================
 //  服务管理
 // ================================================================
-async function addService() {
+function addService() {
     if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
         showToast('Only manager+ can add services');
         return;
@@ -736,7 +673,6 @@ async function addService() {
 
     config.serviceTypes = config.serviceTypes || [];
     config.serviceTypes.push({ name, price });
-    // 保存配置到localStorage（因为config表结构简单，暂用本地）
     localStorage.setItem('cw_config', JSON.stringify(config));
     refreshServices();
     renderSelects();
@@ -745,7 +681,7 @@ async function addService() {
     document.getElementById('newServicePrice').value = '';
 }
 
-async function removeService(index) {
+function removeService(index) {
     config.serviceTypes.splice(index, 1);
     localStorage.setItem('cw_config', JSON.stringify(config));
     refreshServices();
@@ -778,8 +714,7 @@ async function clearAllOrders() {
     if (!currentUser || currentUser.role !== 'owner') { showToast('Only owner can clear'); return; }
     if (confirm('Delete all orders?')) {
         try {
-            const { error } = await supabaseClient.from('orders').delete().neq('id', '');
-            if (error) throw new Error(error.message);
+            await supabaseClient.from('orders').delete().neq('id', '');
             allOrders = [];
             refreshAll();
             showToast('Orders cleared');
@@ -896,22 +831,17 @@ function initCharts() {
 //  启动
 // ================================================================
 async function init() {
-    // 从localStorage加载配置
     try {
         const savedConfig = JSON.parse(localStorage.getItem('cw_config'));
-        if (savedConfig) {
-            config = { ...config, ...savedConfig };
-        }
+        if (savedConfig) config = { ...config, ...savedConfig };
     } catch(e) {}
     
-    // 设置输入框默认值
     document.getElementById('shopName').value = config.shopName || '';
     document.getElementById('shopTaxId').value = config.shopTaxId || '';
     document.getElementById('vatRateInput').value = config.vatRate || 15;
 
     await loadData();
 
-    // 检查session
     const session = localStorage.getItem('cw_session');
     if (session) {
         try {
@@ -935,7 +865,6 @@ async function init() {
     document.getElementById('loginModal').style.display = 'flex';
 }
 
-// 启动
 init();
 
 console.log('✅ CarWash Pro Cloud Edition loaded');
