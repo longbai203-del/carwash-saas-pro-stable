@@ -26,6 +26,7 @@
         .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(245,158,11,0.4); }
         .btn-outline { background: transparent; color: #0091D5; padding: 10px 20px; border-radius: 14px; border: 2px solid #0091D5; cursor: pointer; }
         .btn-outline:hover { background: #0091D5; color: white; }
+        .btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 8px; }
         .sidebar-link { transition: all 0.2s; border-radius: 14px; margin: 4px 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; color: #64748b; cursor: pointer; }
         .sidebar-link:hover { background: rgba(0,145,213,0.08); color: #0091D5; }
         .nav-item-active { background: rgba(0,145,213,0.12); border-right: 4px solid #0091D5; color: #0284c7; font-weight: 600; }
@@ -42,20 +43,31 @@
         .sync-syncing { background: #fef3c7; color: #d97706; }
         .real-time-badge { background: #22c55e; color: white; font-size: 9px; padding: 2px 8px; border-radius: 20px; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .stock-low { background: #fee2e2; border-right: 4px solid #dc2626; }
-        .stock-normal { background: #f0fdf4; border-right: 4px solid #22c55e; }
-        .inventory-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .inv-tab { padding: 8px 20px; border-radius: 20px; border: 2px solid #e2e8f0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
-        .inv-tab:hover { border-color: #0091D5; }
-        .inv-tab.active { border-color: #0091D5; background: #eff6ff; color: #0091D5; }
-        .stat-card-mini { background: #f8fafc; padding: 12px; border-radius: 12px; text-align: center; }
-        .stat-card-mini .num { font-size: 22px; font-weight: 700; }
-        .stat-card-mini .lbl { font-size: 11px; color: #6b7280; }
+        .level-diamond { color: #8b5cf6; font-weight: bold; }
+        .level-gold { color: #f59e0b; font-weight: bold; }
+        .level-silver { color: #9ca3af; font-weight: bold; }
+        .level-bronze { color: #d97706; font-weight: bold; }
+        .level-normal { color: #6b7280; }
+        .commission-badge { font-size: 10px; padding: 2px 10px; border-radius: 20px; }
+        .commission-paid { background: #dcfce7; color: #16a34a; }
+        .commission-pending { background: #fef3c7; color: #d97706; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #0091D5; box-shadow: 0 0 0 3px rgba(0,145,213,0.1); }
+        .report-section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .report-section h4 { font-weight: 600; color: #1f2937; margin-bottom: 12px; }
+        .customer-level { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
+        .customer-level-diamond { background: #ede9fe; color: #7c3aed; }
+        .customer-level-gold { background: #fef3c7; color: #f59e0b; }
+        .customer-level-silver { background: #f3f4f6; color: #6b7280; }
+        .customer-level-bronze { background: #fef3c7; color: #d97706; }
+        .customer-level-normal { background: #f3f4f6; color: #9ca3af; }
         .modal-content { max-height: 85vh; overflow-y: auto; padding: 4px; }
+        .tab-bar { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+        .tab-btn { padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer; font-size: 13px; transition: all 0.2s; background: transparent; }
+        .tab-btn:hover { background: rgba(255,255,255,0.5); }
+        .tab-btn.active { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -103,9 +115,9 @@
             <a href="#" data-nav="dashboard" class="sidebar-link nav-item-active"><i class="fas fa-chart-line w-5"></i><span>仪表板</span></a>
             <a href="#" data-nav="cashier" class="sidebar-link" id="navCashier"><i class="fas fa-cash-register w-5"></i><span>POS / 收银</span></a>
             <a href="#" data-nav="inventory" class="sidebar-link" id="navInventory"><i class="fas fa-boxes w-5"></i><span>库存</span></a>
-            <a href="#" data-nav="members" class="sidebar-link" id="navCustomers"><i class="fas fa-users w-5"></i><span>顾客</span></a>
+            <a href="#" data-nav="members" class="sidebar-link" id="navCustomers"><i class="fas fa-users w-5"></i><span>客户</span></a>
+            <a href="#" data-nav="reports" class="sidebar-link" id="navReports"><i class="fas fa-chart-bar w-5"></i><span>财务</span></a>
             <a href="#" data-nav="attendance" class="sidebar-link" id="navAttendance"><i class="fas fa-clock w-5"></i><span>考勤</span></a>
-            <a href="#" data-nav="reports" class="sidebar-link" id="navReports"><i class="fas fa-chart-bar w-5"></i><span>报告</span></a>
             <a href="#" data-nav="employees" class="sidebar-link" id="navEmployees"><i class="fas fa-user-tie w-5"></i><span>员工</span></a>
             <a href="#" data-nav="settings" class="sidebar-link" id="navSettings"><i class="fas fa-cog w-5"></i><span>设置</span></a>
         </nav>
@@ -139,16 +151,13 @@
             <!-- ========== DASHBOARD ========== -->
             <div id="moduleDashboard" class="module-content space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div class="glass-card p-4"><p class="text-gray-500 text-sm">总销售额</p><h3 class="stat-number" id="totalSalesValue">0.00 SAR</h3></div>
+                    <div class="glass-card p-4"><p class="text-gray-500 text-sm">今日收入</p><h3 class="stat-number text-green-600" id="todayRevenue">0 SAR</h3></div>
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">今日订单</p><h3 class="stat-number" id="todayOrdersValue">0</h3></div>
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">客户数</p><h3 class="stat-number" id="customersValue">0</h3></div>
-                    <div class="glass-card p-4"><p class="text-gray-500 text-sm">库存</p><h3 class="stat-number" id="inventoryValue">0</h3></div>
+                    <div class="glass-card p-4"><p class="text-gray-500 text-sm">总销售额</p><h3 class="stat-number" id="totalSalesValue">0 SAR</h3></div>
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">员工</p><h3 class="stat-number" id="employeesCount">0</h3></div>
                 </div>
-                <!-- 库存预警 -->
-                <div id="stockAlertBar" class="glass-card p-3 hidden">
-                    <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle"></i> <span id="stockAlertText"></span></p>
-                </div>
+                <div id="stockAlertBar" class="glass-card p-3 hidden"><p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle"></i> <span id="stockAlertText"></span></p></div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">服务统计</h3><canvas id="serviceStatsChart" height="180"></canvas></div>
                     <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">收入趋势</h3><canvas id="monthlyRevenueChart" height="180"></canvas></div>
@@ -186,183 +195,145 @@
                         <span class="font-bold">客户: </span><span id="quickCustomerName">-</span>
                         <span class="mx-2">|</span><span>余额: </span><span id="quickCustomerBalance">0 SAR</span>
                         <span class="mx-2">|</span><span>积分: </span><span id="quickCustomerPoints">0</span>
+                        <span class="mx-2">|</span><span>等级: </span><span id="quickCustomerLevel">普通</span>
                     </div>
                 </div>
                 <div class="glass-card p-5 mt-5"><h3 class="font-bold">今日订单</h3><div id="todayOrdersList" class="max-h-72 overflow-auto mt-2 space-y-2"></div></div>
             </div>
 
-            <!-- ========== INVENTORY（库存进销存） ========== -->
+            <!-- ========== INVENTORY ========== -->
             <div id="moduleInventory" class="module-content hidden">
                 <div class="glass-card p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-blue-600">📦 库存管理</h2>
-                        <div class="flex gap-2">
-                            <button onclick="openStockInModal()" class="btn-success px-4 py-2 rounded-lg text-sm"><i class="fas fa-arrow-down"></i> 入库</button>
-                            <button onclick="openStockOutModal()" class="btn-warning px-4 py-2 rounded-lg text-sm"><i class="fas fa-arrow-up"></i> 出库</button>
-                            <button onclick="openAddProductModal()" class="btn-primary px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus"></i> 新产品</button>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="openStockInModal()" class="btn-success btn-sm"><i class="fas fa-arrow-down"></i> 入库</button>
+                            <button onclick="openStockOutModal()" class="btn-warning btn-sm"><i class="fas fa-arrow-up"></i> 出库</button>
+                            <button onclick="openAddProductModal()" class="btn-primary btn-sm"><i class="fas fa-plus"></i> 新产品</button>
                         </div>
                     </div>
-
-                    <!-- 库存统计 -->
                     <div class="grid grid-cols-4 gap-3 mb-4">
                         <div class="stat-card-mini"><div class="num text-blue-600" id="invTotalItems">0</div><div class="lbl">总品类</div></div>
                         <div class="stat-card-mini"><div class="num text-green-600" id="invTotalQty">0</div><div class="lbl">总数量</div></div>
                         <div class="stat-card-mini"><div class="num text-red-600" id="invLowItems">0</div><div class="lbl">低库存</div></div>
                         <div class="stat-card-mini"><div class="num text-purple-600" id="invTotalValue">0 SAR</div><div class="lbl">总价值</div></div>
                     </div>
-
-                    <!-- 筛选 -->
                     <div class="flex gap-3 mb-4 flex-wrap">
-                        <select id="invCategoryFilter" class="p-2 border rounded-lg text-sm">
-                            <option value="all">全部分类</option>
-                            <option value="耗材">耗材</option>
-                            <option value="工具">工具</option>
-                            <option value="其他">其他</option>
-                        </select>
+                        <select id="invCategoryFilter" class="p-2 border rounded-lg text-sm"><option value="all">全部分类</option><option value="耗材">耗材</option><option value="工具">工具</option><option value="其他">其他</option></select>
                         <input id="invSearch" placeholder="搜索产品..." class="p-2 border rounded-lg text-sm flex-1 min-w-[150px]">
-                        <button onclick="applyInvFilter()" class="btn-primary px-4 py-2 rounded-lg text-sm">筛选</button>
-                        <button onclick="resetInvFilter()" class="btn-outline px-4 py-2 rounded-lg text-sm">重置</button>
+                        <button onclick="applyInvFilter()" class="btn-primary btn-sm">筛选</button>
+                        <button onclick="resetInvFilter()" class="btn-outline btn-sm">重置</button>
                     </div>
-
-                    <!-- 库存列表 -->
                     <div id="inventoryList" class="space-y-2 max-h-96 overflow-auto"></div>
                 </div>
-
-                <!-- 出入库记录 -->
                 <div class="glass-card p-6 mt-4">
                     <h3 class="font-bold text-gray-800 mb-3">📋 出入库记录</h3>
-                    <div class="flex gap-3 mb-3">
-                        <select id="stockLogFilter" class="p-2 border rounded-lg text-sm">
-                            <option value="all">全部</option>
-                            <option value="in">入库</option>
-                            <option value="out">出库</option>
-                        </select>
-                        <button onclick="refreshStockLogs()" class="btn-primary px-4 py-2 rounded-lg text-sm">刷新</button>
-                    </div>
+                    <select id="stockLogFilter" class="p-2 border rounded-lg text-sm mb-3" onchange="refreshStockLogs()"><option value="all">全部</option><option value="in">入库</option><option value="out">出库</option></select>
                     <div id="stockLogList" class="space-y-1 max-h-48 overflow-auto text-sm"></div>
                 </div>
             </div>
 
-            <!-- ========== CUSTOMERS ========== -->
-            <div id="moduleMembers" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">👥 客户管理</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><input id="memberPhone" placeholder="电话" class="p-3 border rounded-xl"><input id="memberName" placeholder="姓名" class="p-3 border rounded-xl"><input id="memberPlate" placeholder="车牌" class="p-3 border rounded-xl"><input id="rechargeAmount" placeholder="充值金额" class="p-3 border rounded-xl" type="number"><button onclick="addCustomer()" class="btn-success py-3 rounded-xl font-bold col-span-2">添加 / 充值</button></div><div id="membersList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div></div></div>
+            <!-- ========== CUSTOMERS（CRM增强） ========== -->
+            <div id="moduleMembers" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">👥 客户管理</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                        <input id="memberPhone" placeholder="电话" class="p-3 border rounded-xl">
+                        <input id="memberName" placeholder="姓名" class="p-3 border rounded-xl">
+                        <input id="memberPlate" placeholder="车牌" class="p-3 border rounded-xl">
+                        <input id="rechargeAmount" placeholder="充值金额" class="p-3 border rounded-xl" type="number">
+                        <button onclick="addCustomer()" class="btn-success py-3 rounded-xl font-bold">添加 / 充值</button>
+                    </div>
+                    <div class="flex gap-3 mt-3 flex-wrap">
+                        <input id="customerSearch" placeholder="搜索客户..." class="p-2 border rounded-lg text-sm flex-1 min-w-[150px]">
+                        <select id="customerLevelFilter" class="p-2 border rounded-lg text-sm"><option value="all">全部等级</option><option value="钻石">钻石</option><option value="黄金">黄金</option><option value="白银">白银</option><option value="青铜">青铜</option><option value="普通">普通</option></select>
+                        <button onclick="applyCustomerFilter()" class="btn-primary btn-sm">筛选</button>
+                        <button onclick="resetCustomerFilter()" class="btn-outline btn-sm">重置</button>
+                    </div>
+                    <div id="membersList" class="mt-5 space-y-2 max-h-96 overflow-auto"></div>
+                </div>
+            </div>
+
+            <!-- ========== REPORTS（财务日报 + 提成） ========== -->
+            <div id="moduleReports" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">📊 财务管理</h2>
+                    
+                    <!-- Tab切换 -->
+                    <div class="tab-bar">
+                        <button class="tab-btn active" data-tab="daily" onclick="switchReportTab('daily')">📅 日报</button>
+                        <button class="tab-btn" data-tab="commission" onclick="switchReportTab('commission')">💰 员工提成</button>
+                        <button class="tab-btn" data-tab="customers" onclick="switchReportTab('customers')">🏆 客户排行</button>
+                    </div>
+
+                    <!-- 日报 -->
+                    <div id="reportTabDaily" class="report-section">
+                        <div class="grid grid-cols-4 gap-3 mb-4">
+                            <div class="stat-card-mini"><div class="num text-blue-600" id="dailyOrders">0</div><div class="lbl">今日订单</div></div>
+                            <div class="stat-card-mini"><div class="num text-green-600" id="dailyRevenue">0 SAR</div><div class="lbl">今日收入</div></div>
+                            <div class="stat-card-mini"><div class="num text-purple-600" id="dailyVat">0 SAR</div><div class="lbl">增值税</div></div>
+                            <div class="stat-card-mini"><div class="num text-orange-600" id="dailyProfit">0 SAR</div><div class="lbl">净利润</div></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-3 mb-4">
+                            <div class="stat-card-mini"><div class="num text-sm">💰 现金: <span id="dailyCash" class="font-bold">0</span></div></div>
+                            <div class="stat-card-mini"><div class="num text-sm">💳 银行卡: <span id="dailyCard" class="font-bold">0</span></div></div>
+                            <div class="stat-card-mini"><div class="num text-sm">🏦 mada: <span id="dailyMada" class="font-bold">0</span></div></div>
+                            <div class="stat-card-mini"><div class="num text-sm">📱 Apple Pay: <span id="dailyApple" class="font-bold">0</span></div></div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <input type="date" id="reportDatePicker" onchange="loadDailyReport()">
+                            <button onclick="loadDailyReport()" class="btn-primary btn-sm">查看</button>
+                            <button onclick="exportDailyReport()" class="bg-green-600 text-white btn-sm">📊 导出日报</button>
+                        </div>
+                    </div>
+
+                    <!-- 员工提成 -->
+                    <div id="reportTabCommission" class="report-section hidden">
+                        <div class="flex gap-3 mb-3 flex-wrap">
+                            <select id="commissionStaffFilter" class="p-2 border rounded-lg text-sm"></select>
+                            <select id="commissionStatusFilter" class="p-2 border rounded-lg text-sm"><option value="all">全部状态</option><option value="待结算">待结算</option><option value="已结算">已结算</option></select>
+                            <input type="date" id="commissionDateStart" class="p-2 border rounded-lg text-sm">
+                            <span class="text-sm self-center">至</span>
+                            <input type="date" id="commissionDateEnd" class="p-2 border rounded-lg text-sm">
+                            <button onclick="loadCommission()" class="btn-primary btn-sm">查询</button>
+                            <button onclick="settleCommission()" class="btn-success btn-sm">✅ 结算选中</button>
+                        </div>
+                        <div id="commissionList" class="space-y-2 max-h-64 overflow-auto"></div>
+                        <div class="mt-3 text-sm text-gray-500">总计提成: <span id="commissionTotal" class="font-bold text-green-600">0 SAR</span></div>
+                    </div>
+
+                    <!-- 客户排行 -->
+                    <div id="reportTabCustomers" class="report-section hidden">
+                        <div class="flex gap-3 mb-3">
+                            <select id="customerRankFilter" class="p-2 border rounded-lg text-sm"><option value="points">积分排行</option><option value="spent">消费排行</option><option value="visits">到店次数</option></select>
+                            <button onclick="loadCustomerRank()" class="btn-primary btn-sm">刷新</button>
+                        </div>
+                        <div id="customerRankList" class="space-y-2 max-h-64 overflow-auto"></div>
+                    </div>
+                </div>
+            </div>
 
             <!-- ========== ATTENDANCE ========== -->
             <div id="moduleAttendance" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">⏰ 考勤管理</h2><select id="attendanceStaff" class="w-full p-3 border rounded-xl mt-3"></select><div class="flex gap-3 mt-3"><button onclick="clockIn()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl">上班打卡</button><button onclick="clockOut()" class="bg-amber-500 text-white px-5 py-2 rounded-xl">下班打卡</button></div><div id="attendanceList" class="mt-5 space-y-1 max-h-72 overflow-auto"></div></div></div>
-
-            <!-- ========== REPORTS ========== -->
-            <div id="moduleReports" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">📊 财务报表</h2><div class="grid grid-cols-4 gap-3 mb-4"><div class="bg-gray-50 p-3 rounded text-center"><div class="text-lg font-bold text-blue-600" id="reportTotalOrders">0</div><div class="text-xs text-gray-500">总订单</div></div><div class="bg-gray-50 p-3 rounded text-center"><div class="text-lg font-bold text-green-600" id="reportTotalRevenue">0 SAR</div><div class="text-xs text-gray-500">总收入</div></div><div class="bg-gray-50 p-3 rounded text-center"><div class="text-lg font-bold text-purple-600" id="reportAvgOrder">0 SAR</div><div class="text-xs text-gray-500">平均订单</div></div><div class="bg-gray-50 p-3 rounded text-center"><div class="text-lg font-bold text-orange-600" id="reportTotalCustomers">0</div><div class="text-xs text-gray-500">总客户</div></div></div><div class="flex gap-2 flex-wrap mb-3"><button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">📊 Excel</button><button onclick="exportPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm">📄 PDF</button></div><div id="reportTableBody" class="text-sm max-h-72 overflow-auto space-y-1"></div></div></div>
 
             <!-- ========== EMPLOYEES ========== -->
             <div id="moduleEmployees" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">👔 员工管理</h2><div id="employeesList" class="mt-3 space-y-2 max-h-96 overflow-auto"></div></div></div>
 
             <!-- ========== SETTINGS ========== -->
-            <div id="moduleSettings" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">⚙️ 系统设置</h2><div class="space-y-3 mt-4"><div><label class="text-sm font-medium">店铺名称</label><input id="shopName" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">税号</label><input id="shopTaxId" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">增值税率 (%)</label><input id="vatRateInput" class="w-full p-2 border rounded" type="number"></div><button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full">保存设置</button></div></div></div>
+            <div id="moduleSettings" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">⚙️ 系统设置</h2><div class="space-y-3 mt-4"><div><label class="text-sm font-medium">店铺名称</label><input id="shopName" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">税号</label><input id="shopTaxId" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">增值税率 (%)</label><input id="vatRateInput" class="w-full p-2 border rounded" type="number"></div><div><label class="text-sm font-medium">提成比例 (%)</label><input id="commissionRate" class="w-full p-2 border rounded" type="number" value="5"></div><button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full">保存设置</button></div></div></div>
 
         </main>
     </div>
 </div>
 
 <!-- ==================== 模态框：入库 ==================== -->
-<div id="stockInModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-        <h3 class="text-xl font-bold text-blue-600 mb-4">📥 入库</h3>
-        <div class="form-group">
-            <label>产品</label>
-            <select id="stockInProduct" class="w-full p-2 border rounded"></select>
-        </div>
-        <div class="form-group">
-            <label>数量</label>
-            <input id="stockInQty" type="number" min="1" class="w-full p-2 border rounded" placeholder="数量">
-        </div>
-        <div class="form-group">
-            <label>单价 (SAR)</label>
-            <input id="stockInPrice" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00">
-        </div>
-        <div class="form-group">
-            <label>供应商</label>
-            <input id="stockInSupplier" class="w-full p-2 border rounded" placeholder="供应商名称">
-        </div>
-        <div class="form-group">
-            <label>备注</label>
-            <input id="stockInNote" class="w-full p-2 border rounded" placeholder="备注">
-        </div>
-        <div class="flex gap-3 mt-4">
-            <button onclick="submitStockIn()" class="btn-success flex-1 py-2 rounded-lg">确认入库</button>
-            <button onclick="closeModal('stockInModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button>
-        </div>
-    </div>
-</div>
+<div id="stockInModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-blue-600 mb-4">📥 入库</h3><div class="form-group"><label>产品</label><select id="stockInProduct" class="w-full p-2 border rounded"></select></div><div class="form-group"><label>数量</label><input id="stockInQty" type="number" min="1" class="w-full p-2 border rounded"></div><div class="form-group"><label>单价 (SAR)</label><input id="stockInPrice" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div><div class="form-group"><label>供应商</label><input id="stockInSupplier" class="w-full p-2 border rounded" placeholder="供应商名称"></div><div class="form-group"><label>备注</label><input id="stockInNote" class="w-full p-2 border rounded" placeholder="备注"></div><div class="flex gap-3 mt-4"><button onclick="submitStockIn()" class="btn-success flex-1 py-2 rounded-lg">确认入库</button><button onclick="closeModal('stockInModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
 
 <!-- ==================== 模态框：出库 ==================== -->
-<div id="stockOutModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-        <h3 class="text-xl font-bold text-amber-600 mb-4">📤 出库</h3>
-        <div class="form-group">
-            <label>产品</label>
-            <select id="stockOutProduct" class="w-full p-2 border rounded"></select>
-        </div>
-        <div class="form-group">
-            <label>数量</label>
-            <input id="stockOutQty" type="number" min="1" class="w-full p-2 border rounded" placeholder="数量">
-        </div>
-        <div class="form-group">
-            <label>出库原因</label>
-            <select id="stockOutReason" class="w-full p-2 border rounded">
-                <option value="日常消耗">日常消耗</option>
-                <option value="客户使用">客户使用</option>
-                <option value="过期报废">过期报废</option>
-                <option value="其他">其他</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>备注</label>
-            <input id="stockOutNote" class="w-full p-2 border rounded" placeholder="备注">
-        </div>
-        <div class="flex gap-3 mt-4">
-            <button onclick="submitStockOut()" class="btn-warning flex-1 py-2 rounded-lg">确认出库</button>
-            <button onclick="closeModal('stockOutModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button>
-        </div>
-    </div>
-</div>
+<div id="stockOutModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-amber-600 mb-4">📤 出库</h3><div class="form-group"><label>产品</label><select id="stockOutProduct" class="w-full p-2 border rounded"></select></div><div class="form-group"><label>数量</label><input id="stockOutQty" type="number" min="1" class="w-full p-2 border rounded"></div><div class="form-group"><label>出库原因</label><select id="stockOutReason" class="w-full p-2 border rounded"><option value="日常消耗">日常消耗</option><option value="客户使用">客户使用</option><option value="过期报废">过期报废</option><option value="其他">其他</option></select></div><div class="form-group"><label>备注</label><input id="stockOutNote" class="w-full p-2 border rounded" placeholder="备注"></div><div class="flex gap-3 mt-4"><button onclick="submitStockOut()" class="btn-warning flex-1 py-2 rounded-lg">确认出库</button><button onclick="closeModal('stockOutModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
 
 <!-- ==================== 模态框：新产品 ==================== -->
-<div id="addProductModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-        <h3 class="text-xl font-bold text-blue-600 mb-4">➕ 新产品</h3>
-        <div class="form-group">
-            <label>产品名称</label>
-            <input id="newProductName" class="w-full p-2 border rounded" placeholder="产品名称">
-        </div>
-        <div class="form-group">
-            <label>分类</label>
-            <select id="newProductCategory" class="w-full p-2 border rounded">
-                <option value="耗材">耗材</option>
-                <option value="工具">工具</option>
-                <option value="其他">其他</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>单位</label>
-            <input id="newProductUnit" class="w-full p-2 border rounded" placeholder="如：瓶、条、个" value="瓶">
-        </div>
-        <div class="form-group">
-            <label>初始数量</label>
-            <input id="newProductQty" type="number" min="0" class="w-full p-2 border rounded" placeholder="0">
-        </div>
-        <div class="form-group">
-            <label>成本价 (SAR)</label>
-            <input id="newProductCost" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00">
-        </div>
-        <div class="form-group">
-            <label>最低库存预警</label>
-            <input id="newProductMinQty" type="number" min="1" class="w-full p-2 border rounded" placeholder="5">
-        </div>
-        <div class="flex gap-3 mt-4">
-            <button onclick="submitNewProduct()" class="btn-success flex-1 py-2 rounded-lg">添加产品</button>
-            <button onclick="closeModal('addProductModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button>
-        </div>
-    </div>
-</div>
+<div id="addProductModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-blue-600 mb-4">➕ 新产品</h3><div class="form-group"><label>产品名称</label><input id="newProductName" class="w-full p-2 border rounded"></div><div class="form-group"><label>分类</label><select id="newProductCategory" class="w-full p-2 border rounded"><option value="耗材">耗材</option><option value="工具">工具</option><option value="其他">其他</option></select></div><div class="form-group"><label>单位</label><input id="newProductUnit" class="w-full p-2 border rounded" placeholder="如：瓶、条、个" value="瓶"></div><div class="form-group"><label>初始数量</label><input id="newProductQty" type="number" min="0" class="w-full p-2 border rounded" placeholder="0"></div><div class="form-group"><label>成本价 (SAR)</label><input id="newProductCost" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div><div class="form-group"><label>最低库存预警</label><input id="newProductMinQty" type="number" min="1" class="w-full p-2 border rounded" placeholder="5"></div><div class="flex gap-3 mt-4"><button onclick="submitNewProduct()" class="btn-success flex-1 py-2 rounded-lg">添加产品</button><button onclick="closeModal('addProductModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
 
 <script>
 // ================================================================
@@ -384,10 +355,13 @@ let allInventory = [];
 let allAttendance = [];
 let allStockIn = [];
 let allStockOut = [];
+let allDailyReports = [];
+let allCommissions = [];
 let config = {
     vatRate: 15,
     shopName: 'Car Wash Pro',
     shopTaxId: '310245678900003',
+    commissionRate: 5,
     vehicleTypes: [
         { name: '小型车', price: 30 },
         { name: '中型车', price: 45 },
@@ -406,7 +380,8 @@ let serviceChart = null;
 let revenueChart = null;
 let realtimeSubscription = null;
 let invFilter = { category: 'all', search: '' };
-let stockLogFilter = 'all';
+let customerFilter = { search: '', level: 'all' };
+let currentReportTab = 'daily';
 
 const ROLE_PERMISSIONS = {
     owner: { label: '老板', icon: '👑', level: 100, cashier: true, inventory: true, customers: true, attendance: true, reports: true, employees: true, settings: true },
@@ -421,14 +396,16 @@ const ROLE_PERMISSIONS = {
 async function loadData() {
     try {
         updateSyncStatus('syncing');
-        const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, stockInRes, stockOutRes] = await Promise.all([
+        const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, stockInRes, stockOutRes, dailyRes, commissionRes] = await Promise.all([
             supabaseClient.from('users').select('*').order('created_at', { ascending: true }),
             supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
             supabaseClient.from('customers').select('*').order('created_at', { ascending: false }),
             supabaseClient.from('inventory').select('*'),
             supabaseClient.from('attendance').select('*').order('time', { ascending: false }),
             supabaseClient.from('stock_in').select('*').order('created_at', { ascending: false }).limit(50),
-            supabaseClient.from('stock_out').select('*').order('created_at', { ascending: false }).limit(50)
+            supabaseClient.from('stock_out').select('*').order('created_at', { ascending: false }).limit(50),
+            supabaseClient.from('daily_report').select('*').order('report_date', { ascending: false }).limit(30),
+            supabaseClient.from('employee_commission').select('*').order('created_at', { ascending: false }).limit(100)
         ]);
 
         if (usersRes.error) throw new Error(usersRes.error.message);
@@ -438,6 +415,8 @@ async function loadData() {
         if (attendanceRes.error) throw new Error(attendanceRes.error.message);
         if (stockInRes.error) throw new Error(stockInRes.error.message);
         if (stockOutRes.error) throw new Error(stockOutRes.error.message);
+        if (dailyRes.error) throw new Error(dailyRes.error.message);
+        if (commissionRes.error) throw new Error(commissionRes.error.message);
 
         allUsers = usersRes.data || [];
         allOrders = ordersRes.data || [];
@@ -446,6 +425,8 @@ async function loadData() {
         allAttendance = attendanceRes.data || [];
         allStockIn = stockInRes.data || [];
         allStockOut = stockOutRes.data || [];
+        allDailyReports = dailyRes.data || [];
+        allCommissions = commissionRes.data || [];
 
         try {
             const savedConfig = JSON.parse(localStorage.getItem('cw_config'));
@@ -485,65 +466,43 @@ function updateSyncStatus(status, message) {
 //  实时同步
 // ================================================================
 function setupRealtime() {
-    if (realtimeSubscription) {
-        realtimeSubscription.unsubscribe();
-        realtimeSubscription = null;
-    }
-
+    if (realtimeSubscription) { realtimeSubscription.unsubscribe(); realtimeSubscription = null; }
     realtimeSubscription = supabaseClient
         .channel('db-realtime')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-            const newOrder = payload.new;
-            allOrders.unshift(newOrder);
+            allOrders.unshift(payload.new);
             refreshAll();
-            showToast('🔔 新订单: ' + (newOrder.plate_number || '未知') + ' ' + newOrder.total + ' SAR');
+            showToast('🔔 新订单: ' + (payload.new.plate_number || '未知') + ' ' + payload.new.total + ' SAR');
         })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventory' }, (payload) => {
-            allInventory.push(payload.new);
-            refreshAll();
-        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventory' }, (payload) => { allInventory.push(payload.new); refreshAll(); })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, (payload) => {
             const idx = allInventory.findIndex(i => i.id === payload.new.id);
             if (idx !== -1) allInventory[idx] = payload.new;
             refreshAll();
         })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_in' }, (payload) => {
-            allStockIn.unshift(payload.new);
-            refreshAll();
-            showToast('📥 入库: ' + payload.new.quantity + ' 件');
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_out' }, (payload) => {
-            allStockOut.unshift(payload.new);
-            refreshAll();
-            showToast('📤 出库: ' + payload.new.quantity + ' 件');
-        })
-        .subscribe((status) => {
-            if (status === 'SUBSCRIBED') console.log('✅ Realtime connected');
-        });
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_in' }, (payload) => { allStockIn.unshift(payload.new); refreshAll(); })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_out' }, (payload) => { allStockOut.unshift(payload.new); refreshAll(); })
+        .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected'); });
 }
 
 // ================================================================
-//  登录
+//  登录/退出
 // ================================================================
 async function authLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
     if (!username || !password) { showToast('请输入用户名和密码'); return; }
-
     try {
         await loadData();
         const user = allUsers.find(u => u.username === username);
         if (!user) { showToast('用户不存在'); return; }
-
         const hash = CryptoJS.SHA256(password).toString();
         if (user.password_hash !== hash) { showToast('密码错误'); return; }
-
         currentUser = user;
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById('appContainer').classList.remove('hidden');
         document.getElementById('currentUserSpan').textContent = user.name || user.username;
         document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
-
         const permissions = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.employee;
         document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
         document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
@@ -553,7 +512,6 @@ async function authLogin() {
         document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
         document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
         document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[user.role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[user.role]?.label || user.role);
-
         setupRealtime();
         refreshAll();
         switchTab('dashboard');
@@ -579,7 +537,6 @@ function logout() {
 function switchTab(tab) {
     const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
     if (!permissions[tab]) { showToast('⚠️ 您没有权限访问此页面'); return; }
-
     document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('module' + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (target) target.classList.remove('hidden');
@@ -587,25 +544,20 @@ function switchTab(tab) {
         el.classList.remove('nav-item-active');
         if (el.dataset.nav === tab) el.classList.add('nav-item-active');
     });
-    
-    const titles = { dashboard: '仪表板', cashier: '收银台', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务报表', employees: '员工管理', settings: '系统设置' };
+    const titles = { dashboard: '仪表板', cashier: '收银台', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工管理', settings: '系统设置' };
     document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
-    
     if (tab === 'dashboard') refreshDashboard();
     if (tab === 'cashier') { renderSelects(); updatePrice(); refreshOrders(); }
     if (tab === 'inventory') refreshInventory();
-    if (tab === 'members') refreshCustomers();
+    if (tab === 'members') { refreshCustomers(); loadCustomerRank(); }
     if (tab === 'attendance') refreshAttendance();
     if (tab === 'employees') refreshEmployees();
-    if (tab === 'reports') refreshReports();
+    if (tab === 'reports') { loadDailyReport(); loadCommission(); loadCustomerRank(); }
     if (tab === 'settings') loadSettings();
 }
 
 document.querySelectorAll('[data-nav]').forEach(el => {
-    el.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchTab(el.dataset.nav);
-    });
+    el.addEventListener('click', (e) => { e.preventDefault(); switchTab(el.dataset.nav); });
 });
 
 // ================================================================
@@ -633,10 +585,12 @@ function refreshDashboard() {
     const total = orders.reduce((s, o) => s + (o.total || 0), 0);
     const today = new Date().toISOString().split('T')[0];
     const todayOrders = orders.filter(o => (o.date || '').startsWith(today));
-    document.getElementById('totalSalesValue').textContent = total.toFixed(2) + ' SAR';
+    const todayRevenue = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
+    
+    document.getElementById('todayRevenue').textContent = todayRevenue.toFixed(2) + ' SAR';
     document.getElementById('todayOrdersValue').textContent = todayOrders.length;
     document.getElementById('customersValue').textContent = allCustomers.length;
-    document.getElementById('inventoryValue').textContent = allInventory.reduce((s, i) => s + (i.quantity || 0), 0);
+    document.getElementById('totalSalesValue').textContent = total.toFixed(2) + ' SAR';
     document.getElementById('employeesCount').textContent = allUsers.filter(u => u.role !== 'owner').length;
 
     // 库存预警
@@ -675,46 +629,48 @@ function refreshOrders() {
 }
 
 function refreshCustomers() {
+    let customers = allCustomers;
+    if (customerFilter.search) {
+        customers = customers.filter(c => c.name.includes(customerFilter.search) || c.phone.includes(customerFilter.search) || c.plate_number.includes(customerFilter.search));
+    }
+    if (customerFilter.level !== 'all') {
+        customers = customers.filter(c => c.level === customerFilter.level);
+    }
     const list = document.getElementById('membersList');
-    list.innerHTML = allCustomers.map(c =>
-        `<div class="flex justify-between bg-gray-50 p-3 rounded-xl"><span><strong>${c.name || 'Unknown'}</strong><br><small>${c.phone || ''} | ${c.plate_number || ''}</small></span><span>${c.balance || 0} SAR</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">暂无客户</div>';
+    list.innerHTML = customers.map(c => {
+        const levelClass = 'customer-level customer-level-' + (c.level || 'normal').toLowerCase();
+        return `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+            <div>
+                <strong>${c.name || 'Unknown'}</strong>
+                <span class="${levelClass}">${c.level || '普通'}</span>
+                <br><small>${c.phone || ''} | ${c.plate_number || ''}</small>
+            </div>
+            <div class="text-right">
+                <div>余额: <span class="font-bold text-green-600">${(c.balance || 0).toFixed(2)} SAR</span></div>
+                <div class="text-sm">积分: ${c.points || 0} | 到店: ${c.visit_count || 0}次</div>
+            </div>
+        </div>`;
+    }).join('') || '<div class="text-center text-gray-400">暂无客户</div>';
 }
 
 function refreshInventory() {
-    // 统计
     document.getElementById('invTotalItems').textContent = allInventory.length;
     document.getElementById('invTotalQty').textContent = allInventory.reduce((s, i) => s + (i.quantity || 0), 0);
     document.getElementById('invLowItems').textContent = allInventory.filter(i => (i.quantity || 0) <= (i.min_qty || 5)).length;
     document.getElementById('invTotalValue').textContent = allInventory.reduce((s, i) => s + ((i.quantity || 0) * (i.cost || 0)), 0).toFixed(2) + ' SAR';
 
-    // 筛选
     let items = allInventory;
-    if (invFilter.category !== 'all') {
-        items = items.filter(i => i.category === invFilter.category);
-    }
-    if (invFilter.search) {
-        items = items.filter(i => i.name.includes(invFilter.search));
-    }
+    if (invFilter.category !== 'all') items = items.filter(i => i.category === invFilter.category);
+    if (invFilter.search) items = items.filter(i => i.name.includes(invFilter.search));
 
     const list = document.getElementById('inventoryList');
     list.innerHTML = items.map(i => {
         const isLow = (i.quantity || 0) <= (i.min_qty || 5);
         return `<div class="${isLow ? 'stock-low' : 'stock-normal'} flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border">
-            <div>
-                <span class="font-medium">${i.name}</span>
-                <span class="text-xs text-gray-400 ml-2">${i.category || '其他'} · ${i.unit || '个'}</span>
-                ${isLow ? '<span class="text-xs text-red-500 ml-2">⚠️ 低库存</span>' : ''}
-            </div>
-            <div class="flex items-center gap-4">
-                <span class="font-bold ${isLow ? 'text-red-600' : 'text-green-600'}">${i.quantity || 0}</span>
-                <span class="text-sm text-gray-400">${(i.cost || 0).toFixed(2)} SAR</span>
-                <span class="text-xs text-gray-400">预警: ${i.min_qty || 5}</span>
-            </div>
+            <div><span class="font-medium">${i.name}</span><span class="text-xs text-gray-400 ml-2">${i.category || '其他'} · ${i.unit || '个'}</span>${isLow ? '<span class="text-xs text-red-500 ml-2">⚠️ 低库存</span>' : ''}</div>
+            <div class="flex items-center gap-4"><span class="font-bold ${isLow ? 'text-red-600' : 'text-green-600'}">${i.quantity || 0}</span><span class="text-sm text-gray-400">${(i.cost || 0).toFixed(2)} SAR</span><span class="text-xs text-gray-400">预警: ${i.min_qty || 5}</span></div>
         </div>`;
     }).join('') || '<div class="text-center text-gray-400">暂无库存</div>';
-
-    // 更新出入库记录
     refreshStockLogs();
 }
 
@@ -723,20 +679,15 @@ function refreshStockLogs() {
     allStockIn.forEach(s => logs.push({ type: 'in', ...s }));
     allStockOut.forEach(s => logs.push({ type: 'out', ...s }));
     logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-    if (stockLogFilter === 'in') logs = logs.filter(l => l.type === 'in');
-    if (stockLogFilter === 'out') logs = logs.filter(l => l.type === 'out');
-
+    const filter = document.getElementById('stockLogFilter')?.value || 'all';
+    if (filter === 'in') logs = logs.filter(l => l.type === 'in');
+    if (filter === 'out') logs = logs.filter(l => l.type === 'out');
     const list = document.getElementById('stockLogList');
     list.innerHTML = logs.slice(0, 30).map(l => {
         const icon = l.type === 'in' ? '📥' : '📤';
         const color = l.type === 'in' ? 'text-green-600' : 'text-amber-600';
         const product = allInventory.find(i => i.id === l.inventory_id);
-        return `<div class="flex justify-between p-2 border-b">
-            <span>${icon} <span class="${color}">${l.type === 'in' ? '入库' : '出库'}</span></span>
-            <span>${product?.name || '未知'} × ${l.quantity}</span>
-            <span class="text-gray-400 text-xs">${l.created_at ? new Date(l.created_at).toLocaleString() : ''}</span>
-        </div>`;
+        return `<div class="flex justify-between p-2 border-b"><span>${icon} <span class="${color}">${l.type === 'in' ? '入库' : '出库'}</span></span><span>${product?.name || '未知'} × ${l.quantity}</span><span class="text-gray-400 text-xs">${l.created_at ? new Date(l.created_at).toLocaleString() : ''}</span></div>`;
     }).join('') || '<div class="text-center text-gray-400">暂无记录</div>';
 }
 
@@ -755,20 +706,6 @@ function refreshEmployees() {
     ).join('');
 }
 
-function refreshReports() {
-    const orders = getFilteredOrders();
-    const total = orders.reduce((s, o) => s + (o.total || 0), 0);
-    document.getElementById('reportTotalOrders').textContent = orders.length;
-    document.getElementById('reportTotalRevenue').textContent = total.toFixed(2) + ' SAR';
-    document.getElementById('reportAvgOrder').textContent = orders.length > 0 ? (total / orders.length).toFixed(2) + ' SAR' : '0 SAR';
-    document.getElementById('reportTotalCustomers').textContent = allCustomers.length;
-
-    const table = document.getElementById('reportTableBody');
-    table.innerHTML = orders.slice(0, 30).map(o =>
-        `<div class="flex justify-between p-1 border-b text-sm"><span>${o.date || ''}</span><span>${o.plate_number || 'N/A'}</span><span>${o.total || 0} SAR</span></div>`
-    ).join('') || '<div class="text-center text-gray-400">暂无数据</div>';
-}
-
 function refreshAll() {
     refreshDashboard();
     refreshOrders();
@@ -776,10 +713,10 @@ function refreshAll() {
     refreshInventory();
     refreshAttendance();
     refreshEmployees();
-    refreshReports();
     renderSelects();
     updateStaffSelects();
     updateInventorySelects();
+    updateCommissionStaffSelect();
 }
 
 // ================================================================
@@ -823,6 +760,16 @@ function updateInventorySelects() {
     });
 }
 
+function updateCommissionStaffSelect() {
+    const sel = document.getElementById('commissionStaffFilter');
+    if (sel) {
+        sel.innerHTML = '<option value="all">全部员工</option>' + 
+            allUsers.filter(u => u.role !== 'owner').map(u =>
+                `<option value="${u.name || u.username}">${u.name || u.username}</option>`
+            ).join('');
+    }
+}
+
 function updatePrice() {
     const vehicle = parseFloat(document.getElementById('vehicleSelect').value) || 0;
     const service = parseFloat(document.getElementById('serviceSelect').value) || 0;
@@ -848,6 +795,7 @@ document.getElementById('plateInput')?.addEventListener('blur', function() {
             document.getElementById('quickCustomerName').textContent = customer.name || '未知';
             document.getElementById('quickCustomerBalance').textContent = (customer.balance || 0).toFixed(2) + ' SAR';
             document.getElementById('quickCustomerPoints').textContent = customer.points || 0;
+            document.getElementById('quickCustomerLevel').textContent = customer.level || '普通';
         } else {
             info.classList.add('hidden');
         }
@@ -857,28 +805,45 @@ document.getElementById('plateInput')?.addEventListener('blur', function() {
 async function saveOrder() {
     if (!currentUser) { showToast('请先登录'); return; }
     if (!ROLE_PERMISSIONS[currentUser.role]?.cashier) { showToast('您没有收银权限'); return; }
-
     const plate = document.getElementById('plateInput').value.trim().toUpperCase();
     if (!plate) { showToast('请输入车牌号'); return; }
     const total = parseFloat(document.getElementById('totalSpan').textContent) || 0;
     if (total <= 0) { showToast('金额必须大于0'); return; }
 
     try {
+        const staffName = document.getElementById('staffSelect').value || currentUser.name || currentUser.username;
         const orderData = {
             plate_number: plate,
             total: total,
             amount: parseFloat(document.getElementById('subtotalSpan').textContent) || 0,
             vat: parseFloat(document.getElementById('vatSpan').textContent) || 0,
             payment_method: document.getElementById('paymentSelect').value,
-            staff_name: document.getElementById('staffSelect').value || currentUser.name || currentUser.username,
+            staff_name: staffName,
             service_name: document.getElementById('serviceSelect').selectedOptions[0]?.text || '无',
             date: new Date().toISOString().split('T')[0]
         };
         const { data, error } = await supabaseClient.from('orders').insert([orderData]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allOrders.unshift(data[0]);
+        
+        // 自动生成提成
+        const commissionRate = config.commissionRate || 5;
+        const commissionAmount = total * commissionRate / 100;
+        if (commissionAmount > 0 && staffName) {
+            await supabaseClient.from('employee_commission').insert([{
+                employee_name: staffName,
+                order_id: data[0].id,
+                service_name: orderData.service_name,
+                amount: total,
+                commission_rate: commissionRate,
+                commission_amount: commissionAmount,
+                date: orderData.date,
+                status: '待结算'
+            }]);
+        }
+        
         refreshAll();
-        showToast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR');
+        showToast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR (提成: ' + commissionAmount.toFixed(2) + ' SAR)');
         document.getElementById('plateInput').value = '';
         document.getElementById('priceInput').value = '';
         document.getElementById('customerQuickInfo').classList.add('hidden');
@@ -889,7 +854,7 @@ async function saveOrder() {
 }
 
 // ================================================================
-//  客户管理
+//  客户管理（CRM增强）
 // ================================================================
 async function addCustomer() {
     if (!currentUser) { showToast('请先登录'); return; }
@@ -905,11 +870,19 @@ async function addCustomer() {
         let existing = allCustomers.find(c => c.phone === phone || c.plate_number === plate);
         if (existing) {
             const newBalance = (existing.balance || 0) + amount;
-            await supabaseClient.from('customers').update({ balance: newBalance, name: name }).eq('id', existing.id);
+            await supabaseClient.from('customers').update({ 
+                balance: newBalance, 
+                name: name,
+                total_spent: (existing.total_spent || 0) + amount
+            }).eq('id', existing.id);
             existing.balance = newBalance;
             existing.name = name;
+            existing.total_spent = (existing.total_spent || 0) + amount;
         } else {
-            const { data, error } = await supabaseClient.from('customers').insert([{ phone, name, plate_number: plate, balance: amount, points: 0 }]).select();
+            const { data, error } = await supabaseClient.from('customers').insert([{ 
+                phone, name, plate_number: plate, balance: amount, points: 0,
+                level: '普通', total_spent: amount, visit_count: 1, last_visit: new Date().toISOString().split('T')[0]
+            }]).select();
             if (error) throw new Error(error.message);
             if (data && data.length > 0) allCustomers.unshift(data[0]);
         }
@@ -924,68 +897,26 @@ async function addCustomer() {
     }
 }
 
-// ================================================================
-//  考勤管理
-// ================================================================
-async function clockIn() {
-    if (!currentUser) { showToast('请先登录'); return; }
-    const staff = document.getElementById('attendanceStaff').value || currentUser.name || currentUser.username;
-    try {
-        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '上班打卡', time: new Date().toISOString() }]).select();
-        if (error) throw new Error(error.message);
-        if (data && data.length > 0) allAttendance.unshift(data[0]);
-        refreshAttendance();
-        showToast('✅ ' + staff + ' 上班打卡成功');
-    } catch (error) {
-        showToast('❌ 打卡失败: ' + error.message);
-    }
+function applyCustomerFilter() {
+    customerFilter.search = document.getElementById('customerSearch').value.trim();
+    customerFilter.level = document.getElementById('customerLevelFilter').value;
+    refreshCustomers();
 }
 
-async function clockOut() {
-    if (!currentUser) { showToast('请先登录'); return; }
-    const staff = document.getElementById('attendanceStaff').value || currentUser.name || currentUser.username;
-    try {
-        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '下班打卡', time: new Date().toISOString() }]).select();
-        if (error) throw new Error(error.message);
-        if (data && data.length > 0) allAttendance.unshift(data[0]);
-        refreshAttendance();
-        showToast('✅ ' + staff + ' 下班打卡成功');
-    } catch (error) {
-        showToast('❌ 打卡失败: ' + error.message);
-    }
+function resetCustomerFilter() {
+    document.getElementById('customerSearch').value = '';
+    document.getElementById('customerLevelFilter').value = 'all';
+    customerFilter = { search: '', level: 'all' };
+    refreshCustomers();
 }
 
 // ================================================================
 //  库存进销存功能
 // ================================================================
-function openStockInModal() {
-    updateInventorySelects();
-    document.getElementById('stockInModal').classList.remove('hidden');
-    document.getElementById('stockInQty').value = '';
-    document.getElementById('stockInPrice').value = '';
-    document.getElementById('stockInSupplier').value = '';
-    document.getElementById('stockInNote').value = '';
-}
-
-function openStockOutModal() {
-    updateInventorySelects();
-    document.getElementById('stockOutModal').classList.remove('hidden');
-    document.getElementById('stockOutQty').value = '';
-    document.getElementById('stockOutNote').value = '';
-}
-
-function openAddProductModal() {
-    document.getElementById('addProductModal').classList.remove('hidden');
-    document.getElementById('newProductName').value = '';
-    document.getElementById('newProductQty').value = '';
-    document.getElementById('newProductCost').value = '';
-    document.getElementById('newProductMinQty').value = '5';
-    document.getElementById('newProductUnit').value = '瓶';
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
+function openStockInModal() { updateInventorySelects(); document.getElementById('stockInModal').classList.remove('hidden'); document.getElementById('stockInQty').value = ''; document.getElementById('stockInPrice').value = ''; document.getElementById('stockInSupplier').value = ''; document.getElementById('stockInNote').value = ''; }
+function openStockOutModal() { updateInventorySelects(); document.getElementById('stockOutModal').classList.remove('hidden'); document.getElementById('stockOutQty').value = ''; document.getElementById('stockOutNote').value = ''; }
+function openAddProductModal() { document.getElementById('addProductModal').classList.remove('hidden'); document.getElementById('newProductName').value = ''; document.getElementById('newProductQty').value = ''; document.getElementById('newProductCost').value = ''; document.getElementById('newProductMinQty').value = '5'; document.getElementById('newProductUnit').value = '瓶'; }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 async function submitStockIn() {
     const productId = document.getElementById('stockInProduct').value;
@@ -993,27 +924,18 @@ async function submitStockIn() {
     const price = parseFloat(document.getElementById('stockInPrice').value) || 0;
     const supplier = document.getElementById('stockInSupplier').value || '未知';
     const note = document.getElementById('stockInNote').value || '';
-
     if (!productId || !qty || qty <= 0) { showToast('请选择产品并输入数量'); return; }
-
     try {
         const { data, error } = await supabaseClient.from('stock_in').insert([{
-            inventory_id: productId,
-            quantity: qty,
-            unit_price: price,
-            total_price: price * qty,
-            supplier: supplier,
-            note: note,
-            created_by: currentUser?.name || currentUser?.username || '系统'
+            inventory_id: productId, quantity: qty, unit_price: price, total_price: price * qty,
+            supplier: supplier, note: note, created_by: currentUser?.name || currentUser?.username || '系统'
         }]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allStockIn.unshift(data[0]);
         closeModal('stockInModal');
         refreshInventory();
         showToast('✅ 入库成功: ' + qty + ' 件');
-    } catch (error) {
-        showToast('❌ 入库失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 入库失败: ' + error.message); }
 }
 
 async function submitStockOut() {
@@ -1021,19 +943,13 @@ async function submitStockOut() {
     const qty = parseInt(document.getElementById('stockOutQty').value);
     const reason = document.getElementById('stockOutReason').value;
     const note = document.getElementById('stockOutNote').value || '';
-
     if (!productId || !qty || qty <= 0) { showToast('请选择产品并输入数量'); return; }
-
     const product = allInventory.find(i => i.id === productId);
     if (!product) { showToast('产品不存在'); return; }
     if ((product.quantity || 0) < qty) { showToast('库存不足！当前库存: ' + product.quantity); return; }
-
     try {
         const { data, error } = await supabaseClient.from('stock_out').insert([{
-            inventory_id: productId,
-            quantity: qty,
-            reason: reason,
-            note: note,
+            inventory_id: productId, quantity: qty, reason: reason, note: note,
             created_by: currentUser?.name || currentUser?.username || '系统'
         }]).select();
         if (error) throw new Error(error.message);
@@ -1041,9 +957,7 @@ async function submitStockOut() {
         closeModal('stockOutModal');
         refreshInventory();
         showToast('✅ 出库成功: ' + qty + ' 件');
-    } catch (error) {
-        showToast('❌ 出库失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 出库失败: ' + error.message); }
 }
 
 async function submitNewProduct() {
@@ -1053,9 +967,7 @@ async function submitNewProduct() {
     const qty = parseInt(document.getElementById('newProductQty').value) || 0;
     const cost = parseFloat(document.getElementById('newProductCost').value) || 0;
     const minQty = parseInt(document.getElementById('newProductMinQty').value) || 5;
-
     if (!name) { showToast('请输入产品名称'); return; }
-
     try {
         const { data, error } = await supabaseClient.from('inventory').insert([{
             name, category, unit, quantity: qty, cost, min_qty: minQty
@@ -1065,9 +977,7 @@ async function submitNewProduct() {
         closeModal('addProductModal');
         refreshInventory();
         showToast('✅ 产品已添加: ' + name);
-    } catch (error) {
-        showToast('❌ 添加失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 添加失败: ' + error.message); }
 }
 
 function applyInvFilter() {
@@ -1084,23 +994,182 @@ function resetInvFilter() {
 }
 
 // ================================================================
-//  报表功能
+//  考勤管理
+// ================================================================
+async function clockIn() {
+    if (!currentUser) { showToast('请先登录'); return; }
+    const staff = document.getElementById('attendanceStaff').value || currentUser.name || currentUser.username;
+    try {
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '上班打卡', time: new Date().toISOString() }]).select();
+        if (error) throw new Error(error.message);
+        if (data && data.length > 0) allAttendance.unshift(data[0]);
+        refreshAttendance();
+        showToast('✅ ' + staff + ' 上班打卡成功');
+    } catch (error) { showToast('❌ 打卡失败: ' + error.message); }
+}
+
+async function clockOut() {
+    if (!currentUser) { showToast('请先登录'); return; }
+    const staff = document.getElementById('attendanceStaff').value || currentUser.name || currentUser.username;
+    try {
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '下班打卡', time: new Date().toISOString() }]).select();
+        if (error) throw new Error(error.message);
+        if (data && data.length > 0) allAttendance.unshift(data[0]);
+        refreshAttendance();
+        showToast('✅ ' + staff + ' 下班打卡成功');
+    } catch (error) { showToast('❌ 打卡失败: ' + error.message); }
+}
+
+// ================================================================
+//  P2: 财务日报 + 员工提成 + 客户排行
+// ================================================================
+function switchReportTab(tab) {
+    currentReportTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.tab-btn[data-tab="${tab}"]`)?.classList.add('active');
+    document.getElementById('reportTabDaily').classList.toggle('hidden', tab !== 'daily');
+    document.getElementById('reportTabCommission').classList.toggle('hidden', tab !== 'commission');
+    document.getElementById('reportTabCustomers').classList.toggle('hidden', tab !== 'customers');
+    if (tab === 'daily') loadDailyReport();
+    if (tab === 'commission') loadCommission();
+    if (tab === 'customers') loadCustomerRank();
+}
+
+async function loadDailyReport() {
+    const picker = document.getElementById('reportDatePicker');
+    const date = picker.value || new Date().toISOString().split('T')[0];
+    if (!picker.value) picker.value = date;
+    
+    const report = allDailyReports.find(r => r.report_date === date);
+    if (report) {
+        document.getElementById('dailyOrders').textContent = report.total_orders || 0;
+        document.getElementById('dailyRevenue').textContent = (report.total_revenue || 0).toFixed(2) + ' SAR';
+        document.getElementById('dailyVat').textContent = (report.total_vat || 0).toFixed(2) + ' SAR';
+        document.getElementById('dailyProfit').textContent = ((report.total_revenue || 0) - (report.total_cost || 0)).toFixed(2) + ' SAR';
+        document.getElementById('dailyCash').textContent = (report.cash_amount || 0).toFixed(2);
+        document.getElementById('dailyCard').textContent = (report.card_amount || 0).toFixed(2);
+        document.getElementById('dailyMada').textContent = (report.mada_amount || 0).toFixed(2);
+        document.getElementById('dailyApple').textContent = (report.applepay_amount || 0).toFixed(2);
+    } else {
+        // 从订单计算
+        const dayOrders = allOrders.filter(o => o.date === date);
+        const total = dayOrders.reduce((s, o) => s + (o.total || 0), 0);
+        const vat = dayOrders.reduce((s, o) => s + (o.vat || 0), 0);
+        document.getElementById('dailyOrders').textContent = dayOrders.length;
+        document.getElementById('dailyRevenue').textContent = total.toFixed(2) + ' SAR';
+        document.getElementById('dailyVat').textContent = vat.toFixed(2) + ' SAR';
+        document.getElementById('dailyProfit').textContent = total.toFixed(2) + ' SAR';
+        document.getElementById('dailyCash').textContent = '0';
+        document.getElementById('dailyCard').textContent = '0';
+        document.getElementById('dailyMada').textContent = '0';
+        document.getElementById('dailyApple').textContent = '0';
+    }
+}
+
+function exportDailyReport() {
+    const date = document.getElementById('reportDatePicker').value || new Date().toISOString().split('T')[0];
+    const dayOrders = allOrders.filter(o => o.date === date);
+    if (dayOrders.length === 0) { showToast('该日暂无数据'); return; }
+    const total = dayOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const data = [['日期', '时间', '车牌', '服务', '金额', '支付方式', '员工']];
+    dayOrders.forEach(o => data.push([o.date || '', o.created_at ? new Date(o.created_at).toLocaleTimeString() : '', o.plate_number || '', o.service_name || '', o.total || 0, o.payment_method || '', o.staff_name || '']));
+    data.push(['', '', '', '', '合计', total.toFixed(2), '']);
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '日报');
+    XLSX.writeFile(wb, `日报_${date}.xlsx`);
+    showToast('✅ 日报已导出');
+}
+
+async function loadCommission() {
+    const filterStaff = document.getElementById('commissionStaffFilter')?.value || 'all';
+    const filterStatus = document.getElementById('commissionStatusFilter')?.value || 'all';
+    const startDate = document.getElementById('commissionDateStart')?.value || '';
+    const endDate = document.getElementById('commissionDateEnd')?.value || '';
+
+    let commissions = allCommissions;
+    if (filterStaff !== 'all') commissions = commissions.filter(c => c.employee_name === filterStaff);
+    if (filterStatus !== 'all') commissions = commissions.filter(c => c.status === filterStatus);
+    if (startDate) commissions = commissions.filter(c => c.date >= startDate);
+    if (endDate) commissions = commissions.filter(c => c.date <= endDate);
+
+    const list = document.getElementById('commissionList');
+    list.innerHTML = commissions.slice(0, 50).map(c =>
+        `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+            <div>
+                <span class="font-medium">${c.employee_name}</span>
+                <span class="text-sm text-gray-500 ml-2">${c.service_name || '服务'}</span>
+            </div>
+            <div>
+                <span class="text-sm">${c.amount || 0} SAR × ${c.commission_rate || 5}% = </span>
+                <span class="font-bold text-green-600">${(c.commission_amount || 0).toFixed(2)} SAR</span>
+                <span class="commission-badge ${c.status === '已结算' ? 'commission-paid' : 'commission-pending'}">${c.status || '待结算'}</span>
+            </div>
+        </div>`
+    ).join('') || '<div class="text-center text-gray-400">暂无提成记录</div>';
+
+    const total = commissions.reduce((s, c) => s + (c.commission_amount || 0), 0);
+    document.getElementById('commissionTotal').textContent = total.toFixed(2) + ' SAR';
+}
+
+async function settleCommission() {
+    if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
+        showToast('只有老板和店长可以结算提成');
+        return;
+    }
+    const filterStaff = document.getElementById('commissionStaffFilter')?.value || 'all';
+    const pending = allCommissions.filter(c => c.status === '待结算' && (filterStaff === 'all' || c.employee_name === filterStaff));
+    if (pending.length === 0) { showToast('没有待结算的提成'); return; }
+    if (!confirm('确认结算 ' + pending.length + ' 条提成记录？')) return;
+    
+    try {
+        for (const c of pending) {
+            await supabaseClient.from('employee_commission').update({ status: '已结算' }).eq('id', c.id);
+        }
+        // 更新本地数据
+        allCommissions.forEach(c => { if (c.status === '待结算' && (filterStaff === 'all' || c.employee_name === filterStaff)) c.status = '已结算'; });
+        showToast('✅ 已结算 ' + pending.length + ' 条提成');
+        loadCommission();
+    } catch (error) {
+        showToast('❌ 结算失败: ' + error.message);
+    }
+}
+
+async function loadCustomerRank() {
+    const type = document.getElementById('customerRankFilter')?.value || 'points';
+    let sorted = [...allCustomers];
+    if (type === 'points') sorted.sort((a, b) => (b.points || 0) - (a.points || 0));
+    else if (type === 'spent') sorted.sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0));
+    else if (type === 'visits') sorted.sort((a, b) => (b.visit_count || 0) - (a.visit_count || 0));
+    
+    const list = document.getElementById('customerRankList');
+    list.innerHTML = sorted.slice(0, 20).map((c, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
+        const levelClass = 'customer-level customer-level-' + (c.level || 'normal').toLowerCase();
+        return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+            <div>
+                <span class="font-bold mr-2">${medal}</span>
+                <span>${c.name || '未知'}</span>
+                <span class="${levelClass}">${c.level || '普通'}</span>
+                <span class="text-sm text-gray-400 ml-2">${c.plate_number || ''}</span>
+            </div>
+            <div class="text-right">
+                <div class="text-sm">积分: ${c.points || 0}</div>
+                <div class="text-sm">消费: ${(c.total_spent || 0).toFixed(2)} SAR</div>
+                <div class="text-xs text-gray-400">到店: ${c.visit_count || 0}次</div>
+            </div>
+        </div>`;
+    }).join('') || '<div class="text-center text-gray-400">暂无客户数据</div>';
+}
+
+// ================================================================
+//  报表导出
 // ================================================================
 function exportExcel() {
     const orders = getFilteredOrders();
     if (orders.length === 0) { showToast('暂无数据可导出'); return; }
     const data = [['日期', '时间', '车牌', '服务', '金额', '增值税', '总计', '支付方式', '员工']];
-    orders.forEach(o => data.push([
-        o.date || '',
-        o.created_at ? new Date(o.created_at).toLocaleTimeString() : '',
-        o.plate_number || '',
-        o.service_name || '',
-        o.amount || 0,
-        o.vat || 0,
-        o.total || 0,
-        o.payment_method || '',
-        o.staff_name || ''
-    ]));
+    orders.forEach(o => data.push([o.date || '', o.created_at ? new Date(o.created_at).toLocaleTimeString() : '', o.plate_number || '', o.service_name || '', o.amount || 0, o.vat || 0, o.total || 0, o.payment_method || '', o.staff_name || '']));
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '报表');
@@ -1113,13 +1182,10 @@ function exportPDF() {
     if (orders.length === 0) { showToast('暂无数据可导出'); return; }
     const total = orders.reduce((s, o) => s + (o.total || 0), 0);
     let html = `<html><head><title>报表</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background:#0091D5;color:white;}</style></head><body>
-        <h2>CarWash Pro 报表</h2>
-        <p>导出日期: ${new Date().toLocaleString()}</p>
+        <h2>CarWash Pro 报表</h2><p>导出日期: ${new Date().toLocaleString()}</p>
         <p>总订单: ${orders.length} | 总收入: ${total.toFixed(2)} SAR</p>
         <table><tr><th>日期</th><th>车牌</th><th>总计</th><th>员工</th></tr>`;
-    orders.slice(0, 100).forEach(o => {
-        html += `<tr><td>${o.date || ''}</td><td>${o.plate_number || ''}</td><td>${o.total || 0}</td><td>${o.staff_name || ''}</td></tr>`;
-    });
+    orders.slice(0, 100).forEach(o => { html += `<tr><td>${o.date || ''}</td><td>${o.plate_number || ''}</td><td>${o.total || 0}</td><td>${o.staff_name || ''}</td></tr>`; });
     html += `</table></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
@@ -1135,6 +1201,7 @@ function loadSettings() {
     document.getElementById('shopName').value = config.shopName || '';
     document.getElementById('shopTaxId').value = config.shopTaxId || '';
     document.getElementById('vatRateInput').value = config.vatRate || 15;
+    document.getElementById('commissionRate').value = config.commissionRate || 5;
 }
 
 function saveSettings() {
@@ -1142,6 +1209,7 @@ function saveSettings() {
     config.shopName = document.getElementById('shopName').value.trim() || config.shopName;
     config.shopTaxId = document.getElementById('shopTaxId').value.trim();
     config.vatRate = parseFloat(document.getElementById('vatRateInput').value) || 15;
+    config.commissionRate = parseFloat(document.getElementById('commissionRate').value) || 5;
     localStorage.setItem('cw_config', JSON.stringify(config));
     updatePrice();
     showToast('✅ 设置已保存');
@@ -1221,6 +1289,10 @@ async function init() {
     await loadData();
     loadSettings();
 
+    // 设置默认日期
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('reportDatePicker').value = today;
+
     const session = localStorage.getItem('cw_session');
     if (session) {
         try {
@@ -1256,9 +1328,9 @@ async function init() {
 
 init();
 
-console.log('✅ CarWash Pro 已加载（权限 + 实时 + 库存进销存）');
+console.log('✅ CarWash Pro P2已加载（财务日报 + CRM + 员工提成）');
 console.log('👤 当前用户:', currentUser?.username || '未登录');
-console.log('📦 库存品类:', allInventory.length);
+console.log('📦 客户数:', allCustomers.length);
 console.log('🔑 默认: boss/admin123');
 </script>
 </body>
