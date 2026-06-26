@@ -55,24 +55,39 @@
         .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #0091D5; box-shadow: 0 0 0 3px rgba(0,145,213,0.1); }
-        .report-section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-        .report-section h4 { font-weight: 600; color: #1f2937; margin-bottom: 12px; }
         .customer-level { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
         .customer-level-diamond { background: #ede9fe; color: #7c3aed; }
         .customer-level-gold { background: #fef3c7; color: #f59e0b; }
         .customer-level-silver { background: #f3f4f6; color: #6b7280; }
         .customer-level-bronze { background: #fef3c7; color: #d97706; }
         .customer-level-normal { background: #f3f4f6; color: #9ca3af; }
-        .modal-content { max-height: 85vh; overflow-y: auto; padding: 4px; }
-        .tab-bar { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+        .tab-bar { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap; }
         .tab-btn { padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer; font-size: 13px; transition: all 0.2s; background: transparent; }
         .tab-btn:hover { background: rgba(255,255,255,0.5); }
         .tab-btn.active { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: 600; }
+        .stat-card-mini { background: #f8fafc; padding: 12px; border-radius: 12px; text-align: center; }
+        .stat-card-mini .num { font-size: 22px; font-weight: 700; }
+        .stat-card-mini .lbl { font-size: 11px; color: #6b7280; }
+        .setting-section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .setting-section h4 { font-weight: 600; color: #1f2937; margin-bottom: 12px; }
+        .setting-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .setting-row label { min-width: 100px; font-size: 14px; color: #4b5563; }
+        .setting-row input, .setting-row select { flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
+        .setting-row input:focus, .setting-row select:focus { outline: none; border-color: #0091D5; box-shadow: 0 0 0 3px rgba(0,145,213,0.1); }
+        .stock-low { background: #fee2e2; border-right: 4px solid #dc2626; }
+        .stock-normal { background: #f0fdf4; border-right: 4px solid #22c55e; }
+        .kpi-card { transition: all 0.3s; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -12px rgba(0,0,0,0.15); }
+        .audit-entry { border-left: 3px solid #0091D5; }
+        .audit-INSERT { border-left-color: #22c55e; }
+        .audit-UPDATE { border-left-color: #f59e0b; }
+        .audit-DELETE { border-left-color: #dc2626; }
+        .branch-selector { background: #f8fafc; border-radius: 8px; padding: 4px; }
     </style>
 </head>
 <body>
 
-<!-- 登录模态框 -->
+<!-- ==================== 登录模态框 ==================== -->
 <div id="loginModal" class="modal-glass">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
@@ -98,9 +113,10 @@
     </div>
 </div>
 
-<!-- 主应用 -->
+<!-- ==================== 主应用 ==================== -->
 <div id="appContainer" class="hidden flex h-screen overflow-hidden">
-    <!-- 侧边栏 -->
+
+    <!-- ========== 侧边栏 ========== -->
     <aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100">
         <div class="p-5 border-b border-gray-100 flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-md">
@@ -111,6 +127,15 @@
                 <p class="text-xs text-gray-400" id="userRoleDisplay">☁️ 实时同步</p>
             </div>
         </div>
+
+        <!-- 门店选择器 -->
+        <div class="px-4 py-3 border-b border-gray-100">
+            <label class="text-xs text-gray-400 block mb-1">🏪 当前门店</label>
+            <select id="branchSelector" class="w-full p-2 border rounded-lg text-sm bg-gray-50" onchange="switchBranch()">
+                <option value="all">全部门店</option>
+            </select>
+        </div>
+
         <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1" id="mainNav">
             <a href="#" data-nav="dashboard" class="sidebar-link nav-item-active"><i class="fas fa-chart-line w-5"></i><span>仪表板</span></a>
             <a href="#" data-nav="cashier" class="sidebar-link" id="navCashier"><i class="fas fa-cash-register w-5"></i><span>POS / 收银</span></a>
@@ -119,8 +144,10 @@
             <a href="#" data-nav="reports" class="sidebar-link" id="navReports"><i class="fas fa-chart-bar w-5"></i><span>财务</span></a>
             <a href="#" data-nav="attendance" class="sidebar-link" id="navAttendance"><i class="fas fa-clock w-5"></i><span>考勤</span></a>
             <a href="#" data-nav="employees" class="sidebar-link" id="navEmployees"><i class="fas fa-user-tie w-5"></i><span>员工</span></a>
+            <a href="#" data-nav="audit" class="sidebar-link" id="navAudit"><i class="fas fa-history w-5"></i><span>审计日志</span></a>
             <a href="#" data-nav="settings" class="sidebar-link" id="navSettings"><i class="fas fa-cog w-5"></i><span>设置</span></a>
         </nav>
+
         <div class="p-4 border-t border-gray-100">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -135,7 +162,7 @@
         </div>
     </aside>
 
-    <!-- 主内容 -->
+    <!-- ========== 主内容区 ========== -->
     <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
         <header class="bg-white shadow-sm py-3 px-6 flex justify-between items-center border-b border-gray-100">
             <h2 id="currentPageTitle" class="text-xl font-bold text-gray-800">仪表板</h2>
@@ -150,6 +177,45 @@
 
             <!-- ========== DASHBOARD ========== -->
             <div id="moduleDashboard" class="module-content space-y-6">
+
+                <!-- KPI看板 -->
+                <div class="glass-card p-4">
+                    <h3 class="font-bold text-gray-800 mb-3">📊 实时数据看板</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="kpi-card text-center p-3 bg-blue-50 rounded-xl">
+                            <div class="text-2xl font-bold text-blue-600" id="kpiTodayOrders">0</div>
+                            <div class="text-xs text-gray-500">今日订单</div>
+                        </div>
+                        <div class="kpi-card text-center p-3 bg-green-50 rounded-xl">
+                            <div class="text-2xl font-bold text-green-600" id="kpiTodayRevenue">0 SAR</div>
+                            <div class="text-xs text-gray-500">今日收入</div>
+                        </div>
+                        <div class="kpi-card text-center p-3 bg-purple-50 rounded-xl">
+                            <div class="text-2xl font-bold text-purple-600" id="kpiTotalRevenue">0 SAR</div>
+                            <div class="text-xs text-gray-500">累计收入</div>
+                        </div>
+                        <div class="kpi-card text-center p-3 bg-orange-50 rounded-xl">
+                            <div class="text-2xl font-bold text-orange-600" id="kpiLowStock">0</div>
+                            <div class="text-xs text-gray-500">低库存预警</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 mt-3">
+                        <div class="text-center p-2 bg-gray-50 rounded-lg">
+                            <div class="text-sm font-bold" id="kpiAvgOrder">0 SAR</div>
+                            <div class="text-xs text-gray-400">平均订单</div>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 rounded-lg">
+                            <div class="text-sm font-bold" id="kpiTopStaff">-</div>
+                            <div class="text-xs text-gray-400">最佳员工</div>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 rounded-lg">
+                            <div class="text-sm font-bold" id="kpiTopService">-</div>
+                            <div class="text-xs text-gray-400">热门服务</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">今日收入</p><h3 class="stat-number text-green-600" id="todayRevenue">0 SAR</h3></div>
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">今日订单</p><h3 class="stat-number" id="todayOrdersValue">0</h3></div>
@@ -157,11 +223,19 @@
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">总销售额</p><h3 class="stat-number" id="totalSalesValue">0 SAR</h3></div>
                     <div class="glass-card p-4"><p class="text-gray-500 text-sm">员工</p><h3 class="stat-number" id="employeesCount">0</h3></div>
                 </div>
-                <div id="stockAlertBar" class="glass-card p-3 hidden"><p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle"></i> <span id="stockAlertText"></span></p></div>
+
+                <!-- 库存预警 -->
+                <div id="stockAlertBar" class="glass-card p-3 hidden">
+                    <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle"></i> <span id="stockAlertText"></span></p>
+                </div>
+
+                <!-- 图表 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">服务统计</h3><canvas id="serviceStatsChart" height="180"></canvas></div>
                     <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">收入趋势</h3><canvas id="monthlyRevenueChart" height="180"></canvas></div>
                 </div>
+
+                <!-- 今日订单 & 热门服务 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">今日订单</h3><div id="todayOrdersPreview" class="space-y-2 max-h-64 overflow-auto"></div></div>
                     <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">热门服务</h3><div id="topServicesContent" class="space-y-3"></div></div>
@@ -204,7 +278,7 @@
             <!-- ========== INVENTORY ========== -->
             <div id="moduleInventory" class="module-content hidden">
                 <div class="glass-card p-6">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                         <h2 class="text-xl font-bold text-blue-600">📦 库存管理</h2>
                         <div class="flex gap-2 flex-wrap">
                             <button onclick="openStockInModal()" class="btn-success btn-sm"><i class="fas fa-arrow-down"></i> 入库</button>
@@ -228,12 +302,14 @@
                 </div>
                 <div class="glass-card p-6 mt-4">
                     <h3 class="font-bold text-gray-800 mb-3">📋 出入库记录</h3>
-                    <select id="stockLogFilter" class="p-2 border rounded-lg text-sm mb-3" onchange="refreshStockLogs()"><option value="all">全部</option><option value="in">入库</option><option value="out">出库</option></select>
+                    <select id="stockLogFilter" class="p-2 border rounded-lg text-sm mb-3" onchange="refreshStockLogs()">
+                        <option value="all">全部</option><option value="in">入库</option><option value="out">出库</option>
+                    </select>
                     <div id="stockLogList" class="space-y-1 max-h-48 overflow-auto text-sm"></div>
                 </div>
             </div>
 
-            <!-- ========== CUSTOMERS（CRM增强） ========== -->
+            <!-- ========== CUSTOMERS ========== -->
             <div id="moduleMembers" class="module-content hidden">
                 <div class="glass-card p-6">
                     <h2 class="text-xl font-bold text-blue-600 mb-4">👥 客户管理</h2>
@@ -254,18 +330,15 @@
                 </div>
             </div>
 
-            <!-- ========== REPORTS（财务日报 + 提成） ========== -->
+            <!-- ========== REPORTS ========== -->
             <div id="moduleReports" class="module-content hidden">
                 <div class="glass-card p-6">
                     <h2 class="text-xl font-bold text-blue-600 mb-4">📊 财务管理</h2>
-                    
-                    <!-- Tab切换 -->
                     <div class="tab-bar">
                         <button class="tab-btn active" data-tab="daily" onclick="switchReportTab('daily')">📅 日报</button>
                         <button class="tab-btn" data-tab="commission" onclick="switchReportTab('commission')">💰 员工提成</button>
                         <button class="tab-btn" data-tab="customers" onclick="switchReportTab('customers')">🏆 客户排行</button>
                     </div>
-
                     <!-- 日报 -->
                     <div id="reportTabDaily" class="report-section">
                         <div class="grid grid-cols-4 gap-3 mb-4">
@@ -286,8 +359,7 @@
                             <button onclick="exportDailyReport()" class="bg-green-600 text-white btn-sm">📊 导出日报</button>
                         </div>
                     </div>
-
-                    <!-- 员工提成 -->
+                    <!-- 提成 -->
                     <div id="reportTabCommission" class="report-section hidden">
                         <div class="flex gap-3 mb-3 flex-wrap">
                             <select id="commissionStaffFilter" class="p-2 border rounded-lg text-sm"></select>
@@ -296,15 +368,14 @@
                             <span class="text-sm self-center">至</span>
                             <input type="date" id="commissionDateEnd" class="p-2 border rounded-lg text-sm">
                             <button onclick="loadCommission()" class="btn-primary btn-sm">查询</button>
-                            <button onclick="settleCommission()" class="btn-success btn-sm">✅ 结算选中</button>
+                            <button onclick="settleCommission()" class="btn-success btn-sm">✅ 结算</button>
                         </div>
                         <div id="commissionList" class="space-y-2 max-h-64 overflow-auto"></div>
                         <div class="mt-3 text-sm text-gray-500">总计提成: <span id="commissionTotal" class="font-bold text-green-600">0 SAR</span></div>
                     </div>
-
                     <!-- 客户排行 -->
                     <div id="reportTabCustomers" class="report-section hidden">
-                        <div class="flex gap-3 mb-3">
+                        <div class="flex gap-3 mb-3 flex-wrap">
                             <select id="customerRankFilter" class="p-2 border rounded-lg text-sm"><option value="points">积分排行</option><option value="spent">消费排行</option><option value="visits">到店次数</option></select>
                             <button onclick="loadCustomerRank()" class="btn-primary btn-sm">刷新</button>
                         </div>
@@ -314,26 +385,165 @@
             </div>
 
             <!-- ========== ATTENDANCE ========== -->
-            <div id="moduleAttendance" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">⏰ 考勤管理</h2><select id="attendanceStaff" class="w-full p-3 border rounded-xl mt-3"></select><div class="flex gap-3 mt-3"><button onclick="clockIn()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl">上班打卡</button><button onclick="clockOut()" class="bg-amber-500 text-white px-5 py-2 rounded-xl">下班打卡</button></div><div id="attendanceList" class="mt-5 space-y-1 max-h-72 overflow-auto"></div></div></div>
+            <div id="moduleAttendance" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600">⏰ 考勤管理</h2>
+                    <select id="attendanceStaff" class="w-full p-3 border rounded-xl mt-3"></select>
+                    <div class="flex gap-3 mt-3">
+                        <button onclick="clockIn()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl">上班打卡</button>
+                        <button onclick="clockOut()" class="bg-amber-500 text-white px-5 py-2 rounded-xl">下班打卡</button>
+                    </div>
+                    <div id="attendanceList" class="mt-5 space-y-1 max-h-72 overflow-auto"></div>
+                </div>
+            </div>
 
             <!-- ========== EMPLOYEES ========== -->
-            <div id="moduleEmployees" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">👔 员工管理</h2><div id="employeesList" class="mt-3 space-y-2 max-h-96 overflow-auto"></div></div></div>
+            <div id="moduleEmployees" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600">👔 员工管理</h2>
+                    <div id="employeesList" class="mt-3 space-y-2 max-h-96 overflow-auto"></div>
+                </div>
+            </div>
+
+            <!-- ========== AUDIT LOG ========== -->
+            <div id="moduleAudit" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">📋 审计日志</h2>
+                    <div class="flex gap-3 mb-4 flex-wrap">
+                        <select id="auditActionFilter" class="p-2 border rounded-lg text-sm">
+                            <option value="all">全部操作</option>
+                            <option value="INSERT">新增</option>
+                            <option value="UPDATE">修改</option>
+                            <option value="DELETE">删除</option>
+                        </select>
+                        <select id="auditTableFilter" class="p-2 border rounded-lg text-sm">
+                            <option value="all">全部表</option>
+                            <option value="orders">订单</option>
+                            <option value="customers">客户</option>
+                            <option value="inventory">库存</option>
+                            <option value="users">用户</option>
+                            <option value="attendance">考勤</option>
+                        </select>
+                        <input type="date" id="auditDateStart" class="p-2 border rounded-lg text-sm">
+                        <span class="text-sm self-center">至</span>
+                        <input type="date" id="auditDateEnd" class="p-2 border rounded-lg text-sm">
+                        <button onclick="loadAuditLog()" class="btn-primary btn-sm">查询</button>
+                        <button onclick="exportAuditLog()" class="bg-green-600 text-white btn-sm">📊 导出</button>
+                    </div>
+                    <div id="auditLogList" class="max-h-96 overflow-auto space-y-1 text-sm"></div>
+                    <div class="mt-3 text-sm text-gray-500">共 <span id="auditCount">0</span> 条记录</div>
+                </div>
+            </div>
 
             <!-- ========== SETTINGS ========== -->
-            <div id="moduleSettings" class="module-content hidden"><div class="glass-card p-6"><h2 class="text-xl font-bold text-blue-600">⚙️ 系统设置</h2><div class="space-y-3 mt-4"><div><label class="text-sm font-medium">店铺名称</label><input id="shopName" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">税号</label><input id="shopTaxId" class="w-full p-2 border rounded"></div><div><label class="text-sm font-medium">增值税率 (%)</label><input id="vatRateInput" class="w-full p-2 border rounded" type="number"></div><div><label class="text-sm font-medium">提成比例 (%)</label><input id="commissionRate" class="w-full p-2 border rounded" type="number" value="5"></div><button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full">保存设置</button></div></div></div>
+            <div id="moduleSettings" class="module-content hidden">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">⚙️ 系统设置</h2>
+
+                    <!-- 店铺信息 -->
+                    <div class="setting-section">
+                        <h4>🏪 店铺信息</h4>
+                        <div class="setting-row"><label>店铺名称</label><input id="shopName" class="p-2 border rounded"></div>
+                        <div class="setting-row"><label>税号</label><input id="shopTaxId" class="p-2 border rounded"></div>
+                    </div>
+
+                    <!-- 税务 & 提成 -->
+                    <div class="setting-section">
+                        <h4>💰 税务 & 提成</h4>
+                        <div class="setting-row"><label>增值税率 (%)</label><input id="vatRateInput" class="p-2 border rounded" type="number" step="0.5"></div>
+                        <div class="setting-row"><label>提成比例 (%)</label><input id="commissionRate" class="p-2 border rounded" type="number" step="0.5"></div>
+                    </div>
+
+                    <!-- 自动备份 -->
+                    <div class="setting-section">
+                        <h4>💾 自动备份</h4>
+                        <div class="setting-row">
+                            <label>启用自动备份</label>
+                            <select id="backupEnabled" class="p-2 border rounded-lg">
+                                <option value="true">启用</option>
+                                <option value="false">禁用</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>备份频率</label>
+                            <select id="backupFrequency" class="p-2 border rounded-lg">
+                                <option value="daily">每日</option>
+                                <option value="weekly">每周</option>
+                                <option value="monthly">每月</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>保留天数</label>
+                            <input id="backupRetention" type="number" value="30" class="p-2 border rounded-lg" style="width:100px;">
+                        </div>
+                        <div class="setting-row">
+                            <label>上次备份</label>
+                            <span id="lastBackupTime" class="text-sm text-gray-400">从未备份</span>
+                        </div>
+                        <div class="flex gap-2 mt-2 flex-wrap">
+                            <button onclick="saveBackupConfig()" class="btn-primary btn-sm">保存备份设置</button>
+                            <button onclick="manualBackup()" class="btn-success btn-sm">🔄 立即备份</button>
+                            <button onclick="restoreBackup()" class="btn-warning btn-sm">📂 恢复备份</button>
+                        </div>
+                    </div>
+
+                    <!-- 门店管理 -->
+                    <div class="setting-section">
+                        <h4>🏪 门店管理</h4>
+                        <div class="flex gap-2 mb-2 flex-wrap">
+                            <input id="newBranchName" placeholder="门店名称" class="p-2 border rounded flex-1">
+                            <input id="newBranchAddress" placeholder="地址" class="p-2 border rounded flex-1">
+                            <button onclick="addBranch()" class="btn-primary btn-sm">添加门店</button>
+                        </div>
+                        <div id="branchList" class="space-y-1 max-h-48 overflow-auto"></div>
+                    </div>
+
+                    <button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full mt-4">保存所有设置</button>
+                </div>
+            </div>
 
         </main>
     </div>
 </div>
 
 <!-- ==================== 模态框：入库 ==================== -->
-<div id="stockInModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-blue-600 mb-4">📥 入库</h3><div class="form-group"><label>产品</label><select id="stockInProduct" class="w-full p-2 border rounded"></select></div><div class="form-group"><label>数量</label><input id="stockInQty" type="number" min="1" class="w-full p-2 border rounded"></div><div class="form-group"><label>单价 (SAR)</label><input id="stockInPrice" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div><div class="form-group"><label>供应商</label><input id="stockInSupplier" class="w-full p-2 border rounded" placeholder="供应商名称"></div><div class="form-group"><label>备注</label><input id="stockInNote" class="w-full p-2 border rounded" placeholder="备注"></div><div class="flex gap-3 mt-4"><button onclick="submitStockIn()" class="btn-success flex-1 py-2 rounded-lg">确认入库</button><button onclick="closeModal('stockInModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
+<div id="stockInModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <h3 class="text-xl font-bold text-blue-600 mb-4">📥 入库</h3>
+        <div class="form-group"><label>产品</label><select id="stockInProduct" class="w-full p-2 border rounded"></select></div>
+        <div class="form-group"><label>数量</label><input id="stockInQty" type="number" min="1" class="w-full p-2 border rounded"></div>
+        <div class="form-group"><label>单价 (SAR)</label><input id="stockInPrice" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div>
+        <div class="form-group"><label>供应商</label><input id="stockInSupplier" class="w-full p-2 border rounded" placeholder="供应商名称"></div>
+        <div class="form-group"><label>备注</label><input id="stockInNote" class="w-full p-2 border rounded" placeholder="备注"></div>
+        <div class="flex gap-3 mt-4"><button onclick="submitStockIn()" class="btn-success flex-1 py-2 rounded-lg">确认入库</button><button onclick="closeModal('stockInModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div>
+    </div>
+</div>
 
 <!-- ==================== 模态框：出库 ==================== -->
-<div id="stockOutModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-amber-600 mb-4">📤 出库</h3><div class="form-group"><label>产品</label><select id="stockOutProduct" class="w-full p-2 border rounded"></select></div><div class="form-group"><label>数量</label><input id="stockOutQty" type="number" min="1" class="w-full p-2 border rounded"></div><div class="form-group"><label>出库原因</label><select id="stockOutReason" class="w-full p-2 border rounded"><option value="日常消耗">日常消耗</option><option value="客户使用">客户使用</option><option value="过期报废">过期报废</option><option value="其他">其他</option></select></div><div class="form-group"><label>备注</label><input id="stockOutNote" class="w-full p-2 border rounded" placeholder="备注"></div><div class="flex gap-3 mt-4"><button onclick="submitStockOut()" class="btn-warning flex-1 py-2 rounded-lg">确认出库</button><button onclick="closeModal('stockOutModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
+<div id="stockOutModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <h3 class="text-xl font-bold text-amber-600 mb-4">📤 出库</h3>
+        <div class="form-group"><label>产品</label><select id="stockOutProduct" class="w-full p-2 border rounded"></select></div>
+        <div class="form-group"><label>数量</label><input id="stockOutQty" type="number" min="1" class="w-full p-2 border rounded"></div>
+        <div class="form-group"><label>出库原因</label><select id="stockOutReason" class="w-full p-2 border rounded"><option value="日常消耗">日常消耗</option><option value="客户使用">客户使用</option><option value="过期报废">过期报废</option><option value="其他">其他</option></select></div>
+        <div class="form-group"><label>备注</label><input id="stockOutNote" class="w-full p-2 border rounded" placeholder="备注"></div>
+        <div class="flex gap-3 mt-4"><button onclick="submitStockOut()" class="btn-warning flex-1 py-2 rounded-lg">确认出库</button><button onclick="closeModal('stockOutModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div>
+    </div>
+</div>
 
 <!-- ==================== 模态框：新产品 ==================== -->
-<div id="addProductModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-blue-600 mb-4">➕ 新产品</h3><div class="form-group"><label>产品名称</label><input id="newProductName" class="w-full p-2 border rounded"></div><div class="form-group"><label>分类</label><select id="newProductCategory" class="w-full p-2 border rounded"><option value="耗材">耗材</option><option value="工具">工具</option><option value="其他">其他</option></select></div><div class="form-group"><label>单位</label><input id="newProductUnit" class="w-full p-2 border rounded" placeholder="如：瓶、条、个" value="瓶"></div><div class="form-group"><label>初始数量</label><input id="newProductQty" type="number" min="0" class="w-full p-2 border rounded" placeholder="0"></div><div class="form-group"><label>成本价 (SAR)</label><input id="newProductCost" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div><div class="form-group"><label>最低库存预警</label><input id="newProductMinQty" type="number" min="1" class="w-full p-2 border rounded" placeholder="5"></div><div class="flex gap-3 mt-4"><button onclick="submitNewProduct()" class="btn-success flex-1 py-2 rounded-lg">添加产品</button><button onclick="closeModal('addProductModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
+<div id="addProductModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <h3 class="text-xl font-bold text-blue-600 mb-4">➕ 新产品</h3>
+        <div class="form-group"><label>产品名称</label><input id="newProductName" class="w-full p-2 border rounded"></div>
+        <div class="form-group"><label>分类</label><select id="newProductCategory" class="w-full p-2 border rounded"><option value="耗材">耗材</option><option value="工具">工具</option><option value="其他">其他</option></select></div>
+        <div class="form-group"><label>单位</label><input id="newProductUnit" class="w-full p-2 border rounded" placeholder="如：瓶、条、个" value="瓶"></div>
+        <div class="form-group"><label>初始数量</label><input id="newProductQty" type="number" min="0" class="w-full p-2 border rounded" placeholder="0"></div>
+        <div class="form-group"><label>成本价 (SAR)</label><input id="newProductCost" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div>
+        <div class="form-group"><label>最低库存预警</label><input id="newProductMinQty" type="number" min="1" class="w-full p-2 border rounded" placeholder="5"></div>
+        <div class="flex gap-3 mt-4"><button onclick="submitNewProduct()" class="btn-success flex-1 py-2 rounded-lg">添加产品</button><button onclick="closeModal('addProductModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div>
+    </div>
+</div>
 
 <script>
 // ================================================================
@@ -357,6 +567,9 @@ let allStockIn = [];
 let allStockOut = [];
 let allDailyReports = [];
 let allCommissions = [];
+let allAuditLogs = [];
+let allBranches = [];
+let currentBranch = 'all';
 let config = {
     vatRate: 15,
     shopName: 'Car Wash Pro',
@@ -384,10 +597,10 @@ let customerFilter = { search: '', level: 'all' };
 let currentReportTab = 'daily';
 
 const ROLE_PERMISSIONS = {
-    owner: { label: '老板', icon: '👑', level: 100, cashier: true, inventory: true, customers: true, attendance: true, reports: true, employees: true, settings: true },
-    manager: { label: '店长', icon: '📋', level: 80, cashier: true, inventory: true, customers: true, attendance: true, reports: true, employees: false, settings: false },
-    cashier: { label: '收银员', icon: '💰', level: 50, cashier: true, inventory: false, customers: true, attendance: false, reports: false, employees: false, settings: false },
-    employee: { label: '员工', icon: '👤', level: 30, cashier: false, inventory: false, customers: false, attendance: true, reports: false, employees: false, settings: false }
+    owner: { label: '老板', icon: '👑', level: 100, cashier: true, inventory: true, customers: true, attendance: true, reports: true, employees: true, audit: true, settings: true },
+    manager: { label: '店长', icon: '📋', level: 80, cashier: true, inventory: true, customers: true, attendance: true, reports: true, employees: false, audit: false, settings: false },
+    cashier: { label: '收银员', icon: '💰', level: 50, cashier: true, inventory: false, customers: true, attendance: false, reports: false, employees: false, audit: false, settings: false },
+    employee: { label: '员工', icon: '👤', level: 30, cashier: false, inventory: false, customers: false, attendance: true, reports: false, employees: false, audit: false, settings: false }
 };
 
 // ================================================================
@@ -396,7 +609,7 @@ const ROLE_PERMISSIONS = {
 async function loadData() {
     try {
         updateSyncStatus('syncing');
-        const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, stockInRes, stockOutRes, dailyRes, commissionRes] = await Promise.all([
+        const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, stockInRes, stockOutRes, dailyRes, commissionRes, auditRes, branchesRes] = await Promise.all([
             supabaseClient.from('users').select('*').order('created_at', { ascending: true }),
             supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
             supabaseClient.from('customers').select('*').order('created_at', { ascending: false }),
@@ -405,7 +618,9 @@ async function loadData() {
             supabaseClient.from('stock_in').select('*').order('created_at', { ascending: false }).limit(50),
             supabaseClient.from('stock_out').select('*').order('created_at', { ascending: false }).limit(50),
             supabaseClient.from('daily_report').select('*').order('report_date', { ascending: false }).limit(30),
-            supabaseClient.from('employee_commission').select('*').order('created_at', { ascending: false }).limit(100)
+            supabaseClient.from('employee_commission').select('*').order('created_at', { ascending: false }).limit(100),
+            supabaseClient.from('audit_log').select('*').order('created_at', { ascending: false }).limit(50),
+            supabaseClient.from('branches').select('*')
         ]);
 
         if (usersRes.error) throw new Error(usersRes.error.message);
@@ -417,6 +632,8 @@ async function loadData() {
         if (stockOutRes.error) throw new Error(stockOutRes.error.message);
         if (dailyRes.error) throw new Error(dailyRes.error.message);
         if (commissionRes.error) throw new Error(commissionRes.error.message);
+        if (auditRes.error) throw new Error(auditRes.error.message);
+        if (branchesRes.error) throw new Error(branchesRes.error.message);
 
         allUsers = usersRes.data || [];
         allOrders = ordersRes.data || [];
@@ -427,6 +644,8 @@ async function loadData() {
         allStockOut = stockOutRes.data || [];
         allDailyReports = dailyRes.data || [];
         allCommissions = commissionRes.data || [];
+        allAuditLogs = auditRes.data || [];
+        allBranches = branchesRes.data || [];
 
         try {
             const savedConfig = JSON.parse(localStorage.getItem('cw_config'));
@@ -482,6 +701,10 @@ function setupRealtime() {
         })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_in' }, (payload) => { allStockIn.unshift(payload.new); refreshAll(); })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_out' }, (payload) => { allStockOut.unshift(payload.new); refreshAll(); })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_log' }, (payload) => {
+            if (allAuditLogs.length > 100) allAuditLogs.pop();
+            allAuditLogs.unshift(payload.new);
+        })
         .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected'); });
 }
 
@@ -503,15 +726,8 @@ async function authLogin() {
         document.getElementById('appContainer').classList.remove('hidden');
         document.getElementById('currentUserSpan').textContent = user.name || user.username;
         document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
-        const permissions = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.employee;
-        document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
-        document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
-        document.getElementById('navCustomers').style.display = permissions.customers ? 'flex' : 'none';
-        document.getElementById('navAttendance').style.display = permissions.attendance ? 'flex' : 'none';
-        document.getElementById('navReports').style.display = permissions.reports ? 'flex' : 'none';
-        document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
-        document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
-        document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[user.role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[user.role]?.label || user.role);
+
+        updateUIByRole(user.role);
         setupRealtime();
         refreshAll();
         switchTab('dashboard');
@@ -531,6 +747,20 @@ function logout() {
     showToast('已退出');
 }
 
+function updateUIByRole(role) {
+    const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.employee;
+    document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
+    document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
+    document.getElementById('navCustomers').style.display = permissions.customers ? 'flex' : 'none';
+    document.getElementById('navAttendance').style.display = permissions.attendance ? 'flex' : 'none';
+    document.getElementById('navReports').style.display = permissions.reports ? 'flex' : 'none';
+    document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
+    document.getElementById('navAudit').style.display = permissions.audit ? 'flex' : 'none';
+    document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
+    document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
+    updateBranchSelector();
+}
+
 // ================================================================
 //  导航
 // ================================================================
@@ -544,7 +774,7 @@ function switchTab(tab) {
         el.classList.remove('nav-item-active');
         if (el.dataset.nav === tab) el.classList.add('nav-item-active');
     });
-    const titles = { dashboard: '仪表板', cashier: '收银台', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工管理', settings: '系统设置' };
+    const titles = { dashboard: '仪表板', cashier: '收银台', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工管理', audit: '审计日志', settings: '系统设置' };
     document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
     if (tab === 'dashboard') refreshDashboard();
     if (tab === 'cashier') { renderSelects(); updatePrice(); refreshOrders(); }
@@ -553,7 +783,8 @@ function switchTab(tab) {
     if (tab === 'attendance') refreshAttendance();
     if (tab === 'employees') refreshEmployees();
     if (tab === 'reports') { loadDailyReport(); loadCommission(); loadCustomerRank(); }
-    if (tab === 'settings') loadSettings();
+    if (tab === 'audit') loadAuditLog();
+    if (tab === 'settings') { loadSettings(); loadBackupConfig(); refreshBranches(); }
 }
 
 document.querySelectorAll('[data-nav]').forEach(el => {
@@ -561,13 +792,23 @@ document.querySelectorAll('[data-nav]').forEach(el => {
 });
 
 // ================================================================
-//  数据过滤
+//  数据过滤（含门店）
 // ================================================================
 function getFilteredOrders() {
+    let orders = allOrders;
     const role = currentUser?.role || 'employee';
-    if (role === 'owner' || role === 'manager') return allOrders;
-    const username = currentUser?.name || currentUser?.username || '';
-    return allOrders.filter(o => o.staff_name === username || o.staff_name === currentUser?.name);
+
+    // 门店过滤
+    if (currentBranch !== 'all') {
+        orders = orders.filter(o => o.branch_id === currentBranch);
+    }
+
+    // 角色过滤
+    if (role !== 'owner' && role !== 'manager') {
+        const username = currentUser?.name || currentUser?.username || '';
+        orders = orders.filter(o => o.staff_name === username || o.staff_name === currentUser?.name);
+    }
+    return orders;
 }
 
 function getFilteredAttendance() {
@@ -575,6 +816,95 @@ function getFilteredAttendance() {
     if (role === 'owner' || role === 'manager') return allAttendance;
     const username = currentUser?.name || currentUser?.username || '';
     return allAttendance.filter(a => a.staff_name === username || a.staff_name === currentUser?.name);
+}
+
+// ================================================================
+//  P3: 多门店功能
+// ================================================================
+function updateBranchSelector() {
+    const sel = document.getElementById('branchSelector');
+    if (!sel) return;
+    sel.innerHTML = '<option value="all">🏪 全部门店</option>' +
+        allBranches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    if (currentBranch && currentBranch !== 'all') {
+        sel.value = currentBranch;
+    }
+}
+
+function switchBranch() {
+    currentBranch = document.getElementById('branchSelector').value;
+    refreshAll();
+    const branchName = currentBranch === 'all' ? '全部门店' : allBranches.find(b => b.id === currentBranch)?.name || '未知';
+    showToast('已切换到: ' + branchName);
+}
+
+async function addBranch() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以添加门店'); return; }
+    const name = document.getElementById('newBranchName').value.trim();
+    const address = document.getElementById('newBranchAddress').value.trim();
+    if (!name) { showToast('请输入门店名称'); return; }
+    try {
+        const { data, error } = await supabaseClient.from('branches').insert([{ name, address }]).select();
+        if (error) throw new Error(error.message);
+        if (data && data.length > 0) {
+            allBranches.push(data[0]);
+            refreshBranches();
+            updateBranchSelector();
+            showToast('✅ 门店已添加: ' + name);
+            document.getElementById('newBranchName').value = '';
+            document.getElementById('newBranchAddress').value = '';
+        }
+    } catch (error) {
+        showToast('❌ 添加失败: ' + error.message);
+    }
+}
+
+function refreshBranches() {
+    const list = document.getElementById('branchList');
+    if (!list) return;
+    list.innerHTML = allBranches.map(b =>
+        `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+            <span><strong>${b.name}</strong> <span class="text-sm text-gray-400">${b.address || ''}</span></span>
+            <span class="text-xs text-gray-400">${b.status || 'active'}</span>
+        </div>`
+    ).join('') || '<div class="text-center text-gray-400">暂无门店</div>';
+}
+
+// ================================================================
+//  P3: KPI看板
+// ================================================================
+function refreshKPIs() {
+    const orders = getFilteredOrders();
+    const today = new Date().toISOString().split('T')[0];
+    const todayOrders = orders.filter(o => (o.date || '').startsWith(today));
+    const totalRevenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+    const todayRevenue = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const lowStock = allInventory.filter(i => (i.quantity || 0) <= (i.min_qty || 5)).length;
+    const avgOrder = orders.length > 0 ? totalRevenue / orders.length : 0;
+
+    // 最佳员工
+    const staffStats = {};
+    orders.forEach(o => {
+        const name = o.staff_name || '未知';
+        staffStats[name] = (staffStats[name] || 0) + (o.total || 0);
+    });
+    const topStaff = Object.entries(staffStats).sort((a, b) => b[1] - a[1])[0];
+
+    // 热门服务
+    const serviceStats = {};
+    orders.forEach(o => {
+        const name = o.service_name || '基础';
+        serviceStats[name] = (serviceStats[name] || 0) + 1;
+    });
+    const topService = Object.entries(serviceStats).sort((a, b) => b[1] - a[1])[0];
+
+    document.getElementById('kpiTodayOrders').textContent = todayOrders.length;
+    document.getElementById('kpiTodayRevenue').textContent = todayRevenue.toFixed(2) + ' SAR';
+    document.getElementById('kpiTotalRevenue').textContent = totalRevenue.toFixed(2) + ' SAR';
+    document.getElementById('kpiLowStock').textContent = lowStock;
+    document.getElementById('kpiAvgOrder').textContent = avgOrder.toFixed(2) + ' SAR';
+    document.getElementById('kpiTopStaff').textContent = topStaff ? topStaff[0] + ' (' + topStaff[1].toFixed(0) + ' SAR)' : '-';
+    document.getElementById('kpiTopService').textContent = topService ? topService[0] + ' (' + topService[1] + '单)' : '-';
 }
 
 // ================================================================
@@ -586,7 +916,7 @@ function refreshDashboard() {
     const today = new Date().toISOString().split('T')[0];
     const todayOrders = orders.filter(o => (o.date || '').startsWith(today));
     const todayRevenue = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
-    
+
     document.getElementById('todayRevenue').textContent = todayRevenue.toFixed(2) + ' SAR';
     document.getElementById('todayOrdersValue').textContent = todayOrders.length;
     document.getElementById('customersValue').textContent = allCustomers.length;
@@ -615,6 +945,7 @@ function refreshDashboard() {
         `<div class="flex justify-between"><span>${name}</span><span>${count} 单</span></div>`
     ).join('') || '<div class="text-gray-400 text-center">暂无数据</div>';
 
+    refreshKPIs();
     initCharts();
 }
 
@@ -640,15 +971,8 @@ function refreshCustomers() {
     list.innerHTML = customers.map(c => {
         const levelClass = 'customer-level customer-level-' + (c.level || 'normal').toLowerCase();
         return `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
-            <div>
-                <strong>${c.name || 'Unknown'}</strong>
-                <span class="${levelClass}">${c.level || '普通'}</span>
-                <br><small>${c.phone || ''} | ${c.plate_number || ''}</small>
-            </div>
-            <div class="text-right">
-                <div>余额: <span class="font-bold text-green-600">${(c.balance || 0).toFixed(2)} SAR</span></div>
-                <div class="text-sm">积分: ${c.points || 0} | 到店: ${c.visit_count || 0}次</div>
-            </div>
+            <div><strong>${c.name || 'Unknown'}</strong><span class="${levelClass}">${c.level || '普通'}</span><br><small>${c.phone || ''} | ${c.plate_number || ''}</small></div>
+            <div class="text-right"><div>余额: <span class="font-bold text-green-600">${(c.balance || 0).toFixed(2)} SAR</span></div><div class="text-sm">积分: ${c.points || 0} | 到店: ${c.visit_count || 0}次</div></div>
         </div>`;
     }).join('') || '<div class="text-center text-gray-400">暂无客户</div>';
 }
@@ -763,7 +1087,7 @@ function updateInventorySelects() {
 function updateCommissionStaffSelect() {
     const sel = document.getElementById('commissionStaffFilter');
     if (sel) {
-        sel.innerHTML = '<option value="all">全部员工</option>' + 
+        sel.innerHTML = '<option value="all">全部员工</option>' +
             allUsers.filter(u => u.role !== 'owner').map(u =>
                 `<option value="${u.name || u.username}">${u.name || u.username}</option>`
             ).join('');
@@ -820,12 +1144,14 @@ async function saveOrder() {
             payment_method: document.getElementById('paymentSelect').value,
             staff_name: staffName,
             service_name: document.getElementById('serviceSelect').selectedOptions[0]?.text || '无',
-            date: new Date().toISOString().split('T')[0]
+            date: new Date().toISOString().split('T')[0],
+            branch_id: currentBranch !== 'all' ? currentBranch : null,
+            branch_name: currentBranch !== 'all' ? allBranches.find(b => b.id === currentBranch)?.name : null
         };
         const { data, error } = await supabaseClient.from('orders').insert([orderData]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allOrders.unshift(data[0]);
-        
+
         // 自动生成提成
         const commissionRate = config.commissionRate || 5;
         const commissionAmount = total * commissionRate / 100;
@@ -841,7 +1167,7 @@ async function saveOrder() {
                 status: '待结算'
             }]);
         }
-        
+
         refreshAll();
         showToast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR (提成: ' + commissionAmount.toFixed(2) + ' SAR)');
         document.getElementById('plateInput').value = '';
@@ -854,7 +1180,7 @@ async function saveOrder() {
 }
 
 // ================================================================
-//  客户管理（CRM增强）
+//  客户管理
 // ================================================================
 async function addCustomer() {
     if (!currentUser) { showToast('请先登录'); return; }
@@ -870,8 +1196,8 @@ async function addCustomer() {
         let existing = allCustomers.find(c => c.phone === phone || c.plate_number === plate);
         if (existing) {
             const newBalance = (existing.balance || 0) + amount;
-            await supabaseClient.from('customers').update({ 
-                balance: newBalance, 
+            await supabaseClient.from('customers').update({
+                balance: newBalance,
                 name: name,
                 total_spent: (existing.total_spent || 0) + amount
             }).eq('id', existing.id);
@@ -879,7 +1205,7 @@ async function addCustomer() {
             existing.name = name;
             existing.total_spent = (existing.total_spent || 0) + amount;
         } else {
-            const { data, error } = await supabaseClient.from('customers').insert([{ 
+            const { data, error } = await supabaseClient.from('customers').insert([{
                 phone, name, plate_number: plate, balance: amount, points: 0,
                 level: '普通', total_spent: amount, visit_count: 1, last_visit: new Date().toISOString().split('T')[0]
             }]).select();
@@ -911,7 +1237,7 @@ function resetCustomerFilter() {
 }
 
 // ================================================================
-//  库存进销存功能
+//  库存进销存
 // ================================================================
 function openStockInModal() { updateInventorySelects(); document.getElementById('stockInModal').classList.remove('hidden'); document.getElementById('stockInQty').value = ''; document.getElementById('stockInPrice').value = ''; document.getElementById('stockInSupplier').value = ''; document.getElementById('stockInNote').value = ''; }
 function openStockOutModal() { updateInventorySelects(); document.getElementById('stockOutModal').classList.remove('hidden'); document.getElementById('stockOutQty').value = ''; document.getElementById('stockOutNote').value = ''; }
@@ -1021,7 +1347,7 @@ async function clockOut() {
 }
 
 // ================================================================
-//  P2: 财务日报 + 员工提成 + 客户排行
+//  P2: 财务日报 + 提成
 // ================================================================
 function switchReportTab(tab) {
     currentReportTab = tab;
@@ -1039,7 +1365,7 @@ async function loadDailyReport() {
     const picker = document.getElementById('reportDatePicker');
     const date = picker.value || new Date().toISOString().split('T')[0];
     if (!picker.value) picker.value = date;
-    
+
     const report = allDailyReports.find(r => r.report_date === date);
     if (report) {
         document.getElementById('dailyOrders').textContent = report.total_orders || 0;
@@ -1051,7 +1377,6 @@ async function loadDailyReport() {
         document.getElementById('dailyMada').textContent = (report.mada_amount || 0).toFixed(2);
         document.getElementById('dailyApple').textContent = (report.applepay_amount || 0).toFixed(2);
     } else {
-        // 从订单计算
         const dayOrders = allOrders.filter(o => o.date === date);
         const total = dayOrders.reduce((s, o) => s + (o.total || 0), 0);
         const vat = dayOrders.reduce((s, o) => s + (o.vat || 0), 0);
@@ -1096,15 +1421,9 @@ async function loadCommission() {
     const list = document.getElementById('commissionList');
     list.innerHTML = commissions.slice(0, 50).map(c =>
         `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-            <div>
-                <span class="font-medium">${c.employee_name}</span>
-                <span class="text-sm text-gray-500 ml-2">${c.service_name || '服务'}</span>
-            </div>
-            <div>
-                <span class="text-sm">${c.amount || 0} SAR × ${c.commission_rate || 5}% = </span>
-                <span class="font-bold text-green-600">${(c.commission_amount || 0).toFixed(2)} SAR</span>
-                <span class="commission-badge ${c.status === '已结算' ? 'commission-paid' : 'commission-pending'}">${c.status || '待结算'}</span>
-            </div>
+            <div><span class="font-medium">${c.employee_name}</span><span class="text-sm text-gray-500 ml-2">${c.service_name || '服务'}</span></div>
+            <div><span class="text-sm">${c.amount || 0} SAR × ${c.commission_rate || 5}% = </span><span class="font-bold text-green-600">${(c.commission_amount || 0).toFixed(2)} SAR</span>
+            <span class="commission-badge ${c.status === '已结算' ? 'commission-paid' : 'commission-pending'}">${c.status || '待结算'}</span></div>
         </div>`
     ).join('') || '<div class="text-center text-gray-400">暂无提成记录</div>';
 
@@ -1121,12 +1440,11 @@ async function settleCommission() {
     const pending = allCommissions.filter(c => c.status === '待结算' && (filterStaff === 'all' || c.employee_name === filterStaff));
     if (pending.length === 0) { showToast('没有待结算的提成'); return; }
     if (!confirm('确认结算 ' + pending.length + ' 条提成记录？')) return;
-    
+
     try {
         for (const c of pending) {
             await supabaseClient.from('employee_commission').update({ status: '已结算' }).eq('id', c.id);
         }
-        // 更新本地数据
         allCommissions.forEach(c => { if (c.status === '待结算' && (filterStaff === 'all' || c.employee_name === filterStaff)) c.status = '已结算'; });
         showToast('✅ 已结算 ' + pending.length + ' 条提成');
         loadCommission();
@@ -1141,25 +1459,190 @@ async function loadCustomerRank() {
     if (type === 'points') sorted.sort((a, b) => (b.points || 0) - (a.points || 0));
     else if (type === 'spent') sorted.sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0));
     else if (type === 'visits') sorted.sort((a, b) => (b.visit_count || 0) - (a.visit_count || 0));
-    
+
     const list = document.getElementById('customerRankList');
     list.innerHTML = sorted.slice(0, 20).map((c, i) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
         const levelClass = 'customer-level customer-level-' + (c.level || 'normal').toLowerCase();
         return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-            <div>
-                <span class="font-bold mr-2">${medal}</span>
-                <span>${c.name || '未知'}</span>
-                <span class="${levelClass}">${c.level || '普通'}</span>
-                <span class="text-sm text-gray-400 ml-2">${c.plate_number || ''}</span>
-            </div>
-            <div class="text-right">
-                <div class="text-sm">积分: ${c.points || 0}</div>
-                <div class="text-sm">消费: ${(c.total_spent || 0).toFixed(2)} SAR</div>
-                <div class="text-xs text-gray-400">到店: ${c.visit_count || 0}次</div>
-            </div>
+            <div><span class="font-bold mr-2">${medal}</span><span>${c.name || '未知'}</span><span class="${levelClass}">${c.level || '普通'}</span><span class="text-sm text-gray-400 ml-2">${c.plate_number || ''}</span></div>
+            <div class="text-right"><div class="text-sm">积分: ${c.points || 0}</div><div class="text-sm">消费: ${(c.total_spent || 0).toFixed(2)} SAR</div><div class="text-xs text-gray-400">到店: ${c.visit_count || 0}次</div></div>
         </div>`;
     }).join('') || '<div class="text-center text-gray-400">暂无客户数据</div>';
+}
+
+// ================================================================
+//  P3: 审计日志
+// ================================================================
+async function loadAuditLog() {
+    const action = document.getElementById('auditActionFilter')?.value || 'all';
+    const table = document.getElementById('auditTableFilter')?.value || 'all';
+    const startDate = document.getElementById('auditDateStart')?.value || '';
+    const endDate = document.getElementById('auditDateEnd')?.value || '';
+
+    let query = supabaseClient.from('audit_log').select('*').order('created_at', { ascending: false });
+
+    if (action !== 'all') query = query.eq('action', action);
+    if (table !== 'all') query = query.eq('table_name', table);
+    if (startDate) query = query.gte('created_at', startDate + 'T00:00:00');
+    if (endDate) query = query.lte('created_at', endDate + 'T23:59:59');
+
+    const { data, error } = await query.limit(100);
+    if (!error && data) {
+        allAuditLogs = data;
+        renderAuditLog();
+    }
+}
+
+function renderAuditLog() {
+    const list = document.getElementById('auditLogList');
+    const actions = { INSERT: '🟢 新增', UPDATE: '🟡 修改', DELETE: '🔴 删除' };
+
+    list.innerHTML = allAuditLogs.map(log => {
+        const actionClass = 'audit-' + log.action;
+        return `<div class="audit-entry ${actionClass} flex justify-between p-2 border-b hover:bg-gray-50">
+            <div>
+                <span class="font-medium">${actions[log.action] || log.action}</span>
+                <span class="text-gray-600 ml-2">${log.table_name}</span>
+                <span class="text-xs text-gray-400 ml-2">${log.username || '系统'}</span>
+                ${log.old_data ? `<span class="text-xs text-gray-400 ml-2" title="${JSON.stringify(log.old_data).substring(0, 100)}">📄旧</span>` : ''}
+                ${log.new_data ? `<span class="text-xs text-gray-400 ml-2" title="${JSON.stringify(log.new_data).substring(0, 100)}">📄新</span>` : ''}
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-gray-400">${log.created_at ? new Date(log.created_at).toLocaleString() : ''}</span>
+            </div>
+        </div>`;
+    }).join('') || '<div class="text-center text-gray-400">暂无审计记录</div>';
+
+    document.getElementById('auditCount').textContent = allAuditLogs.length;
+}
+
+function exportAuditLog() {
+    if (allAuditLogs.length === 0) { showToast('暂无数据可导出'); return; }
+    const data = [['时间', '用户', '操作', '表', '记录ID', '旧数据', '新数据']];
+    allAuditLogs.forEach(log => {
+        data.push([
+            log.created_at ? new Date(log.created_at).toLocaleString() : '',
+            log.username || '',
+            log.action || '',
+            log.table_name || '',
+            log.record_id || '',
+            log.old_data ? JSON.stringify(log.old_data).substring(0, 100) : '',
+            log.new_data ? JSON.stringify(log.new_data).substring(0, 100) : ''
+        ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '审计日志');
+    XLSX.writeFile(wb, `审计日志_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('✅ 审计日志已导出');
+}
+
+// ================================================================
+//  P3: 备份功能
+// ================================================================
+async function loadBackupConfig() {
+    const { data, error } = await supabaseClient.from('backup_config').select('*').eq('id', 1).single();
+    if (!error && data) {
+        document.getElementById('backupEnabled').value = data.auto_backup_enabled ? 'true' : 'false';
+        document.getElementById('backupFrequency').value = data.backup_frequency || 'daily';
+        document.getElementById('backupRetention').value = data.retention_days || 30;
+        document.getElementById('lastBackupTime').textContent = data.last_backup_at ? new Date(data.last_backup_at).toLocaleString() : '从未备份';
+    }
+}
+
+async function saveBackupConfig() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以修改备份设置'); return; }
+    const data = {
+        auto_backup_enabled: document.getElementById('backupEnabled').value === 'true',
+        backup_frequency: document.getElementById('backupFrequency').value,
+        retention_days: parseInt(document.getElementById('backupRetention').value) || 30,
+        updated_at: new Date().toISOString()
+    };
+    const { error } = await supabaseClient.from('backup_config').update(data).eq('id', 1);
+    if (error) { showToast('❌ 保存失败: ' + error.message); return; }
+    showToast('✅ 备份设置已保存');
+}
+
+async function manualBackup() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以执行备份'); return; }
+    showToast('⏳ 正在备份...');
+
+    try {
+        const backupData = {
+            timestamp: new Date().toISOString(),
+            users: allUsers,
+            orders: allOrders,
+            customers: allCustomers,
+            inventory: allInventory,
+            attendance: allAttendance,
+            branches: allBranches,
+            config: config
+        };
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        await supabaseClient.from('backup_config').update({
+            last_backup_at: new Date().toISOString()
+        }).eq('id', 1);
+
+        document.getElementById('lastBackupTime').textContent = new Date().toLocaleString();
+        showToast('✅ 备份完成');
+    } catch (error) {
+        showToast('❌ 备份失败: ' + error.message);
+    }
+}
+
+function restoreBackup() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以恢复备份'); return; }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!confirm('⚠️ 恢复备份将覆盖当前数据，确认继续？')) return;
+
+                if (data.users) {
+                    for (const u of data.users) {
+                        await supabaseClient.from('users').upsert(u);
+                    }
+                }
+                if (data.orders) {
+                    for (const o of data.orders) {
+                        await supabaseClient.from('orders').upsert(o);
+                    }
+                }
+                if (data.customers) {
+                    for (const c of data.customers) {
+                        await supabaseClient.from('customers').upsert(c);
+                    }
+                }
+                if (data.inventory) {
+                    for (const i of data.inventory) {
+                        await supabaseClient.from('inventory').upsert(i);
+                    }
+                }
+
+                showToast('✅ 备份恢复完成，请刷新页面');
+                setTimeout(() => location.reload(), 2000);
+            } catch(err) {
+                showToast('❌ 恢复失败: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 }
 
 // ================================================================
@@ -1289,7 +1772,6 @@ async function init() {
     await loadData();
     loadSettings();
 
-    // 设置默认日期
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('reportDatePicker').value = today;
 
@@ -1304,15 +1786,7 @@ async function init() {
                 document.getElementById('appContainer').classList.remove('hidden');
                 document.getElementById('currentUserSpan').textContent = user.name || user.username;
                 document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
-                const permissions = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.employee;
-                document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
-                document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
-                document.getElementById('navCustomers').style.display = permissions.customers ? 'flex' : 'none';
-                document.getElementById('navAttendance').style.display = permissions.attendance ? 'flex' : 'none';
-                document.getElementById('navReports').style.display = permissions.reports ? 'flex' : 'none';
-                document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
-                document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
-                document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[user.role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[user.role]?.label || user.role);
+                updateUIByRole(user.role);
                 setupRealtime();
                 refreshAll();
                 switchTab('dashboard');
@@ -1328,9 +1802,10 @@ async function init() {
 
 init();
 
-console.log('✅ CarWash Pro P2已加载（财务日报 + CRM + 员工提成）');
+console.log('✅ CarWash Pro P3 完整版已加载');
 console.log('👤 当前用户:', currentUser?.username || '未登录');
 console.log('📦 客户数:', allCustomers.length);
+console.log('🏪 门店数:', allBranches.length);
 console.log('🔑 默认: boss/admin123');
 </script>
 </body>
