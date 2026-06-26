@@ -65,15 +65,6 @@
         .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0091D5; box-shadow: 0 0 0 3px rgba(0,145,213,0.1); }
-        .order-timeline { position: relative; padding-left: 20px; }
-        .order-timeline::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
-        .timeline-item { position: relative; padding-bottom: 16px; padding-left: 16px; }
-        .timeline-item::before { content: ''; position: absolute; left: -14px; top: 6px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #0091D5; background: white; }
-        .timeline-item.active::before { background: #0091D5; }
-        .timeline-item.completed::before { background: #22c55e; border-color: #22c55e; }
-        .kpi-card { transition: all 0.3s; }
-        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -12px rgba(0,0,0,0.15); }
-        .modal-content { max-height: 85vh; overflow-y: auto; padding: 4px; }
         .order-card { cursor: pointer; transition: all 0.2s; }
         .order-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px rgba(0,0,0,0.1); }
         .commission-paid { background: #dcfce7; color: #16a34a; }
@@ -83,13 +74,20 @@
         .setting-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
         .setting-row label { min-width: 100px; font-size: 14px; color: #4b5563; }
         .setting-row input, .setting-row select { flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
+        .kpi-card { transition: all 0.3s; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -12px rgba(0,0,0,0.15); }
+        .auth-link { color: #0091D5; cursor: pointer; font-weight: 500; }
+        .auth-link:hover { text-decoration: underline; }
+        .auth-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
     </style>
 </head>
 <body>
 
-<!-- ==================== 登录模态框 ==================== -->
+<!-- ==================== 登录模态框（包含注册、忘记密码、修改密码） ==================== -->
 <div id="loginModal" class="modal-glass">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 max-h-[90vh] overflow-y-auto">
+
         <div class="text-center mb-6">
             <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <i class="fas fa-car-wash text-4xl text-white"></i>
@@ -98,6 +96,8 @@
             <p class="text-gray-500 mt-1">☁️ 云端版 · 实时同步</p>
             <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ 连接中...</span>
         </div>
+
+        <!-- ===== 登录视图 ===== -->
         <div id="loginView">
             <div class="mb-3">
                 <label class="text-sm font-medium text-gray-600">用户名 / Username</label>
@@ -105,15 +105,335 @@
             </div>
             <div class="mb-3">
                 <label class="text-sm font-medium text-gray-600">密码 / Password</label>
-                <input type="password" id="loginPassword" value="admin123" placeholder="请输入密码" class="w-full p-3 border border-gray-200 rounded-xl mt-1">
+                <input type="password" id="loginPassword" value="admin123" placeholder="请输入密码" class="w-full p-3 border border-gray-200 rounded-xl mt-1" onkeydown="if(event.key==='Enter') authLogin()">
             </div>
             <button onclick="authLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition">登录 / Login</button>
-            <div class="mt-2 text-center text-xs text-gray-400">默认: boss / admin123</div>
+
+            <div class="auth-divider">
+                <span class="text-xs text-gray-400">或者</span>
+            </div>
+
+            <div class="flex justify-between text-sm">
+                <span class="auth-link" onclick="showRegister()">📝 注册账号</span>
+                <span class="auth-link" onclick="showForgotPassword()">🔑 忘记密码</span>
+                <span class="auth-link" onclick="showChangePassword()">🔒 修改密码</span>
+            </div>
+
+            <div class="mt-3 text-center text-xs text-gray-400">默认账号: boss / admin123</div>
         </div>
+
+        <!-- ===== 注册视图 ===== -->
+        <div id="registerView" class="hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📝 注册新账号</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">用户名 *</label>
+                    <input id="regUsername" placeholder="设置用户名" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">姓名</label>
+                    <input id="regName" placeholder="您的姓名" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">密码 *（至少6位）</label>
+                    <input id="regPassword" type="password" placeholder="设置密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">确认密码 *</label>
+                    <input id="regPasswordConfirm" type="password" placeholder="再次输入密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">角色</label>
+                    <select id="regRole" class="w-full p-3 border rounded-xl mt-1">
+                        <option value="employee">员工</option>
+                        <option value="cashier">收银员</option>
+                        <option value="manager">店长</option>
+                        <option value="owner">老板</option>
+                    </select>
+                </div>
+                <button onclick="registerUser()" class="w-full btn-success py-3 rounded-xl font-bold text-lg">立即注册</button>
+                <button onclick="showLogin()" class="w-full text-gray-500 mt-2 text-sm hover:text-gray-700">← 返回登录</button>
+            </div>
+        </div>
+
+        <!-- ===== 忘记密码视图 ===== -->
+        <div id="forgotPasswordView" class="hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">🔑 重置密码</h3>
+            <p class="text-sm text-gray-500 mb-4">输入您的用户名，系统将允许您重置密码。</p>
+            <div>
+                <label class="text-sm font-medium text-gray-600">用户名</label>
+                <input id="forgotUsername" placeholder="输入用户名" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <div class="mt-3">
+                <label class="text-sm font-medium text-gray-600">新密码</label>
+                <input id="forgotNewPassword" type="password" placeholder="设置新密码（至少6位）" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <div class="mt-3">
+                <label class="text-sm font-medium text-gray-600">确认新密码</label>
+                <input id="forgotConfirmPassword" type="password" placeholder="再次输入新密码" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <button onclick="resetPassword()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition mt-4">重置密码</button>
+            <button onclick="showLogin()" class="w-full text-gray-500 mt-2 text-sm hover:text-gray-700">← 返回登录</button>
+        </div>
+
+        <!-- ===== 修改密码视图 ===== -->
+        <div id="changePasswordView" class="hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">🔒 修改密码</h3>
+            <p class="text-sm text-gray-500 mb-4">输入当前密码和新密码来修改密码。</p>
+            <div>
+                <label class="text-sm font-medium text-gray-600">当前用户名</label>
+                <input id="changeUsername" placeholder="输入用户名" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <div class="mt-3">
+                <label class="text-sm font-medium text-gray-600">当前密码</label>
+                <input id="changeOldPassword" type="password" placeholder="输入当前密码" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <div class="mt-3">
+                <label class="text-sm font-medium text-gray-600">新密码</label>
+                <input id="changeNewPassword" type="password" placeholder="设置新密码（至少6位）" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <div class="mt-3">
+                <label class="text-sm font-medium text-gray-600">确认新密码</label>
+                <input id="changeConfirmPassword" type="password" placeholder="再次输入新密码" class="w-full p-3 border rounded-xl mt-1">
+            </div>
+            <button onclick="changePassword()" class="w-full bg-amber-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-amber-600 transition mt-4">确认修改密码</button>
+            <button onclick="showLogin()" class="w-full text-gray-500 mt-2 text-sm hover:text-gray-700">← 返回登录</button>
+        </div>
+
     </div>
 </div>
 
-<!-- ==================== 主应用 ==================== -->
+<!-- ==================== 主应用（后续完整代码将在下方继续） ==================== -->
+<script>
+// ================================================================
+//  Supabase配置
+// ================================================================
+const SUPABASE_URL = 'https://fhwsbdokxgjqyrbvstxq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZod3NiZG9reGdqcXlyYnZzdHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQzNjAsImV4cCI6MjA5Nzk2MDM2MH0.XXR5BhhOuF0t6lzOkeYl6OPyva_QCwcV482TzOFV_84';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ================================================================
+//  Auth UI 控制
+// ================================================================
+function showLogin() {
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('forgotPasswordView').classList.add('hidden');
+    document.getElementById('changePasswordView').classList.add('hidden');
+}
+
+function showRegister() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.remove('hidden');
+    document.getElementById('forgotPasswordView').classList.add('hidden');
+    document.getElementById('changePasswordView').classList.add('hidden');
+}
+
+function showForgotPassword() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('forgotPasswordView').classList.remove('hidden');
+    document.getElementById('changePasswordView').classList.add('hidden');
+}
+
+function showChangePassword() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('forgotPasswordView').classList.add('hidden');
+    document.getElementById('changePasswordView').classList.remove('hidden');
+}
+
+// ================================================================
+//  注册功能
+// ================================================================
+async function registerUser() {
+    const username = document.getElementById('regUsername').value.trim();
+    const name = document.getElementById('regName').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regPasswordConfirm').value;
+    const role = document.getElementById('regRole').value;
+
+    if (!username || !password) { showToast('请填写用户名和密码'); return; }
+    if (password.length < 6) { showToast('密码至少6位'); return; }
+    if (password !== confirm) { showToast('两次密码不一致'); return; }
+
+    try {
+        // 检查用户名是否存在
+        const { data: existing } = await supabaseClient
+            .from('users')
+            .select('username')
+            .eq('username', username);
+
+        if (existing && existing.length > 0) {
+            showToast('❌ 用户名已存在');
+            return;
+        }
+
+        const passwordHash = CryptoJS.SHA256(password).toString();
+        const { data, error } = await supabaseClient
+            .from('users')
+            .insert([{
+                username: username,
+                password_hash: passwordHash,
+                role: role,
+                name: name || username,
+                status: 'active'
+            }])
+            .select();
+
+        if (error) throw new Error(error.message);
+
+        showToast('✅ 注册成功！请登录');
+        document.getElementById('loginUsername').value = username;
+        showLogin();
+    } catch (error) {
+        showToast('❌ 注册失败: ' + error.message);
+    }
+}
+
+// ================================================================
+//  忘记密码 - 重置密码
+// ================================================================
+async function resetPassword() {
+    const username = document.getElementById('forgotUsername').value.trim();
+    const newPassword = document.getElementById('forgotNewPassword').value;
+    const confirm = document.getElementById('forgotConfirmPassword').value;
+
+    if (!username || !newPassword) { showToast('请填写用户名和新密码'); return; }
+    if (newPassword.length < 6) { showToast('密码至少6位'); return; }
+    if (newPassword !== confirm) { showToast('两次密码不一致'); return; }
+
+    try {
+        // 检查用户是否存在
+        const { data: user } = await supabaseClient
+            .from('users')
+            .select('id')
+            .eq('username', username)
+            .single();
+
+        if (!user) { showToast('❌ 用户不存在'); return; }
+
+        const passwordHash = CryptoJS.SHA256(newPassword).toString();
+        const { error } = await supabaseClient
+            .from('users')
+            .update({ password_hash: passwordHash })
+            .eq('username', username);
+
+        if (error) throw new Error(error.message);
+
+        showToast('✅ 密码已重置，请登录');
+        document.getElementById('loginUsername').value = username;
+        showLogin();
+    } catch (error) {
+        showToast('❌ 重置失败: ' + error.message);
+    }
+}
+
+// ================================================================
+//  修改密码（需登录）
+// ================================================================
+async function changePassword() {
+    const username = document.getElementById('changeUsername').value.trim();
+    const oldPassword = document.getElementById('changeOldPassword').value;
+    const newPassword = document.getElementById('changeNewPassword').value;
+    const confirm = document.getElementById('changeConfirmPassword').value;
+
+    if (!username || !oldPassword || !newPassword) {
+        showToast('请填写完整信息');
+        return;
+    }
+    if (newPassword.length < 6) { showToast('新密码至少6位'); return; }
+    if (newPassword !== confirm) { showToast('两次密码不一致'); return; }
+
+    try {
+        const { data: user } = await supabaseClient
+            .from('users')
+            .select('id, password_hash')
+            .eq('username', username)
+            .single();
+
+        if (!user) { showToast('❌ 用户不存在'); return; }
+
+        const oldHash = CryptoJS.SHA256(oldPassword).toString();
+        if (user.password_hash !== oldHash) {
+            showToast('❌ 当前密码错误');
+            return;
+        }
+
+        const newHash = CryptoJS.SHA256(newPassword).toString();
+        const { error } = await supabaseClient
+            .from('users')
+            .update({ password_hash: newHash })
+            .eq('username', username);
+
+        if (error) throw new Error(error.message);
+
+        showToast('✅ 密码修改成功，请重新登录');
+        document.getElementById('loginUsername').value = username;
+        showLogin();
+    } catch (error) {
+        showToast('❌ 修改失败: ' + error.message);
+    }
+}
+
+// ================================================================
+//  登录功能
+// ================================================================
+async function authLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    if (!username || !password) { showToast('请输入用户名和密码'); return; }
+
+    try {
+        // 加载用户数据
+        const { data: users, error } = await supabaseClient
+            .from('users')
+            .select('*');
+
+        if (error) throw new Error(error.message);
+
+        const user = users.find(u => u.username === username);
+        if (!user) { showToast('❌ 用户不存在'); return; }
+
+        const hash = CryptoJS.SHA256(password).toString();
+        if (user.password_hash !== hash) { showToast('❌ 密码错误'); return; }
+
+        // 登录成功
+        currentUser = user;
+        localStorage.setItem('cw_session', JSON.stringify({ id: user.id, username: user.username }));
+
+        // 加载完整数据
+        await loadAllData();
+
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('appContainer').classList.remove('hidden');
+
+        updateUIAfterLogin();
+        showToast('👋 欢迎 ' + (user.name || user.username));
+
+        // 重定向到仪表板
+        switchTab('dashboard');
+
+    } catch (error) {
+        showToast('❌ 登录失败: ' + error.message);
+    }
+}
+
+function logout() {
+    currentUser = null;
+    localStorage.removeItem('cw_session');
+    document.getElementById('appContainer').classList.add('hidden');
+    document.getElementById('loginModal').style.display = 'flex';
+    showToast('已退出');
+}
+</script>
+
+<!-- ==================== 由于代码过长，以下为完整主应用和所有功能模块 ==================== -->
+<!-- ==================== 请继续往下翻，完整代码在下方 ==================== -->
+</body>
+</html><!-- ==================== 主应用容器 ==================== -->
 <div id="appContainer" class="hidden flex h-screen overflow-hidden">
 
     <!-- ========== 侧边栏 ========== -->
@@ -160,6 +480,11 @@
                 </div>
                 <span class="real-time-badge"><i class="fas fa-bolt"></i> 实时</span>
             </div>
+            <div class="mt-2 text-xs text-gray-400">
+                <span id="currentUserSpan">Admin</span>
+                <span class="mx-1">·</span>
+                <span id="currentRoleSpan" class="text-gray-500">老板</span>
+            </div>
         </div>
     </aside>
 
@@ -168,8 +493,8 @@
         <header class="bg-white shadow-sm py-3 px-6 flex justify-between items-center border-b border-gray-100">
             <h2 id="currentPageTitle" class="text-xl font-bold text-gray-800">仪表板</h2>
             <div class="flex items-center gap-4">
-                <span id="currentUserSpan" class="text-sm font-semibold">Admin</span>
-                <span id="currentRoleSpan" class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">老板</span>
+                <span class="text-sm text-gray-500 hidden md:inline" id="headerUserInfo">👤 <span id="headerUsername">Admin</span></span>
+                <button onclick="showChangePasswordFromMenu()" class="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">🔒 修改密码</button>
                 <button onclick="logout()" class="text-xs text-red-500 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100">退出</button>
             </div>
         </header>
@@ -486,20 +811,69 @@
                 </div>
             </div>
 
-            <!-- ========== SETTINGS ========== -->
+            <!-- ========== SETTINGS（完整版） ========== -->
             <div id="moduleSettings" class="module-content hidden">
                 <div class="glass-card p-6">
                     <h2 class="text-xl font-bold text-blue-600 mb-4">⚙️ 系统设置</h2>
+
+                    <!-- 店铺信息 -->
                     <div class="setting-section">
                         <h4>🏪 店铺信息</h4>
                         <div class="setting-row"><label>店铺名称</label><input id="shopName" class="p-2 border rounded"></div>
                         <div class="setting-row"><label>税号</label><input id="shopTaxId" class="p-2 border rounded"></div>
                     </div>
+
+                    <!-- 税务 & 提成 -->
                     <div class="setting-section">
                         <h4>💰 税务 & 提成</h4>
                         <div class="setting-row"><label>增值税率 (%)</label><input id="vatRateInput" class="p-2 border rounded" type="number" step="0.5"></div>
                         <div class="setting-row"><label>提成比例 (%)</label><input id="commissionRate" class="p-2 border rounded" type="number" step="0.5"></div>
                     </div>
+
+                    <!-- 自动备份 -->
+                    <div class="setting-section">
+                        <h4>💾 自动备份</h4>
+                        <div class="setting-row">
+                            <label>启用自动备份</label>
+                            <select id="backupEnabled" class="p-2 border rounded-lg">
+                                <option value="true">启用</option>
+                                <option value="false">禁用</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>备份频率</label>
+                            <select id="backupFrequency" class="p-2 border rounded-lg">
+                                <option value="daily">每日</option>
+                                <option value="weekly">每周</option>
+                                <option value="monthly">每月</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>保留天数</label>
+                            <input id="backupRetention" type="number" value="30" class="p-2 border rounded-lg" style="width:100px;">
+                        </div>
+                        <div class="setting-row">
+                            <label>上次备份</label>
+                            <span id="lastBackupTime" class="text-sm text-gray-400">从未备份</span>
+                        </div>
+                        <div class="flex gap-2 mt-2 flex-wrap">
+                            <button onclick="saveBackupConfig()" class="btn-primary btn-sm">保存备份设置</button>
+                            <button onclick="manualBackup()" class="btn-success btn-sm">🔄 立即备份</button>
+                            <button onclick="restoreBackup()" class="btn-warning btn-sm">📂 恢复备份</button>
+                        </div>
+                    </div>
+
+                    <!-- 门店管理 -->
+                    <div class="setting-section">
+                        <h4>🏪 门店管理</h4>
+                        <div class="flex gap-2 mb-2 flex-wrap">
+                            <input id="newBranchName" placeholder="门店名称" class="p-2 border rounded flex-1">
+                            <input id="newBranchAddress" placeholder="地址" class="p-2 border rounded flex-1">
+                            <button onclick="addBranch()" class="btn-primary btn-sm">添加门店</button>
+                        </div>
+                        <div id="branchList" class="space-y-1 max-h-48 overflow-auto"></div>
+                    </div>
+
                     <button onclick="saveSettings()" class="btn-primary py-2 rounded-lg w-full mt-4">保存所有设置</button>
                 </div>
             </div>
@@ -556,15 +930,8 @@
     </div>
 </div>
 
+<!-- ==================== 完整JavaScript ==================== -->
 <script>
-// ================================================================
-//  Supabase配置
-// ================================================================
-const SUPABASE_URL = 'https://fhwsbdokxgjqyrbvstxq.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZod3NiZG9reGdqcXlyYnZzdHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQzNjAsImV4cCI6MjA5Nzk2MDM2MH0.XXR5BhhOuF0t6lzOkeYl6OPyva_QCwcV482TzOFV_84';
-
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // ================================================================
 //  全局状态
 // ================================================================
@@ -580,7 +947,6 @@ let allDailyReports = [];
 let allCommissions = [];
 let allAuditLogs = [];
 let allBranches = [];
-let allProducts = [];
 let allVehicles = [];
 let currentBranch = 'all';
 let config = {
@@ -592,34 +958,14 @@ let config = {
 let serviceChart = null;
 let revenueChart = null;
 let realtimeSubscription = null;
-let customerFilter = { search: '', level: 'all' };
 
-// 订单状态
-const ORDER_STATUS = {
-    PENDING: 'pending',
-    CONFIRMED: 'confirmed',
-    IN_PROGRESS: 'in_progress',
-    COMPLETED: 'completed',
-    CANCELLED: 'cancelled',
-    REFUNDED: 'refunded'
-};
-
-const ORDER_STATUS_LABELS = {
-    pending: '待确认',
-    confirmed: '已确认',
-    in_progress: '施工中',
-    completed: '已完成',
-    cancelled: '已取消',
-    refunded: '已退款'
-};
-
+// 订单状态常量
+const ORDER_STATUS = { PENDING: 'pending', CONFIRMED: 'confirmed', IN_PROGRESS: 'in_progress', COMPLETED: 'completed', CANCELLED: 'cancelled', REFUNDED: 'refunded' };
+const ORDER_STATUS_LABELS = { pending: '待确认', confirmed: '已确认', in_progress: '施工中', completed: '已完成', cancelled: '已取消', refunded: '已退款' };
 const ORDER_STATUS_CLASSES = {
-    pending: 'status-pending',
-    confirmed: 'status-confirmed',
-    in_progress: 'status-in_progress',
-    completed: 'status-completed',
-    cancelled: 'status-cancelled',
-    refunded: 'status-refunded'
+    pending: 'status-pending', confirmed: 'status-confirmed',
+    in_progress: 'status-in_progress', completed: 'status-completed',
+    cancelled: 'status-cancelled', refunded: 'status-refunded'
 };
 
 const ROLE_PERMISSIONS = {
@@ -633,13 +979,13 @@ const ROLE_PERMISSIONS = {
 // ================================================================
 //  数据加载
 // ================================================================
-async function loadData() {
+async function loadAllData() {
     try {
         updateSyncStatus('syncing');
-        const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, stockInRes, stockOutRes, dailyRes, commissionRes, auditRes, branchesRes, productsRes, vehiclesRes] = await Promise.all([
-            supabaseClient.from('users').select('*').order('created_at', { ascending: true }),
+        const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, stockInRes, stockOutRes, dailyRes, commissionRes, auditRes, branchesRes, vehiclesRes] = await Promise.all([
+            supabaseClient.from('users').select('*'),
             supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(200),
-            supabaseClient.from('customers').select('*').order('created_at', { ascending: false }),
+            supabaseClient.from('customers').select('*'),
             supabaseClient.from('inventory').select('*'),
             supabaseClient.from('attendance').select('*').order('time', { ascending: false }).limit(100),
             supabaseClient.from('stock_in').select('*').order('created_at', { ascending: false }).limit(50),
@@ -648,7 +994,6 @@ async function loadData() {
             supabaseClient.from('commissions').select('*').order('created_at', { ascending: false }).limit(100),
             supabaseClient.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50),
             supabaseClient.from('stores').select('*'),
-            supabaseClient.from('products').select('*'),
             supabaseClient.from('vehicles').select('*')
         ]);
 
@@ -663,7 +1008,6 @@ async function loadData() {
         if (commissionRes.error) throw new Error(commissionRes.error.message);
         if (auditRes.error) throw new Error(auditRes.error.message);
         if (branchesRes.error) throw new Error(branchesRes.error.message);
-        if (productsRes.error) throw new Error(productsRes.error.message);
         if (vehiclesRes.error) throw new Error(vehiclesRes.error.message);
 
         allUsers = usersRes.data || [];
@@ -677,7 +1021,6 @@ async function loadData() {
         allCommissions = commissionRes.data || [];
         allAuditLogs = auditRes.data || [];
         allBranches = branchesRes.data || [];
-        allProducts = productsRes.data || [];
         allVehicles = vehiclesRes.data || [];
 
         try {
@@ -735,46 +1078,12 @@ function setupRealtime() {
 }
 
 // ================================================================
-//  登录/退出
+//  登录后UI更新
 // ================================================================
-async function authLogin() {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    if (!username || !password) { showToast('请输入用户名和密码'); return; }
-    try {
-        await loadData();
-        const user = allUsers.find(u => u.username === username);
-        if (!user) { showToast('用户不存在'); return; }
-        const hash = CryptoJS.SHA256(password).toString();
-        if (user.password_hash !== hash) { showToast('密码错误'); return; }
-        currentUser = user;
-        document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('appContainer').classList.remove('hidden');
-        document.getElementById('currentUserSpan').textContent = user.name || user.username;
-        document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
-
-        updateUIByRole(user.role);
-        setupRealtime();
-        refreshAll();
-        switchTab('dashboard');
-        showToast('👋 欢迎 ' + (user.name || user.username));
-        localStorage.setItem('cw_session', JSON.stringify({ id: user.id, username: user.username }));
-    } catch (error) {
-        showToast('登录错误: ' + error.message);
-    }
-}
-
-function logout() {
-    if (realtimeSubscription) { realtimeSubscription.unsubscribe(); realtimeSubscription = null; }
-    currentUser = null;
-    localStorage.removeItem('cw_session');
-    document.getElementById('appContainer').classList.add('hidden');
-    document.getElementById('loginModal').style.display = 'flex';
-    showToast('已退出');
-}
-
-function updateUIByRole(role) {
+function updateUIAfterLogin() {
+    const role = currentUser?.role || 'employee';
     const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.employee;
+
     document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
     document.getElementById('navOrders').style.display = permissions.orders ? 'flex' : 'none';
     document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
@@ -784,8 +1093,26 @@ function updateUIByRole(role) {
     document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
     document.getElementById('navAudit').style.display = permissions.audit ? 'flex' : 'none';
     document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
+
     document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
+    document.getElementById('currentUserSpan').textContent = currentUser?.name || currentUser?.username || 'Admin';
+    document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[role]?.label || role;
+    document.getElementById('headerUsername').textContent = currentUser?.name || currentUser?.username || 'Admin';
+
     updateBranchSelector();
+    setupRealtime();
+    refreshAll();
+    switchTab('dashboard');
+    updatePOSPrice();
+}
+
+function showChangePasswordFromMenu() {
+    document.getElementById('changeUsername').value = currentUser?.username || '';
+    document.getElementById('changeOldPassword').value = '';
+    document.getElementById('changeNewPassword').value = '';
+    document.getElementById('changeConfirmPassword').value = '';
+    showChangePassword();
+    document.getElementById('loginModal').style.display = 'flex';
 }
 
 // ================================================================
@@ -794,17 +1121,25 @@ function updateUIByRole(role) {
 function switchTab(tab) {
     const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
     if (!permissions[tab]) { showToast('⚠️ 您没有权限访问此页面'); return; }
+
     document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('module' + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (target) target.classList.remove('hidden');
+
     document.querySelectorAll('[data-nav]').forEach(el => {
         el.classList.remove('nav-item-active');
         if (el.dataset.nav === tab) el.classList.add('nav-item-active');
     });
-    const titles = { dashboard: '仪表板', cashier: '收银台', orders: '订单管理', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工管理', audit: '审计日志', settings: '系统设置' };
+
+    const titles = {
+        dashboard: '仪表板', cashier: '收银台', orders: '订单管理',
+        inventory: '库存管理', members: '客户管理', attendance: '考勤管理',
+        reports: '财务管理', employees: '员工管理', audit: '审计日志', settings: '系统设置'
+    };
     document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
+
     if (tab === 'dashboard') refreshDashboard();
-    if (tab === 'cashier') refreshPOS();
+    if (tab === 'cashier') { refreshPOS(); }
     if (tab === 'orders') loadOrders();
     if (tab === 'inventory') refreshInventory();
     if (tab === 'members') refreshCustomers();
@@ -812,7 +1147,7 @@ function switchTab(tab) {
     if (tab === 'employees') refreshEmployees();
     if (tab === 'reports') { loadDailyReport(); loadCommission(); loadCustomerRank(); }
     if (tab === 'audit') loadAuditLog();
-    if (tab === 'settings') loadSettings();
+    if (tab === 'settings') { loadSettings(); loadBackupConfig(); refreshBranches(); }
 }
 
 document.querySelectorAll('[data-nav]').forEach(el => {
@@ -843,9 +1178,7 @@ function updateBranchSelector() {
     if (!sel) return;
     sel.innerHTML = '<option value="all">🏪 全部门店</option>' +
         allBranches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
-    if (currentBranch && currentBranch !== 'all') {
-        sel.value = currentBranch;
-    }
+    if (currentBranch && currentBranch !== 'all') { sel.value = currentBranch; }
 }
 
 function switchBranch() {
@@ -869,17 +1202,11 @@ function refreshKPIs() {
     const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'confirmed' || o.status === 'in_progress').length;
 
     const staffStats = {};
-    orders.forEach(o => {
-        const name = o.staff_name || '未知';
-        staffStats[name] = (staffStats[name] || 0) + (o.total || 0);
-    });
+    orders.forEach(o => { const name = o.staff_name || '未知'; staffStats[name] = (staffStats[name] || 0) + (o.total || 0); });
     const topStaff = Object.entries(staffStats).sort((a, b) => b[1] - a[1])[0];
 
     const serviceStats = {};
-    orders.forEach(o => {
-        const name = o.service_name || '基础';
-        serviceStats[name] = (serviceStats[name] || 0) + 1;
-    });
+    orders.forEach(o => { const name = o.service_name || '基础'; serviceStats[name] = (serviceStats[name] || 0) + 1; });
     const topService = Object.entries(serviceStats).sort((a, b) => b[1] - a[1])[0];
 
     document.getElementById('kpiTodayOrders').textContent = todayOrders.length;
@@ -893,7 +1220,7 @@ function refreshKPIs() {
 }
 
 // ================================================================
-//  渲染函数
+//  仪表板
 // ================================================================
 function refreshDashboard() {
     const orders = getFilteredOrders();
@@ -937,8 +1264,10 @@ function refreshDashboard() {
     initCharts();
 }
 
+// ================================================================
+//  POS功能
+// ================================================================
 function refreshPOS() {
-    // 更新客户下拉
     const custSel = document.getElementById('posCustomer');
     if (custSel) {
         const currentVal = custSel.value;
@@ -946,7 +1275,6 @@ function refreshPOS() {
             allCustomers.map(c => `<option value="${c.id}">${c.name} (${c.plate_number || ''})</option>`).join('');
         if (currentVal) custSel.value = currentVal;
     }
-    // 更新员工下拉
     const empSel = document.getElementById('posEmployee');
     if (empSel) {
         const staff = allUsers.filter(u => u.role !== 'owner' && u.role !== 'admin');
@@ -957,7 +1285,6 @@ function refreshPOS() {
             }
         }
     }
-    // 更新车辆下拉
     const vehSel = document.getElementById('posVehicle');
     if (vehSel) {
         vehSel.innerHTML = '<option value="">选择车辆</option>' +
@@ -967,13 +1294,7 @@ function refreshPOS() {
 }
 
 function updatePOSPrice() {
-    const servicePrices = {
-        '基础清洗': 30,
-        '深度清洗': 55,
-        '外部抛光': 65,
-        '内部护理': 70,
-        '全车精洗': 110
-    };
+    const servicePrices = { '基础清洗': 30, '深度清洗': 55, '外部抛光': 65, '内部护理': 70, '全车精洗': 110 };
     const service = document.getElementById('posService').value;
     const amount = servicePrices[service] || 30;
     const vat = amount * (config.vatRate || 15) / 100;
@@ -1003,7 +1324,6 @@ document.getElementById('posPlate')?.addEventListener('blur', function() {
             document.getElementById('posCustBalance').textContent = (customer.balance || 0).toFixed(2) + ' SAR';
             document.getElementById('posCustPoints').textContent = customer.points || 0;
             document.getElementById('posCustLevel').textContent = customer.level || '普通';
-            // 自动选择客户
             const custSel = document.getElementById('posCustomer');
             if (custSel) {
                 for (let opt of custSel.options) {
@@ -1016,9 +1336,6 @@ document.getElementById('posPlate')?.addEventListener('blur', function() {
     }
 });
 
-// ================================================================
-//  POS 功能
-// ================================================================
 function posFindCustomer() {
     const plate = document.getElementById('posPlate').value.trim().toUpperCase();
     if (!plate) { showToast('请输入车牌号'); return; }
@@ -1054,26 +1371,16 @@ async function posSaveOrder() {
         const vat = amount * (config.vatRate || 15) / 100;
         const total = amount + vat;
 
-        // 生成订单号
         const today = new Date().toISOString().split('T')[0];
         const todayOrders = allOrders.filter(o => (o.date || '').startsWith(today));
         const orderNumber = 'ORD-' + today.replace(/-/g, '') + '-' + String(todayOrders.length + 1).padStart(4, '0');
 
         const orderData = {
-            order_number: orderNumber,
-            plate_number: plate,
-            customer_id: customerId,
-            employee_id: employeeId,
-            staff_name: employeeId ? allUsers.find(u => u.id === employeeId)?.name : currentUser.name,
-            service_name: serviceName,
-            amount: amount,
-            vat: vat,
-            total: total,
-            payment_method: paymentMethod,
-            status: 'completed',
-            payment_status: 'paid',
-            date: today,
-            store_id: currentBranch !== 'all' ? currentBranch : null,
+            order_number: orderNumber, plate_number: plate, customer_id: customerId,
+            employee_id: employeeId, staff_name: employeeId ? allUsers.find(u => u.id === employeeId)?.name : currentUser.name,
+            service_name: serviceName, amount: amount, vat: vat, total: total,
+            payment_method: paymentMethod, status: 'completed', payment_status: 'paid',
+            date: today, store_id: currentBranch !== 'all' ? currentBranch : null,
             created_at: new Date().toISOString()
         };
 
@@ -1081,15 +1388,10 @@ async function posSaveOrder() {
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allOrders.unshift(data[0]);
 
-        // 记录支付
         await supabaseClient.from('payments').insert([{
-            order_id: data[0].id,
-            amount: total,
-            payment_method: paymentMethod,
-            processed_by: currentUser.id
+            order_id: data[0].id, amount: total, payment_method: paymentMethod, processed_by: currentUser.id
         }]);
 
-        // 自动处理：扣库存、积分、提成
         await processOrderCompletion(data[0].id);
 
         refreshAll();
@@ -1103,54 +1405,54 @@ async function posSaveOrder() {
     }
 }
 
+function posPrintReceipt() {
+    const total = document.getElementById('posTotal').textContent;
+    const plate = document.getElementById('posPlate').value || 'N/A';
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <html><head><title>发票</title>
+        <style>body{font-family:sans-serif;padding:40px;text-align:center;}
+        .inv{max-width:400px;margin:auto;border:1px solid #ddd;padding:30px;border-radius:12px;}
+        .tot{font-size:28px;font-weight:bold;color:#0091D5;}</style>
+</head><body>
+<div class="inv"><h2>🧼 CarWash Pro</h2>
+<p>${config.shopName || 'Car Wash Pro'}</p>
+<p>税号: ${config.shopTaxId || 'N/A'}</p><hr>
+<p><strong>车牌:</strong> ${plate}</p>
+<p><strong>日期:</strong> ${new Date().toLocaleString()}</p><hr>
+<p class="tot">总计: ${total}</p>
+<p style="font-size:12px;color:#999;">感谢光临</p></div>
+<script>setTimeout(()=>window.print(),300)<\/script>
+</body></html>`);
+    win.document.close();
+}
+
+function posVoiceTotal() {
+    const total = document.getElementById('posTotal').textContent;
+    const msg = new SpeechSynthesisUtterance('总计 ' + total);
+    window.speechSynthesis.speak(msg);
+}
+
 // ================================================================
 //  订单完成处理（扣库存、积分、提成）
 // ================================================================
 async function processOrderCompletion(orderId) {
     try {
-        const { data: order } = await supabaseClient
-            .from('orders')
-            .select('customer_id, employee_id, total, service_name')
-            .eq('id', orderId)
-            .single();
+        const { data: order } = await supabaseClient.from('orders').select('customer_id, employee_id, total, service_name').eq('id', orderId).single();
         if (!order) return;
 
-        // 1. 扣库存（如果有产品关联）
-        // 简化版：按服务名称匹配产品
-        const product = allProducts.find(p => p.name === order.service_name);
-        if (product) {
-            const inventory = allInventory.find(i => i.product_id === product.id);
-            if (inventory && inventory.quantity > 0) {
-                const newQty = Math.max(0, inventory.quantity - 1);
-                await supabaseClient
-                    .from('inventory')
-                    .update({ quantity: newQty, last_updated: new Date().toISOString() })
-                    .eq('id', inventory.id);
-                
-                await supabaseClient
-                    .from('inventory_logs')
-                    .insert([{
-                        product_id: product.id,
-                        quantity_change: -1,
-                        previous_quantity: inventory.quantity,
-                        new_quantity: newQty,
-                        type: 'sale',
-                        reference_id: orderId,
-                        reference_type: 'order',
-                        created_by: currentUser?.id
-                    }]);
-            }
+        // 扣库存
+        const product = allInventory.find(p => p.name === order.service_name);
+        if (product && product.quantity > 0) {
+            const newQty = Math.max(0, product.quantity - 1);
+            await supabaseClient.from('inventory').update({ quantity: newQty, last_updated: new Date().toISOString() }).eq('id', product.id);
+            product.quantity = newQty;
         }
 
-        // 2. 更新客户积分和等级
+        // 客户积分
         if (order.customer_id) {
             const pointsEarned = Math.floor(order.total);
-            const { data: customer } = await supabaseClient
-                .from('customers')
-                .select('points, total_spent')
-                .eq('id', order.customer_id)
-                .single();
-            
+            const { data: customer } = await supabaseClient.from('customers').select('points, total_spent, visit_count').eq('id', order.customer_id).single();
             if (customer) {
                 const newPoints = (customer.points || 0) + pointsEarned;
                 const newSpent = (customer.total_spent || 0) + order.total;
@@ -1159,42 +1461,26 @@ async function processOrderCompletion(orderId) {
                 else if (newSpent >= 5000) level = '黄金';
                 else if (newSpent >= 2000) level = '白银';
                 else if (newSpent >= 500) level = '青铜';
-
-                await supabaseClient
-                    .from('customers')
-                    .update({
-                        points: newPoints,
-                        total_spent: newSpent,
-                        level: level,
-                        visit_count: (customer.visit_count || 0) + 1,
-                        last_visit: new Date().toISOString().split('T')[0]
-                    })
-                    .eq('id', order.customer_id);
+                await supabaseClient.from('customers').update({
+                    points: newPoints, total_spent: newSpent, level: level,
+                    visit_count: (customer.visit_count || 0) + 1,
+                    last_visit: new Date().toISOString().split('T')[0]
+                }).eq('id', order.customer_id);
             }
         }
 
-        // 3. 计算提成
+        // 提成
         if (order.employee_id) {
             const rate = config.commissionRate || 5;
             const commissionAmount = order.total * rate / 100;
             if (commissionAmount > 0) {
-                await supabaseClient
-                    .from('commissions')
-                    .insert([{
-                        employee_id: order.employee_id,
-                        order_id: orderId,
-                        amount: order.total,
-                        rate: rate,
-                        commission_amount: commissionAmount,
-                        status: 'pending'
-                    }]);
+                await supabaseClient.from('commissions').insert([{
+                    employee_id: order.employee_id, order_id: orderId,
+                    amount: order.total, rate: rate, commission_amount: commissionAmount, status: 'pending'
+                }]);
             }
         }
-
-        console.log('✅ 订单处理完成: 库存扣减、积分更新、提成计算');
-    } catch (error) {
-        console.error('订单处理错误:', error);
-    }
+    } catch (error) { console.error('订单处理错误:', error); }
 }
 
 // ================================================================
@@ -1206,19 +1492,9 @@ async function loadOrders() {
     const search = document.getElementById('orderSearch')?.value?.trim() || '';
 
     let orders = getFilteredOrders();
-    if (statusFilter !== 'all') {
-        orders = orders.filter(o => o.status === statusFilter);
-    }
-    if (dateFilter) {
-        orders = orders.filter(o => o.date === dateFilter);
-    }
-    if (search) {
-        orders = orders.filter(o => 
-            o.plate_number?.includes(search) || 
-            o.order_number?.includes(search) ||
-            o.staff_name?.includes(search)
-        );
-    }
+    if (statusFilter !== 'all') orders = orders.filter(o => o.status === statusFilter);
+    if (dateFilter) orders = orders.filter(o => o.date === dateFilter);
+    if (search) orders = orders.filter(o => o.plate_number?.includes(search) || o.order_number?.includes(search) || o.staff_name?.includes(search));
 
     const list = document.getElementById('ordersList');
     list.innerHTML = orders.slice(0, 50).map(o => `
@@ -1246,58 +1522,27 @@ async function loadOrders() {
 
 async function updateOrderStatus(orderId, newStatus) {
     try {
-        const { data: order } = await supabaseClient
-            .from('orders')
-            .select('status')
-            .eq('id', orderId)
-            .single();
-        
+        const { data: order } = await supabaseClient.from('orders').select('status').eq('id', orderId).single();
         if (!order) { showToast('订单不存在'); return; }
-        
-        // 状态转换验证
-        const transitions = {
-            pending: ['confirmed', 'cancelled'],
-            confirmed: ['in_progress', 'cancelled'],
-            in_progress: ['completed', 'cancelled'],
-            completed: ['refunded'],
-            cancelled: [],
-            refunded: []
-        };
-        
+        const transitions = { pending: ['confirmed', 'cancelled'], confirmed: ['in_progress', 'cancelled'], in_progress: ['completed', 'cancelled'], completed: ['refunded'], cancelled: [], refunded: [] };
         if (!transitions[order.status]?.includes(newStatus)) {
             showToast('❌ 状态转换不允许: ' + ORDER_STATUS_LABELS[order.status] + ' → ' + ORDER_STATUS_LABELS[newStatus]);
             return;
         }
-
         const updateData = { status: newStatus, updated_at: new Date().toISOString() };
-        if (newStatus === 'completed') {
-            updateData.completed_at = new Date().toISOString();
-        }
-
-        const { error } = await supabaseClient
-            .from('orders')
-            .update(updateData)
-            .eq('id', orderId);
-
+        if (newStatus === 'completed') updateData.completed_at = new Date().toISOString();
+        const { error } = await supabaseClient.from('orders').update(updateData).eq('id', orderId);
         if (error) throw new Error(error.message);
-        
-        // 如果订单完成，触发后续操作
-        if (newStatus === 'completed') {
-            await processOrderCompletion(orderId);
-        }
-
+        if (newStatus === 'completed') await processOrderCompletion(orderId);
         showToast('✅ 订单已更新: ' + ORDER_STATUS_LABELS[newStatus]);
         loadOrders();
         refreshAll();
-    } catch (error) {
-        showToast('❌ 更新失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 更新失败: ' + error.message); }
 }
 
 async function showOrderDetail(orderId) {
     const order = allOrders.find(o => o.id === orderId);
     if (!order) { showToast('订单不存在'); return; }
-
     const customer = allCustomers.find(c => c.id === order.customer_id);
     const employee = allUsers.find(u => u.id === order.employee_id);
 
@@ -1319,11 +1564,6 @@ async function showOrderDetail(orderId) {
                 <div class="flex justify-between"><span>增值税</span><span>${(order.vat || 0).toFixed(2)} SAR</span></div>
                 <div class="flex justify-between text-xl font-bold text-blue-600"><span>总计</span><span>${(order.total || 0).toFixed(2)} SAR</span></div>
             </div>
-            ${order.status === 'completed' ? `
-            <div class="border-t pt-3 text-sm text-gray-500">
-                <div>✅ 完成时间: ${order.completed_at ? new Date(order.completed_at).toLocaleString() : ''}</div>
-            </div>
-            ` : ''}
             <div class="flex gap-2 flex-wrap border-t pt-3">
                 ${order.status === 'pending' ? `<button onclick="updateOrderStatus('${order.id}','confirmed');closeModal('orderDetailModal')" class="btn-success btn-sm">确认订单</button>` : ''}
                 ${order.status === 'confirmed' ? `<button onclick="updateOrderStatus('${order.id}','in_progress');closeModal('orderDetailModal')" class="btn-warning btn-sm">开始施工</button>` : ''}
@@ -1336,6 +1576,8 @@ async function showOrderDetail(orderId) {
     document.getElementById('orderDetailTitle').textContent = '订单详情 #' + (order.order_number || order.id.slice(0, 8));
     document.getElementById('orderDetailModal').classList.remove('hidden');
 }
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 // ================================================================
 //  客户管理
@@ -1354,42 +1596,30 @@ async function addCustomer() {
         let existing = allCustomers.find(c => c.phone === phone || c.plate_number === plate);
         if (existing) {
             const newBalance = (existing.balance || 0) + amount;
-            await supabaseClient
-                .from('customers')
-                .update({ balance: newBalance, name: name, total_spent: (existing.total_spent || 0) + amount })
-                .eq('id', existing.id);
-            existing.balance = newBalance;
-            existing.name = name;
-            existing.total_spent = (existing.total_spent || 0) + amount;
+            await supabaseClient.from('customers').update({ balance: newBalance, name: name, total_spent: (existing.total_spent || 0) + amount }).eq('id', existing.id);
+            existing.balance = newBalance; existing.name = name; existing.total_spent = (existing.total_spent || 0) + amount;
         } else {
-            const { data, error } = await supabaseClient
-                .from('customers')
-                .insert([{ phone, name, plate_number: plate, balance: amount, points: 0, level: '普通', total_spent: amount, visit_count: 1, last_visit: new Date().toISOString().split('T')[0] }])
-                .select();
+            const { data, error } = await supabaseClient.from('customers').insert([{
+                phone, name, plate_number: plate, balance: amount, points: 0,
+                level: '普通', total_spent: amount, visit_count: 1, last_visit: new Date().toISOString().split('T')[0]
+            }]).select();
             if (error) throw new Error(error.message);
             if (data && data.length > 0) allCustomers.unshift(data[0]);
         }
         refreshCustomers();
         showToast('✅ 客户已保存 / 充值 ' + amount + ' SAR');
-        document.getElementById('memberPhone').value = '';
-        document.getElementById('memberName').value = '';
-        document.getElementById('memberPlate').value = '';
-        document.getElementById('rechargeAmount').value = '';
-    } catch (error) {
-        showToast('❌ 操作失败: ' + error.message);
-    }
+        document.getElementById('memberPhone').value = ''; document.getElementById('memberName').value = '';
+        document.getElementById('memberPlate').value = ''; document.getElementById('rechargeAmount').value = '';
+    } catch (error) { showToast('❌ 操作失败: ' + error.message); }
 }
 
 function refreshCustomers() {
     let customers = allCustomers;
     const search = document.getElementById('customerSearch')?.value?.trim() || '';
     const level = document.getElementById('customerLevelFilter')?.value || 'all';
-    if (search) {
-        customers = customers.filter(c => c.name?.includes(search) || c.phone?.includes(search) || c.plate_number?.includes(search));
-    }
-    if (level !== 'all') {
-        customers = customers.filter(c => c.level === level);
-    }
+    if (search) customers = customers.filter(c => c.name?.includes(search) || c.phone?.includes(search) || c.plate_number?.includes(search));
+    if (level !== 'all') customers = customers.filter(c => c.level === level);
+
     const list = document.getElementById('membersList');
     list.innerHTML = customers.map(c => {
         const levelClass = 'customer-level customer-level-' + (c.level || 'normal').toLowerCase();
@@ -1406,9 +1636,8 @@ function refreshCustomers() {
 function refreshInventory() {
     const search = document.getElementById('invSearch')?.value?.trim() || '';
     let items = allInventory;
-    if (search) {
-        items = items.filter(i => i.name?.includes(search));
-    }
+    if (search) items = items.filter(i => i.name?.includes(search));
+
     document.getElementById('invTotalItems').textContent = items.length;
     document.getElementById('invTotalQty').textContent = items.reduce((s, i) => s + (i.quantity || 0), 0);
     document.getElementById('invLowItems').textContent = items.filter(i => (i.quantity || 0) <= (i.min_qty || 5)).length;
@@ -1442,9 +1671,7 @@ function openStockInModal() {
     const sel = document.getElementById('stockInProduct');
     sel.innerHTML = allInventory.map(i => `<option value="${i.id}">${i.name} (库存: ${i.quantity || 0})</option>`).join('');
     document.getElementById('stockInModal').classList.remove('hidden');
-    document.getElementById('stockInQty').value = '';
-    document.getElementById('stockInPrice').value = '';
-    document.getElementById('stockInSupplier').value = '';
+    document.getElementById('stockInQty').value = ''; document.getElementById('stockInPrice').value = ''; document.getElementById('stockInSupplier').value = '';
 }
 
 function openStockOutModal() {
@@ -1456,15 +1683,9 @@ function openStockOutModal() {
 
 function openAddProductModal() {
     document.getElementById('addProductModal').classList.remove('hidden');
-    document.getElementById('newProductName').value = '';
-    document.getElementById('newProductQty').value = '';
-    document.getElementById('newProductCost').value = '';
-    document.getElementById('newProductMinQty').value = '5';
+    document.getElementById('newProductName').value = ''; document.getElementById('newProductQty').value = '';
+    document.getElementById('newProductCost').value = ''; document.getElementById('newProductMinQty').value = '5';
     document.getElementById('newProductUnit').value = '瓶';
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
 }
 
 async function submitStockIn() {
@@ -1476,21 +1697,14 @@ async function submitStockIn() {
     try {
         const product = allInventory.find(i => i.id === productId);
         const newQty = (product.quantity || 0) + qty;
-        await supabaseClient
-            .from('inventory')
-            .update({ quantity: newQty, cost: price || product.cost, last_updated: new Date().toISOString() })
-            .eq('id', productId);
+        await supabaseClient.from('inventory').update({ quantity: newQty, cost: price || product.cost, last_updated: new Date().toISOString() }).eq('id', productId);
         product.quantity = newQty;
         if (price) product.cost = price;
-        await supabaseClient
-            .from('stock_in')
-            .insert([{ inventory_id: productId, product_name: product.name, quantity: qty, unit_price: price, total_price: price * qty, supplier: supplier, created_by: currentUser?.name || '系统' }]);
+        await supabaseClient.from('stock_in').insert([{ inventory_id: productId, product_name: product.name, quantity: qty, unit_price: price, total_price: price * qty, supplier: supplier, created_by: currentUser?.name || '系统' }]);
         closeModal('stockInModal');
         refreshInventory();
         showToast('✅ 入库成功: ' + qty + ' 件');
-    } catch (error) {
-        showToast('❌ 入库失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 入库失败: ' + error.message); }
 }
 
 async function submitStockOut() {
@@ -1503,20 +1717,13 @@ async function submitStockOut() {
     if ((product.quantity || 0) < qty) { showToast('库存不足！当前库存: ' + product.quantity); return; }
     try {
         const newQty = product.quantity - qty;
-        await supabaseClient
-            .from('inventory')
-            .update({ quantity: newQty, last_updated: new Date().toISOString() })
-            .eq('id', productId);
+        await supabaseClient.from('inventory').update({ quantity: newQty, last_updated: new Date().toISOString() }).eq('id', productId);
         product.quantity = newQty;
-        await supabaseClient
-            .from('stock_out')
-            .insert([{ inventory_id: productId, product_name: product.name, quantity: qty, reason: reason, created_by: currentUser?.name || '系统' }]);
+        await supabaseClient.from('stock_out').insert([{ inventory_id: productId, product_name: product.name, quantity: qty, reason: reason, created_by: currentUser?.name || '系统' }]);
         closeModal('stockOutModal');
         refreshInventory();
         showToast('✅ 出库成功: ' + qty + ' 件');
-    } catch (error) {
-        showToast('❌ 出库失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 出库失败: ' + error.message); }
 }
 
 async function submitNewProduct() {
@@ -1528,18 +1735,13 @@ async function submitNewProduct() {
     const minQty = parseInt(document.getElementById('newProductMinQty').value) || 5;
     if (!name) { showToast('请输入产品名称'); return; }
     try {
-        const { data, error } = await supabaseClient
-            .from('inventory')
-            .insert([{ name, category, unit, quantity: qty, cost, min_qty: minQty }])
-            .select();
+        const { data, error } = await supabaseClient.from('inventory').insert([{ name, category, unit, quantity: qty, cost, min_qty: minQty }]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allInventory.unshift(data[0]);
         closeModal('addProductModal');
         refreshInventory();
         showToast('✅ 产品已添加: ' + name);
-    } catch (error) {
-        showToast('❌ 添加失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 添加失败: ' + error.message); }
 }
 
 // ================================================================
@@ -1550,15 +1752,13 @@ function refreshAttendance() {
     list.innerHTML = allAttendance.slice(0, 20).map(a =>
         `<div class="text-sm p-2 bg-gray-50 rounded">${a.staff_name} · ${a.type} · ${a.time ? new Date(a.time).toLocaleString() : ''}</div>`
     ).join('') || '<div class="text-center text-gray-400">暂无记录</div>';
-    
+
     const sel = document.getElementById('attendanceStaff');
     if (sel) {
         const staff = allUsers.filter(u => u.role !== 'owner').map(u => u.name || u.username);
         sel.innerHTML = staff.map(s => `<option value="${s}">${s}</option>`).join('') || '<option value="">暂无员工</option>';
         if (currentUser?.name) {
-            for (let opt of sel.options) {
-                if (opt.value === currentUser.name || opt.value === currentUser.username) { opt.selected = true; break; }
-            }
+            for (let opt of sel.options) { if (opt.value === currentUser.name || opt.value === currentUser.username) { opt.selected = true; break; } }
         }
     }
 }
@@ -1567,34 +1767,24 @@ async function clockIn() {
     if (!currentUser) { showToast('请先登录'); return; }
     const staff = document.getElementById('attendanceStaff').value || currentUser.name || currentUser.username;
     try {
-        const { data, error } = await supabaseClient
-            .from('attendance')
-            .insert([{ staff_name: staff, type: '上班打卡', time: new Date().toISOString() }])
-            .select();
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '上班打卡', time: new Date().toISOString() }]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allAttendance.unshift(data[0]);
         refreshAttendance();
         showToast('✅ ' + staff + ' 上班打卡成功');
-    } catch (error) {
-        showToast('❌ 打卡失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 打卡失败: ' + error.message); }
 }
 
 async function clockOut() {
     if (!currentUser) { showToast('请先登录'); return; }
     const staff = document.getElementById('attendanceStaff').value || currentUser.name || currentUser.username;
     try {
-        const { data, error } = await supabaseClient
-            .from('attendance')
-            .insert([{ staff_name: staff, type: '下班打卡', time: new Date().toISOString() }])
-            .select();
+        const { data, error } = await supabaseClient.from('attendance').insert([{ staff_name: staff, type: '下班打卡', time: new Date().toISOString() }]).select();
         if (error) throw new Error(error.message);
         if (data && data.length > 0) allAttendance.unshift(data[0]);
         refreshAttendance();
         showToast('✅ ' + staff + ' 下班打卡成功');
-    } catch (error) {
-        showToast('❌ 打卡失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 打卡失败: ' + error.message); }
 }
 
 // ================================================================
@@ -1682,6 +1872,8 @@ async function loadCommission() {
 
     const total = commissions.reduce((s, c) => s + (c.commission_amount || 0), 0);
     document.getElementById('commissionTotal').textContent = total.toFixed(2) + ' SAR';
+    document.getElementById('commissionStaffFilter').innerHTML = '<option value="all">全部员工</option>' +
+        allUsers.filter(u => u.role !== 'owner').map(u => `<option value="${u.id}">${u.name || u.username}</option>`).join('');
 }
 
 async function settleCommission() {
@@ -1696,17 +1888,12 @@ async function settleCommission() {
 
     try {
         for (const c of pending) {
-            await supabaseClient
-                .from('commissions')
-                .update({ status: 'paid', updated_at: new Date().toISOString() })
-                .eq('id', c.id);
+            await supabaseClient.from('commissions').update({ status: 'paid', updated_at: new Date().toISOString() }).eq('id', c.id);
             c.status = 'paid';
         }
         showToast('✅ 已结算 ' + pending.length + ' 条提成');
         loadCommission();
-    } catch (error) {
-        showToast('❌ 结算失败: ' + error.message);
-    }
+    } catch (error) { showToast('❌ 结算失败: ' + error.message); }
 }
 
 async function loadCustomerRank() {
@@ -1754,13 +1941,7 @@ function exportAuditLog() {
     if (allAuditLogs.length === 0) { showToast('暂无数据可导出'); return; }
     const data = [['时间', '用户', '操作', '表', '记录ID']];
     allAuditLogs.forEach(log => {
-        data.push([
-            log.created_at ? new Date(log.created_at).toLocaleString() : '',
-            log.username || '',
-            log.action || '',
-            log.table_name || '',
-            log.record_id || ''
-        ]);
+        data.push([log.created_at ? new Date(log.created_at).toLocaleString() : '', log.username || '', log.action || '', log.table_name || '', log.record_id || '']);
     });
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -1770,34 +1951,117 @@ function exportAuditLog() {
 }
 
 // ================================================================
-//  POS 打印和语音
+//  备份功能
 // ================================================================
-function posPrintReceipt() {
-    const total = document.getElementById('posTotal').textContent;
-    const plate = document.getElementById('posPlate').value || 'N/A';
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <html><head><title>发票</title>
-        <style>body{font-family:sans-serif;padding:40px;text-align:center;}
-        .inv{max-width:400px;margin:auto;border:1px solid #ddd;padding:30px;border-radius:12px;}
-        .tot{font-size:28px;font-weight:bold;color:#0091D5;}</style>
-</head><body>
-<div class="inv"><h2>🧼 CarWash Pro</h2>
-<p>${config.shopName || 'Car Wash Pro'}</p>
-<p>税号: ${config.shopTaxId || 'N/A'}</p><hr>
-<p><strong>车牌:</strong> ${plate}</p>
-<p><strong>日期:</strong> ${new Date().toLocaleString()}</p><hr>
-<p class="tot">总计: ${total}</p>
-<p style="font-size:12px;color:#999;">感谢光临</p></div>
-<script>setTimeout(()=>window.print(),300)<\/script>
-</body></html>`);
-    win.document.close();
+async function loadBackupConfig() {
+    try {
+        const { data, error } = await supabaseClient.from('backup_config').select('*').eq('id', 1).single();
+        if (!error && data) {
+            document.getElementById('backupEnabled').value = data.auto_backup_enabled ? 'true' : 'false';
+            document.getElementById('backupFrequency').value = data.backup_frequency || 'daily';
+            document.getElementById('backupRetention').value = data.retention_days || 30;
+            document.getElementById('lastBackupTime').textContent = data.last_backup_at ? new Date(data.last_backup_at).toLocaleString() : '从未备份';
+        }
+    } catch(e) { console.log('加载备份配置失败:', e); }
 }
 
-function posVoiceTotal() {
-    const total = document.getElementById('posTotal').textContent;
-    const msg = new SpeechSynthesisUtterance('总计 ' + total);
-    window.speechSynthesis.speak(msg);
+async function saveBackupConfig() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以修改备份设置'); return; }
+    try {
+        const data = {
+            auto_backup_enabled: document.getElementById('backupEnabled').value === 'true',
+            backup_frequency: document.getElementById('backupFrequency').value,
+            retention_days: parseInt(document.getElementById('backupRetention').value) || 30,
+            updated_at: new Date().toISOString()
+        };
+        const { error } = await supabaseClient.from('backup_config').update(data).eq('id', 1);
+        if (error) throw new Error(error.message);
+        showToast('✅ 备份设置已保存');
+    } catch (error) { showToast('❌ 保存失败: ' + error.message); }
+}
+
+async function manualBackup() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以执行备份'); return; }
+    showToast('⏳ 正在备份...');
+    try {
+        const backupData = {
+            timestamp: new Date().toISOString(),
+            users: allUsers, orders: allOrders, customers: allCustomers,
+            inventory: allInventory, attendance: allAttendance, branches: allBranches,
+            commissions: allCommissions, config: config
+        };
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        await supabaseClient.from('backup_config').update({ last_backup_at: new Date().toISOString() }).eq('id', 1);
+        document.getElementById('lastBackupTime').textContent = new Date().toLocaleString();
+        showToast('✅ 备份完成');
+    } catch (error) { showToast('❌ 备份失败: ' + error.message); }
+}
+
+function restoreBackup() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以恢复备份'); return; }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!confirm('⚠️ 恢复备份将覆盖当前数据，确认继续？')) return;
+                if (data.users) { for (const u of data.users) { await supabaseClient.from('users').upsert(u); } }
+                if (data.orders) { for (const o of data.orders) { await supabaseClient.from('orders').upsert(o); } }
+                if (data.customers) { for (const c of data.customers) { await supabaseClient.from('customers').upsert(c); } }
+                if (data.inventory) { for (const i of data.inventory) { await supabaseClient.from('inventory').upsert(i); } }
+                if (data.branches) { for (const b of data.branches) { await supabaseClient.from('stores').upsert(b); } }
+                showToast('✅ 备份恢复完成，请刷新页面');
+                setTimeout(() => location.reload(), 2000);
+            } catch(err) { showToast('❌ 恢复失败: ' + err.message); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+// ================================================================
+//  门店管理
+// ================================================================
+async function addBranch() {
+    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以添加门店'); return; }
+    const name = document.getElementById('newBranchName').value.trim();
+    const address = document.getElementById('newBranchAddress').value.trim();
+    if (!name) { showToast('请输入门店名称'); return; }
+    try {
+        const { data, error } = await supabaseClient.from('stores').insert([{ name, address, status: 'active' }]).select();
+        if (error) throw new Error(error.message);
+        if (data && data.length > 0) {
+            allBranches.push(data[0]);
+            refreshBranches();
+            updateBranchSelector();
+            showToast('✅ 门店已添加: ' + name);
+            document.getElementById('newBranchName').value = '';
+            document.getElementById('newBranchAddress').value = '';
+        }
+    } catch (error) { showToast('❌ 添加失败: ' + error.message); }
+}
+
+function refreshBranches() {
+    const list = document.getElementById('branchList');
+    if (!list) return;
+    list.innerHTML = allBranches.map(b =>
+        `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+            <span><strong>${b.name}</strong> <span class="text-sm text-gray-400">${b.address || ''}</span></span>
+            <span class="text-xs text-gray-400">${b.status || 'active'}</span>
+        </div>`
+    ).join('') || '<div class="text-center text-gray-400">暂无门店</div>';
 }
 
 // ================================================================
@@ -1831,13 +2095,11 @@ function refreshAll() {
     refreshAttendance();
     refreshEmployees();
     refreshPOS();
-    if (document.getElementById('moduleOrders').classList.contains('hidden') === false) loadOrders();
-    if (document.getElementById('moduleReports').classList.contains('hidden') === false) {
-        loadDailyReport();
-        loadCommission();
-        loadCustomerRank();
+    if (!document.getElementById('moduleOrders').classList.contains('hidden')) loadOrders();
+    if (!document.getElementById('moduleReports').classList.contains('hidden')) {
+        loadDailyReport(); loadCommission(); loadCustomerRank();
     }
-    if (document.getElementById('moduleAudit').classList.contains('hidden') === false) loadAuditLog();
+    if (!document.getElementById('moduleAudit').classList.contains('hidden')) loadAuditLog();
 }
 
 // ================================================================
@@ -1883,10 +2145,7 @@ function initCharts() {
 // ================================================================
 //  启动
 // ================================================================
-async function init() {
-    await loadData();
-    loadSettings();
-
+(async function init() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('reportDatePicker').value = today;
     document.getElementById('orderDateFilter').value = today;
@@ -1895,33 +2154,35 @@ async function init() {
     if (session) {
         try {
             const s = JSON.parse(session);
+            // 加载用户数据验证session
+            const { data: users } = await supabaseClient.from('users').select('*');
+            if (users) allUsers = users;
             const user = allUsers.find(u => u.id === s.id);
             if (user) {
                 currentUser = user;
+                await loadAllData();
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
-                document.getElementById('currentUserSpan').textContent = user.name || user.username;
-                document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[user.role]?.label || user.role;
-                updateUIByRole(user.role);
-                setupRealtime();
-                refreshAll();
-                switchTab('dashboard');
+                updateUIAfterLogin();
                 updatePOSPrice();
                 return;
             }
         } catch(e) {}
     }
 
+    // 未登录：加载基础数据后显示登录
+    await loadAllData();
     document.getElementById('loginModal').style.display = 'flex';
-}
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('forgotPasswordView').classList.add('hidden');
+    document.getElementById('changePasswordView').classList.add('hidden');
 
-init();
-
-console.log('✅ CarWash Pro 完整版已加载');
-console.log('👤 当前用户:', currentUser?.username || '未登录');
-console.log('📦 客户数:', allCustomers.length);
-console.log('🏪 门店数:', allBranches.length);
-console.log('🔑 默认: boss/admin123');
+    console.log('✅ CarWash Pro 完整版已加载');
+    console.log('👤 用户数:', allUsers.length);
+    console.log('📦 客户数:', allCustomers.length);
+    console.log('🔑 默认: boss/admin123');
+})();
 </script>
 </body>
 </html>
