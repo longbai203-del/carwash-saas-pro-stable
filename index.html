@@ -395,7 +395,7 @@ switchTab = async function(tab) {
         if (tab === 'reports') { loadDailyReport(); loadCommission(); loadCustomerRank(); }
         if (tab === 'audit') loadAuditLog();
         if (tab === 'settings') { loadSettings(); loadBackupConfig(); refreshBranches(); }
-    }, 100);
+    }, 300);  // 从 100 改为 300，确保 DOM 完全渲染
 };
 
 // 重新绑定导航点击事件
