@@ -582,8 +582,36 @@ async function authLogin() {
         const hash = CryptoJS.SHA256(password).toString();
         if (user.password_hash !== hash) { showToast('❌ 密码错误'); return; }
 
-        currentUser = user;
-        localStorage.setItem('cw_session', JSON.stringify({ id: user.id, username: user.username }));
+        // ===== 修复：保存完整用户信息到 currentUser =====
+        currentUser = {
+            id: user.id,
+            username: user.username,
+            password_hash: user.password_hash,
+            role: user.role || 'employee',
+            name: user.name || user.username,
+            status: user.status,
+            registered_at: user.registered_at,
+            approved_by: user.approved_by,
+            approved_at: user.approved_at,
+            branch_id: user.branch_id,
+            tenant_id: user.tenant_id,
+            store_id: user.store_id,
+            role_id: user.role_id,
+            employee_code: user.employee_code,
+            phone: user.phone,
+            avatar_url: user.avatar_url,
+            last_login_at: user.last_login_at,
+            updated_at: user.updated_at
+        };
+        // ===== 修复结束 =====
+        
+        // 保存 session 时也保存角色
+        localStorage.setItem('cw_session', JSON.stringify({ 
+            id: user.id, 
+            username: user.username,
+            role: user.role || 'employee'
+        }));
+        
         await loadAllData();
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById('appContainer').classList.remove('hidden');
@@ -781,8 +809,44 @@ function updateUIAfterLogin() {
 }
 
 function switchTab(tab) {
+    // ===== 增加容错：如果 currentUser.role 丢失，尝试从 allUsers 恢复 =====
+    if (currentUser && !currentUser.role) {
+        const user = allUsers.find(u => u.id === currentUser.id);
+        if (user) {
+            currentUser = {
+                id: user.id,
+                username: user.username,
+                password_hash: user.password_hash,
+                role: user.role || 'employee',
+                name: user.name || user.username,
+                status: user.status,
+                registered_at: user.registered_at,
+                approved_by: user.approved_by,
+                approved_at: user.approved_at,
+                branch_id: user.branch_id,
+                tenant_id: user.tenant_id,
+                store_id: user.store_id,
+                role_id: user.role_id,
+                employee_code: user.employee_code,
+                phone: user.phone,
+                avatar_url: user.avatar_url,
+                last_login_at: user.last_login_at,
+                updated_at: user.updated_at
+            };
+            localStorage.setItem('cw_session', JSON.stringify({ 
+                id: user.id, 
+                username: user.username,
+                role: user.role || 'employee'
+            }));
+        }
+    }
+    // ===== 容错结束 =====
+    
     const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
-    if (!permissions[tab]) { showToast('⚠️ 您没有权限访问此页面'); return; }
+    if (!permissions[tab]) { 
+        showToast('⚠️ 您没有权限访问此页面'); 
+        return; 
+    }
 
     document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('module' + tab.charAt(0).toUpperCase() + tab.slice(1));
@@ -1643,13 +1707,35 @@ function initCharts() {
             if (users) allUsers = users;
             const user = users?.find(u => u.id === s.id);
             if (user && user.status === 'approved') {
-                currentUser = user;
+                // ===== 修复：确保 currentUser 包含完整信息 =====
+                currentUser = {
+                    id: user.id,
+                    username: user.username,
+                    password_hash: user.password_hash,
+                    role: user.role || 'employee',
+                    name: user.name || user.username,
+                    status: user.status,
+                    registered_at: user.registered_at,
+                    approved_by: user.approved_by,
+                    approved_at: user.approved_at,
+                    branch_id: user.branch_id,
+                    tenant_id: user.tenant_id,
+                    store_id: user.store_id,
+                    role_id: user.role_id,
+                    employee_code: user.employee_code,
+                    phone: user.phone,
+                    avatar_url: user.avatar_url,
+                    last_login_at: user.last_login_at,
+                    updated_at: user.updated_at
+                };
+                // ===== 修复结束 =====
+                
                 await loadAllData();
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
                 updateUIAfterLogin();
                 updatePOSPrice();
-                console.log('✅ CarWash Pro 已启动');
+                console.log('✅ CarWash Pro 已启动，当前用户:', currentUser.username, '角色:', currentUser.role);
                 return;
             } else if (user && user.status === 'pending') {
                 showToast('⏳ 账号正在审核中');
@@ -1658,7 +1744,9 @@ function initCharts() {
                 showToast('❌ 账号已被拒绝');
                 localStorage.removeItem('cw_session');
             }
-        } catch(e) {}
+        } catch(e) {
+            console.error('Session 恢复失败:', e);
+        }
     }
 
     // 未登录或session无效
