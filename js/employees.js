@@ -3,11 +3,12 @@
 // ================================================================
 
 const EmployeesModule = {
-    // 初始化
+    _boundFilter: null,
+
     init() {
         console.log('👔 EmployeesModule 初始化');
         if (!document.getElementById('usersReviewList')) {
-            console.warn('⚠️ 员工审核元素未加载，延迟初始化');
+            console.warn('⚠️ 员工审核元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
@@ -15,23 +16,25 @@ const EmployeesModule = {
         this.bindEvents();
     },
 
-    // 销毁
     destroy() {
         console.log('👔 EmployeesModule 销毁');
-    },
-
-    // 绑定事件
-    bindEvents() {
         const filter = document.getElementById('userStatusFilter');
-        if (filter) {
-            filter.addEventListener('change', () => this.loadUsersForReview());
+        if (filter && this._boundFilter) {
+            filter.removeEventListener('change', this._boundFilter);
         }
     },
 
-    // 加载用户审核列表
-    async loadUsersForReview() {
+    bindEvents() {
+        const filter = document.getElementById('userStatusFilter');
+        if (filter) {
+            this._boundFilter = () => this.loadUsersForReview();
+            filter.addEventListener('change', this._boundFilter);
+        }
+    },
+
+    loadUsersForReview() {
         const statusFilter = document.getElementById('userStatusFilter')?.value || 'all';
-        let users = allUsers || [];
+        let users = (allUsers || []);
         if (statusFilter !== 'all') users = users.filter(u => u.status === statusFilter);
 
         const list = document.getElementById('usersReviewList');
@@ -70,7 +73,6 @@ const EmployeesModule = {
         }).join('') || '<div class="text-center text-gray-400">暂无用户</div>';
     },
 
-    // 审核通过用户
     async approveUser(userId) {
         if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
             showToast('❌ 只有老板和店长可以审核用户');
@@ -81,7 +83,7 @@ const EmployeesModule = {
                 .from('users')
                 .update({ status: 'approved', approved_by: currentUser.id, approved_at: new Date().toISOString() })
                 .eq('id', userId);
-            const user = allUsers.find(u => u.id === userId);
+            const user = (allUsers || []).find(u => u.id === userId);
             if (user) user.status = 'approved';
             showToast('✅ 用户已审核通过');
             this.loadUsersForReview();
@@ -91,7 +93,6 @@ const EmployeesModule = {
         }
     },
 
-    // 拒绝/停用用户
     async rejectUser(userId) {
         if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
             showToast('❌ 只有老板和店长可以审核用户');
@@ -103,7 +104,7 @@ const EmployeesModule = {
                 .from('users')
                 .update({ status: 'rejected', approved_by: currentUser.id, approved_at: new Date().toISOString() })
                 .eq('id', userId);
-            const user = allUsers.find(u => u.id === userId);
+            const user = (allUsers || []).find(u => u.id === userId);
             if (user) user.status = 'rejected';
             showToast('✅ 用户已拒绝/停用');
             this.loadUsersForReview();
@@ -113,7 +114,6 @@ const EmployeesModule = {
         }
     },
 
-    // 创建老板账号
     async createAdminAccount() {
         if (!currentUser || currentUser.role !== 'owner') {
             showToast('❌ 只有老板可以创建老板账号');
@@ -148,8 +148,10 @@ const EmployeesModule = {
             if (error) throw new Error(error.message);
 
             showToast('✅ 老板账号已创建: ' + username);
-            document.getElementById('adminCreateUsername').value = '';
-            document.getElementById('adminCreatePassword').value = '';
+            const usernameInput = document.getElementById('adminCreateUsername');
+            const passwordInput = document.getElementById('adminCreatePassword');
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
             this.loadUsersForReview();
             if (typeof refreshAll === 'function') refreshAll();
         } catch (error) {
@@ -158,13 +160,9 @@ const EmployeesModule = {
     }
 };
 
-// 暴露到全局
 window.EmployeesModule = EmployeesModule;
-
-// 兼容旧版函数
 window.loadUsersForReview = function() { EmployeesModule.loadUsersForReview(); };
 window.approveUser = function(id) { EmployeesModule.approveUser(id); };
 window.rejectUser = function(id) { EmployeesModule.rejectUser(id); };
 window.createAdminAccount = function() { EmployeesModule.createAdminAccount(); };
-
-console.log('✅ employees.js 已加载 (模块化)');
+console.log('✅ employees.js 已加载');

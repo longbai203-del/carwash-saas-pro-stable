@@ -3,15 +3,15 @@
 // ================================================================
 
 const ReportsModule = {
-    // 初始化
+    _boundPicker: null,
+
     init() {
         console.log('📊 ReportsModule 初始化');
         if (!document.getElementById('dailyOrders')) {
-            console.warn('⚠️ 报表元素未加载，延迟初始化');
+            console.warn('⚠️ 报表元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
-        // 设置日期默认值
         const picker = document.getElementById('reportDatePicker');
         if (picker) {
             picker.value = new Date().toISOString().split('T')[0];
@@ -22,38 +22,42 @@ const ReportsModule = {
         this.bindEvents();
     },
 
-    // 销毁
     destroy() {
         console.log('📊 ReportsModule 销毁');
-    },
-
-    // 绑定事件
-    bindEvents() {
         const picker = document.getElementById('reportDatePicker');
-        if (picker) {
-            picker.addEventListener('change', () => this.loadDailyReport());
+        if (picker && this._boundPicker) {
+            picker.removeEventListener('change', this._boundPicker);
         }
     },
 
-    // 切换报表标签
+    bindEvents() {
+        const picker = document.getElementById('reportDatePicker');
+        if (picker) {
+            this._boundPicker = () => this.loadDailyReport();
+            picker.addEventListener('change', this._boundPicker);
+        }
+    },
+
     switchReportTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.querySelector(`.tab-btn[data-tab="${tab}"]`)?.classList.add('active');
-        document.getElementById('reportTabDaily').classList.toggle('hidden', tab !== 'daily');
-        document.getElementById('reportTabCommission').classList.toggle('hidden', tab !== 'commission');
-        document.getElementById('reportTabCustomers').classList.toggle('hidden', tab !== 'customers');
+        const daily = document.getElementById('reportTabDaily');
+        const comm = document.getElementById('reportTabCommission');
+        const cust = document.getElementById('reportTabCustomers');
+        if (daily) daily.classList.toggle('hidden', tab !== 'daily');
+        if (comm) comm.classList.toggle('hidden', tab !== 'commission');
+        if (cust) cust.classList.toggle('hidden', tab !== 'customers');
         if (tab === 'daily') this.loadDailyReport();
         if (tab === 'commission') this.loadCommission();
         if (tab === 'customers') this.loadCustomerRank();
     },
 
-    // 加载日报
-    async loadDailyReport() {
+    loadDailyReport() {
         const picker = document.getElementById('reportDatePicker');
         const date = picker?.value || new Date().toISOString().split('T')[0];
         if (picker && !picker.value) picker.value = date;
 
-        const orders = (typeof getFilteredOrders === 'function' ? getFilteredOrders() : allOrders || [])
+        const orders = (typeof getFilteredOrders === 'function' ? getFilteredOrders() : (allOrders || []))
             .filter(o => o.date === date);
         const total = orders.reduce((s, o) => s + (o.total || 0), 0);
         const vat = orders.reduce((s, o) => s + (o.vat || 0), 0);
@@ -62,17 +66,15 @@ const ReportsModule = {
         const dailyRevenue = document.getElementById('dailyRevenue');
         const dailyVat = document.getElementById('dailyVat');
         const dailyProfit = document.getElementById('dailyProfit');
-
         if (dailyOrders) dailyOrders.textContent = orders.length;
         if (dailyRevenue) dailyRevenue.textContent = total.toFixed(2) + ' SAR';
         if (dailyVat) dailyVat.textContent = vat.toFixed(2) + ' SAR';
         if (dailyProfit) dailyProfit.textContent = total.toFixed(2) + ' SAR';
     },
 
-    // 导出日报
     exportDailyReport() {
         const date = document.getElementById('reportDatePicker')?.value || new Date().toISOString().split('T')[0];
-        const orders = (typeof getFilteredOrders === 'function' ? getFilteredOrders() : allOrders || [])
+        const orders = (typeof getFilteredOrders === 'function' ? getFilteredOrders() : (allOrders || []))
             .filter(o => o.date === date);
         if (orders.length === 0) { showToast('该日暂无数据'); return; }
         const total = orders.reduce((s, o) => s + (o.total || 0), 0);
@@ -95,12 +97,11 @@ const ReportsModule = {
         showToast('✅ 日报已导出');
     },
 
-    // 加载提成
-    async loadCommission() {
+    loadCommission() {
         const filterStaff = document.getElementById('commissionStaffFilter')?.value || 'all';
         const filterStatus = document.getElementById('commissionStatusFilter')?.value || 'all';
 
-        let commissions = allCommissions || [];
+        let commissions = (allCommissions || []);
         if (filterStaff !== 'all') commissions = commissions.filter(c => c.employee_id === filterStaff);
         if (filterStatus !== 'all') commissions = commissions.filter(c => c.status === filterStatus);
 
@@ -108,7 +109,7 @@ const ReportsModule = {
         if (!list) return;
 
         list.innerHTML = commissions.slice(0, 50).map(c => {
-            const employee = allUsers.find(u => u.id === c.employee_id);
+            const employee = (allUsers || []).find(u => u.id === c.employee_id);
             return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                 <div><span class="font-medium">${employee?.name || '未知'}</span></div>
                 <div>
@@ -126,12 +127,11 @@ const ReportsModule = {
         const staffFilter = document.getElementById('commissionStaffFilter');
         if (staffFilter) {
             staffFilter.innerHTML = '<option value="all">全部员工</option>' +
-                allUsers.filter(u => u.role !== 'owner' && u.status === 'approved')
+                (allUsers || []).filter(u => u.role !== 'owner' && u.status === 'approved')
                     .map(u => `<option value="${u.id}">${u.name || u.username}</option>`).join('');
         }
     },
 
-    // 结算提成
     async settleCommission() {
         if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
             showToast('只有老板和店长可以结算提成');
@@ -152,8 +152,7 @@ const ReportsModule = {
         } catch (error) { showToast('❌ 结算失败: ' + error.message); }
     },
 
-    // 加载客户排行
-    async loadCustomerRank() {
+    loadCustomerRank() {
         const type = document.getElementById('customerRankFilter')?.value || 'points';
         let sorted = [...(allCustomers || [])];
         if (type === 'points') sorted.sort((a, b) => (b.points || 0) - (a.points || 0));
@@ -181,15 +180,11 @@ const ReportsModule = {
     }
 };
 
-// 暴露到全局
 window.ReportsModule = ReportsModule;
-
-// 兼容旧版函数
 window.switchReportTab = function(tab) { ReportsModule.switchReportTab(tab); };
 window.loadDailyReport = function() { ReportsModule.loadDailyReport(); };
 window.exportDailyReport = function() { ReportsModule.exportDailyReport(); };
 window.loadCommission = function() { ReportsModule.loadCommission(); };
 window.settleCommission = function() { ReportsModule.settleCommission(); };
 window.loadCustomerRank = function() { ReportsModule.loadCustomerRank(); };
-
-console.log('✅ reports.js 已加载 (模块化)');
+console.log('✅ reports.js 已加载');

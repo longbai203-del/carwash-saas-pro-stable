@@ -3,11 +3,13 @@
 // ================================================================
 
 const AuditModule = {
-    // 初始化
+    _boundAction: null,
+    _boundTable: null,
+
     init() {
         console.log('📋 AuditModule 初始化');
         if (!document.getElementById('auditLogList')) {
-            console.warn('⚠️ 审计日志元素未加载，延迟初始化');
+            console.warn('⚠️ 审计日志元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
@@ -15,39 +17,32 @@ const AuditModule = {
         this.bindEvents();
     },
 
-    // 销毁
     destroy() {
         console.log('📋 AuditModule 销毁');
-        const actionFilter = document.getElementById('auditActionFilter');
-        if (actionFilter && this._boundAction) {
-            actionFilter.removeEventListener('change', this._boundAction);
-        }
-        const tableFilter = document.getElementById('auditTableFilter');
-        if (tableFilter && this._boundTable) {
-            tableFilter.removeEventListener('change', this._boundTable);
-        }
+        const action = document.getElementById('auditActionFilter');
+        if (action && this._boundAction) action.removeEventListener('change', this._boundAction);
+        const table = document.getElementById('auditTableFilter');
+        if (table && this._boundTable) table.removeEventListener('change', this._boundTable);
     },
 
-    // 绑定事件
     bindEvents() {
-        const actionFilter = document.getElementById('auditActionFilter');
-        if (actionFilter) {
+        const action = document.getElementById('auditActionFilter');
+        if (action) {
             this._boundAction = () => this.loadAuditLog();
-            actionFilter.addEventListener('change', this._boundAction);
+            action.addEventListener('change', this._boundAction);
         }
-        const tableFilter = document.getElementById('auditTableFilter');
-        if (tableFilter) {
+        const table = document.getElementById('auditTableFilter');
+        if (table) {
             this._boundTable = () => this.loadAuditLog();
-            tableFilter.addEventListener('change', this._boundTable);
+            table.addEventListener('change', this._boundTable);
         }
     },
 
-    // 加载审计日志
-    async loadAuditLog() {
+    loadAuditLog() {
         const action = document.getElementById('auditActionFilter')?.value || 'all';
         const table = document.getElementById('auditTableFilter')?.value || 'all';
 
-        let logs = allAuditLogs || [];
+        let logs = (allAuditLogs || []);
         if (action !== 'all') logs = logs.filter(l => l.action === action);
         if (table !== 'all') logs = logs.filter(l => l.table_name === table);
 
@@ -72,7 +67,6 @@ const AuditModule = {
         if (countEl) countEl.textContent = logs.length;
     },
 
-    // 导出审计日志
     exportAuditLog() {
         if (!allAuditLogs || allAuditLogs.length === 0) { showToast('暂无数据可导出'); return; }
         const data = [['时间', '用户', '操作', '表', '记录ID']];
@@ -93,11 +87,7 @@ const AuditModule = {
     }
 };
 
-// 暴露到全局
 window.AuditModule = AuditModule;
-
-// 兼容旧版函数
 window.loadAuditLog = function() { AuditModule.loadAuditLog(); };
 window.exportAuditLog = function() { AuditModule.exportAuditLog(); };
-
-console.log('✅ audit.js 已加载 (模块化)');
+console.log('✅ audit.js 已加载');

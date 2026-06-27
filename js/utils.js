@@ -1,6 +1,7 @@
 // ================================================================
-//  Toast
+//  utils.js - 工具函数
 // ================================================================
+
 function showToast(msg) {
     const t = document.createElement('div');
     t.className = 'toast-custom';
@@ -9,14 +10,11 @@ function showToast(msg) {
     setTimeout(() => t.remove(), 3000);
 }
 
-// ================================================================
-//  关闭模态框
-// ================================================================
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+}
 
-// ================================================================
-//  加载所有数据
-// ================================================================
 async function loadAllData() {
     try {
         const [usersRes, ordersRes, customersRes, inventoryRes, attendanceRes, commissionRes, auditRes, branchesRes] = await Promise.all([
@@ -48,21 +46,25 @@ async function loadAllData() {
         allAuditLogs = auditRes.data || [];
         allBranches = branchesRes.data || [];
 
-        try { const savedConfig = JSON.parse(localStorage.getItem('cw_config')); if (savedConfig) config = { ...config, ...savedConfig }; } catch(e) {}
+        try {
+            const savedConfig = JSON.parse(localStorage.getItem('cw_config'));
+            if (savedConfig) config = { ...config, ...savedConfig };
+        } catch(e) {}
         return true;
-    } catch (error) { console.error('Load data error:', error); showToast('⚠️ 加载数据失败'); return false; }
+    } catch (error) {
+        console.error('Load data error:', error);
+        showToast('⚠️ 加载数据失败');
+        return false;
+    }
 }
 
-// ================================================================
-//  Charts
-// ================================================================
 function initCharts() {
     const ctx1 = document.getElementById('serviceStatsChart');
     if (ctx1) {
-        if (serviceChart) serviceChart.destroy();
+        if (window.serviceChart) window.serviceChart.destroy();
         const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         const counts = days.map(() => Math.floor(Math.random() * 10) + 1);
-        serviceChart = new Chart(ctx1, {
+        window.serviceChart = new Chart(ctx1, {
             type: 'bar',
             data: { labels: days, datasets: [{ label: '订单数', data: counts, backgroundColor: '#0091D5', borderRadius: 6 }] },
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
@@ -70,13 +72,15 @@ function initCharts() {
     }
     const ctx2 = document.getElementById('monthlyRevenueChart');
     if (ctx2) {
-        if (revenueChart) revenueChart.destroy();
+        if (window.revenueChart) window.revenueChart.destroy();
         const months = ['1月', '2月', '3月', '4月', '5月', '6月'];
         const revenues = months.map(() => Math.floor(Math.random() * 5000) + 1000);
-        revenueChart = new Chart(ctx2, {
+        window.revenueChart = new Chart(ctx2, {
             type: 'line',
             data: { labels: months, datasets: [{ label: '收入', data: revenues, borderColor: '#0091D5', fill: true, tension: 0.3 }] },
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     }
 }
+
+console.log('✅ utils.js 已加载');

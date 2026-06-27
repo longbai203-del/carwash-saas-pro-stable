@@ -1,49 +1,33 @@
 // ================================================================
-//  loader.js - 模块加载器 v3.0 (修复版)
-//  功能：统一管理模块的加载、切换、初始化和缓存
+//  loader.js - 统一模块加载器 v4.0
+//  职责：加载HTML、调用init/destroy、缓存、切换
 // ================================================================
 
 const ModuleLoader = {
-    // 缓存已加载的模块HTML
+    // 缓存
     cache: {},
     
-    // 当前激活的模块名称
+    // 当前模块
     currentModule: null,
     
-    // 模块是否已初始化
+    // 已初始化标记
     initializedModules: {},
 
-    // 模块名 → 模块对象名 映射
-    moduleMap: {
-        'dashboard': 'DashboardModule',
-        'cashier': 'CashierModule',
-        'orders': 'OrdersModule',
-        'inventory': 'InventoryModule',
-        'members': 'CustomersModule',
-        'reports': 'ReportsModule',
-        'attendance': 'AttendanceModule',
-        'employees': 'EmployeesModule',
-        'audit': 'AuditModule',
-        'settings': 'SettingsModule'
+    // 模块注册表
+    modules: {
+        dashboard: { obj: 'DashboardModule', fallback: 'refreshDashboard' },
+        cashier: { obj: 'CashierModule', fallback: 'refreshPOS' },
+        orders: { obj: 'OrdersModule', fallback: 'loadOrders' },
+        inventory: { obj: 'InventoryModule', fallback: 'refreshInventory' },
+        members: { obj: 'CustomersModule', fallback: 'refreshCustomers' },
+        reports: { obj: 'ReportsModule', fallback: 'loadDailyReport' },
+        attendance: { obj: 'AttendanceModule', fallback: 'refreshAttendance' },
+        employees: { obj: 'EmployeesModule', fallback: 'loadUsersForReview' },
+        audit: { obj: 'AuditModule', fallback: 'loadAuditLog' },
+        settings: { obj: 'SettingsModule', fallback: 'loadSettings' }
     },
 
-    // 模块名 → 兼容函数名 映射（当模块对象不存在时使用）
-    fallbackMap: {
-        'dashboard': 'refreshDashboard',
-        'cashier': 'refreshPOS',
-        'orders': 'loadOrders',
-        'inventory': 'refreshInventory',
-        'members': 'refreshCustomers',
-        'reports': 'loadDailyReport',
-        'attendance': 'refreshAttendance',
-        'employees': 'loadUsersForReview',
-        'audit': 'loadAuditLog',
-        'settings': 'loadSettings'
-    },
-
-    // 切换到指定模块
     async switchTo(moduleName) {
-        // 如果已经在当前模块且已初始化，跳过
         if (this.currentModule === moduleName && this.initializedModules[moduleName]) {
             console.log(`📌 已在 ${moduleName} 模块`);
             return;
@@ -56,14 +40,13 @@ const ModuleLoader = {
             this.destroyModule(this.currentModule);
         }
 
-        // 2. 加载模块HTML
+        // 2. 加载并注入HTML
         const html = await this.loadModuleHTML(moduleName);
         if (!html) {
             console.error(`❌ 加载模块 ${moduleName} 失败`);
             return;
         }
 
-        // 3. 注入到容器
         const container = document.getElementById('moduleContainer');
         if (!container) {
             console.error('❌ moduleContainer 不存在');
@@ -72,17 +55,16 @@ const ModuleLoader = {
         container.innerHTML = html;
         console.log(`✅ HTML 已注入: ${moduleName}`);
 
-        // 4. 更新当前模块
+        // 3. 更新状态
         this.currentModule = moduleName;
         this.initializedModules[moduleName] = false;
 
-        // 5. 延迟初始化（等待DOM渲染）
+        // 4. 延迟初始化
         setTimeout(() => {
             this.initModule(moduleName);
-        }, 350);
+        }, 300);
     },
 
-    // 加载模块HTML（带缓存）
     async loadModuleHTML(moduleName) {
         if (this.cache[moduleName]) {
             console.log(`📦 从缓存加载: ${moduleName}`);
@@ -97,7 +79,7 @@ const ModuleLoader = {
             }
             const html = await response.text();
             this.cache[moduleName] = html;
-            console.log(`✅ 加载模块: ${moduleName} (${html.length} bytes)`);
+            console.log(`✅ 加载模块: ${moduleName}`);
             return html;
         } catch (error) {
             console.error(`❌ 加载模块 ${moduleName} 失败:`, error.message);
@@ -105,94 +87,74 @@ const ModuleLoader = {
         }
     },
 
-    // 初始化模块
     initModule(moduleName) {
         console.log(`⚡ 初始化模块: ${moduleName}`);
 
+        const config = this.modules[moduleName];
+        if (!config) {
+            console.warn(`⚠️ 未知模块: ${moduleName}`);
+            return;
+        }
+
         // 方式1：通过模块对象调用 init()
-        const moduleKey = this.moduleMap[moduleName];
-        if (moduleKey) {
-            const moduleObj = window[moduleKey];
-            if (moduleObj && typeof moduleObj.init === 'function') {
-                try {
-                    moduleObj.init();
-                    this.initializedModules[moduleName] = true;
-                    console.log(`✅ 模块 ${moduleName} init() 调用成功`);
-                    return;
-                } catch (e) {
-                    console.error(`❌ ${moduleKey}.init() 错误:`, e.message);
-                }
+        const moduleObj = window[config.obj];
+        if (moduleObj && typeof moduleObj.init === 'function') {
+            try {
+                moduleObj.init();
+                this.initializedModules[moduleName] = true;
+                console.log(`✅ ${moduleName} init() 成功`);
+                return;
+            } catch (e) {
+                console.error(`❌ ${config.obj}.init() 错误:`, e.message);
             }
         }
 
         // 方式2：通过兼容函数
-        const fallbackFn = this.fallbackMap[moduleName];
-        if (fallbackFn && typeof window[fallbackFn] === 'function') {
+        if (config.fallback && typeof window[config.fallback] === 'function') {
             try {
-                window[fallbackFn]();
+                window[config.fallback]();
                 this.initializedModules[moduleName] = true;
-                console.log(`✅ 兼容函数 ${fallbackFn}() 调用成功`);
+                console.log(`✅ ${config.fallback}() 成功`);
                 return;
             } catch (e) {
-                console.error(`❌ ${fallbackFn}() 错误:`, e.message);
+                console.error(`❌ ${config.fallback}() 错误:`, e.message);
             }
         }
 
-        console.warn(`⚠️ 模块 ${moduleName} 没有可用的初始化方法`);
-        
-        // 方式3：尝试直接查找模块对象并调用 refresh
-        for (const key in window) {
-            if (key.toLowerCase().includes(moduleName.toLowerCase()) && 
-                typeof window[key] === 'object' && 
-                window[key] !== null &&
-                typeof window[key].refresh === 'function') {
-                try {
-                    window[key].refresh();
-                    this.initializedModules[moduleName] = true;
-                    console.log(`✅ 通过 ${key}.refresh() 初始化成功`);
-                    return;
-                } catch(e) {}
-            }
-        }
+        console.warn(`⚠️ ${moduleName} 没有可用的初始化方法`);
     },
 
-    // 销毁模块
     destroyModule(moduleName) {
         console.log(`🧹 销毁模块: ${moduleName}`);
-        const moduleKey = this.moduleMap[moduleName];
-        if (moduleKey) {
-            const moduleObj = window[moduleKey];
+        const config = this.modules[moduleName];
+        if (config) {
+            const moduleObj = window[config.obj];
             if (moduleObj && typeof moduleObj.destroy === 'function') {
                 try {
                     moduleObj.destroy();
                 } catch (e) {
-                    console.warn('销毁模块警告:', e.message);
+                    console.warn('销毁警告:', e.message);
                 }
             }
         }
         this.initializedModules[moduleName] = false;
     },
 
-    // 刷新当前模块
     refresh() {
         if (this.currentModule) {
-            console.log(`🔄 刷新模块: ${this.currentModule}`);
+            console.log(`🔄 刷新: ${this.currentModule}`);
             this.initModule(this.currentModule);
         }
     },
 
-    // 预加载所有模块（提升切换速度）
     async preloadAll() {
         console.log('📦 预加载所有模块...');
-        const modules = Object.keys(this.moduleMap);
-        for (const name of modules) {
+        for (const name of Object.keys(this.modules)) {
             await this.loadModuleHTML(name);
         }
         console.log('✅ 预加载完成');
     }
 };
 
-// 暴露到全局
 window.ModuleLoader = ModuleLoader;
-
-console.log('✅ loader.js v3.0 已加载');
+console.log('✅ loader.js v4.0 已加载');

@@ -1,11 +1,7 @@
 // ================================================================
 //  auth.js - 认证模块
-//  功能：登录、注册、修改密码、权限控制
 // ================================================================
 
-// ================================================================
-//  Auth UI 控制
-// ================================================================
 function showLogin() {
     document.getElementById('loginView').classList.remove('hidden');
     document.getElementById('registerView').classList.add('hidden');
@@ -32,14 +28,14 @@ function showChangePassword() {
     document.getElementById('registerView').classList.add('hidden');
     document.getElementById('forgotPasswordView').classList.add('hidden');
     document.getElementById('changePasswordView').classList.remove('hidden');
-    document.getElementById('changeOldPassword').value = '';
-    document.getElementById('changeNewPassword').value = '';
-    document.getElementById('changeConfirmPassword').value = '';
+    const old = document.getElementById('changeOldPassword');
+    const newP = document.getElementById('changeNewPassword');
+    const confirm = document.getElementById('changeConfirmPassword');
+    if (old) old.value = '';
+    if (newP) newP.value = '';
+    if (confirm) confirm.value = '';
 }
 
-// ================================================================
-//  注册功能（状态：待审核）
-// ================================================================
 async function registerUser() {
     const username = document.getElementById('regUsername').value.trim();
     const name = document.getElementById('regName').value.trim() || username;
@@ -50,51 +46,30 @@ async function registerUser() {
     if (!username || !password) { showToast('请填写用户名和密码'); return; }
     if (password.length < 6) { showToast('密码至少6位'); return; }
     if (password !== confirm) { showToast('两次密码不一致'); return; }
-
-    if (role === 'owner') {
-        showToast('❌ 老板账号不能通过注册创建，请联系管理员');
-        return;
-    }
+    if (role === 'owner') { showToast('❌ 老板账号不能通过注册创建'); return; }
 
     try {
-        const { data: existing } = await supabaseClient
-            .from('users')
-            .select('username')
-            .eq('username', username);
-
-        if (existing && existing.length > 0) {
-            showToast('❌ 用户名已存在');
-            return;
-        }
+        const { data: existing } = await supabaseClient.from('users').select('username').eq('username', username);
+        if (existing && existing.length > 0) { showToast('❌ 用户名已存在'); return; }
 
         const passwordHash = CryptoJS.SHA256(password).toString();
-        const { error } = await supabaseClient
-            .from('users')
-            .insert([{
-                username,
-                password_hash: passwordHash,
-                role: role,
-                name: name,
-                status: 'pending',
-                registered_at: new Date().toISOString()
-            }]);
+        const { error } = await supabaseClient.from('users').insert([{
+            username, password_hash: passwordHash, role: role, name: name,
+            status: 'pending', registered_at: new Date().toISOString()
+        }]);
 
         if (error) throw new Error(error.message);
-
         showToast('✅ 注册申请已提交！请等待管理员审核');
-        document.getElementById('regUsername').value = '';
-        document.getElementById('regName').value = '';
-        document.getElementById('regPassword').value = '';
-        document.getElementById('regPasswordConfirm').value = '';
+        ['regUsername', 'regName', 'regPassword', 'regPasswordConfirm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
         showLogin();
     } catch (error) {
         showToast('❌ 注册失败: ' + error.message);
     }
 }
 
-// ================================================================
-//  登录功能（检查状态）
-// ================================================================
 async function authLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
@@ -102,63 +77,32 @@ async function authLogin() {
     if (!username || !password) { showToast('请输入用户名和密码'); return; }
 
     try {
-        const { data: users, error } = await supabaseClient
-            .from('users')
-            .select('*');
-
+        const { data: users, error } = await supabaseClient.from('users').select('*');
         if (error) throw new Error(error.message);
-        if (!users || users.length === 0) {
-            showToast('⚠️ 系统暂无用户，请先注册');
-            return;
-        }
+        if (!users || users.length === 0) { showToast('⚠️ 系统暂无用户，请先注册'); return; }
 
         allUsers = users;
         const user = users.find(u => u.username === username);
-        if (!user) { showToast('❌ 用户不存在，请先注册'); return; }
+        if (!user) { showToast('❌ 用户不存在'); return; }
 
-        if (user.status === 'pending') {
-            showToast('⏳ 账号正在审核中，请等待管理员审核通过');
-            return;
-        }
-        if (user.status === 'rejected') {
-            showToast('❌ 账号已被拒绝，请联系管理员');
-            return;
-        }
-        if (user.status !== 'approved') {
-            showToast('❌ 账号状态异常，请联系管理员');
-            return;
-        }
+        if (user.status === 'pending') { showToast('⏳ 账号正在审核中'); return; }
+        if (user.status === 'rejected') { showToast('❌ 账号已被拒绝'); return; }
+        if (user.status !== 'approved') { showToast('❌ 账号状态异常'); return; }
 
         const hash = CryptoJS.SHA256(password).toString();
         if (user.password_hash !== hash) { showToast('❌ 密码错误'); return; }
 
         currentUser = {
-            id: user.id,
-            username: user.username,
-            password_hash: user.password_hash,
-            role: user.role || 'employee',
-            name: user.name || user.username,
-            status: user.status,
-            registered_at: user.registered_at,
-            approved_by: user.approved_by,
-            approved_at: user.approved_at,
-            branch_id: user.branch_id,
-            tenant_id: user.tenant_id,
-            store_id: user.store_id,
-            role_id: user.role_id,
-            employee_code: user.employee_code,
-            phone: user.phone,
-            avatar_url: user.avatar_url,
-            last_login_at: user.last_login_at,
-            updated_at: user.updated_at
+            id: user.id, username: user.username, password_hash: user.password_hash,
+            role: user.role || 'employee', name: user.name || user.username,
+            status: user.status, registered_at: user.registered_at,
+            approved_by: user.approved_by, approved_at: user.approved_at
         };
-        
-        localStorage.setItem('cw_session', JSON.stringify({ 
-            id: user.id, 
-            username: user.username,
-            role: user.role || 'employee'
+
+        localStorage.setItem('cw_session', JSON.stringify({
+            id: user.id, username: user.username, role: user.role || 'employee'
         }));
-        
+
         await loadAllData();
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById('appContainer').classList.remove('hidden');
@@ -169,9 +113,6 @@ async function authLogin() {
     }
 }
 
-// ================================================================
-//  忘记密码（需账号已审核）
-// ================================================================
 async function resetPassword() {
     const username = document.getElementById('forgotUsername').value.trim();
     const newPassword = document.getElementById('forgotNewPassword').value;
@@ -182,35 +123,22 @@ async function resetPassword() {
     if (newPassword !== confirm) { showToast('两次密码不一致'); return; }
 
     try {
-        const { data: user } = await supabaseClient
-            .from('users')
-            .select('id, status')
-            .eq('username', username)
-            .single();
-
+        const { data: user } = await supabaseClient.from('users').select('id, status').eq('username', username).single();
         if (!user) { showToast('❌ 用户不存在'); return; }
-        if (user.status !== 'approved') {
-            showToast('❌ 账号未审核通过，无法重置密码');
-            return;
-        }
+        if (user.status !== 'approved') { showToast('❌ 账号未审核通过'); return; }
 
         const passwordHash = CryptoJS.SHA256(newPassword).toString();
-        await supabaseClient
-            .from('users')
-            .update({ password_hash: passwordHash })
-            .eq('username', username);
+        await supabaseClient.from('users').update({ password_hash: passwordHash }).eq('username', username);
 
         showToast('✅ 密码已重置，请登录');
-        document.getElementById('loginUsername').value = username;
+        const loginUsername = document.getElementById('loginUsername');
+        if (loginUsername) loginUsername.value = username;
         showLogin();
     } catch (error) {
         showToast('❌ 重置失败: ' + error.message);
     }
 }
 
-// ================================================================
-//  修改密码
-// ================================================================
 async function changePassword() {
     const username = document.getElementById('changeUsername').value.trim();
     const oldPassword = document.getElementById('changeOldPassword').value;
@@ -222,38 +150,25 @@ async function changePassword() {
     if (newPassword !== confirm) { showToast('两次密码不一致'); return; }
 
     try {
-        const { data: user } = await supabaseClient
-            .from('users')
-            .select('id, password_hash, status')
-            .eq('username', username)
-            .single();
-
+        const { data: user } = await supabaseClient.from('users').select('id, password_hash, status').eq('username', username).single();
         if (!user) { showToast('❌ 用户不存在'); return; }
-        if (user.status !== 'approved') {
-            showToast('❌ 账号未审核通过，无法修改密码');
-            return;
-        }
+        if (user.status !== 'approved') { showToast('❌ 账号未审核通过'); return; }
 
         const oldHash = CryptoJS.SHA256(oldPassword).toString();
         if (user.password_hash !== oldHash) { showToast('❌ 当前密码错误'); return; }
 
         const newHash = CryptoJS.SHA256(newPassword).toString();
-        await supabaseClient
-            .from('users')
-            .update({ password_hash: newHash })
-            .eq('username', username);
+        await supabaseClient.from('users').update({ password_hash: newHash }).eq('username', username);
 
         showToast('✅ 密码修改成功，请重新登录');
-        document.getElementById('loginUsername').value = username;
+        const loginUsername = document.getElementById('loginUsername');
+        if (loginUsername) loginUsername.value = username;
         showLogin();
     } catch (error) {
         showToast('❌ 修改失败: ' + error.message);
     }
 }
 
-// ================================================================
-//  修改密码（从菜单调用）
-// ================================================================
 function showChangePasswordFromMenu() {
     if (!currentUser) {
         showToast('请先登录');
@@ -262,13 +177,11 @@ function showChangePasswordFromMenu() {
     }
     document.getElementById('loginModal').style.display = 'flex';
     showChangePassword();
-    document.getElementById('changeUsername').value = currentUser.username || '';
+    const usernameInput = document.getElementById('changeUsername');
+    if (usernameInput) usernameInput.value = currentUser.username || '';
     showToast('请输入当前密码和新密码');
 }
 
-// ================================================================
-//  退出登录
-// ================================================================
 function logout() {
     currentUser = null;
     localStorage.removeItem('cw_session');
@@ -277,143 +190,68 @@ function logout() {
     showToast('已退出');
 }
 
-// ================================================================
-//  UI更新（登录后调用）
-// ================================================================
 function updateUIAfterLogin() {
     const role = currentUser?.role || 'employee';
     const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.employee;
 
-    // 显示/隐藏导航项
-    document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
-    document.getElementById('navOrders').style.display = permissions.orders ? 'flex' : 'none';
-    document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
-    document.getElementById('navCustomers').style.display = permissions.customers ? 'flex' : 'none';
-    document.getElementById('navAttendance').style.display = permissions.attendance ? 'flex' : 'none';
-    document.getElementById('navReports').style.display = permissions.reports ? 'flex' : 'none';
-    document.getElementById('navEmployees').style.display = permissions.employees ? 'flex' : 'none';
-    document.getElementById('navAudit').style.display = permissions.audit ? 'flex' : 'none';
-    document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
+    const navMap = {
+        navCashier: 'cashier', navOrders: 'orders', navInventory: 'inventory',
+        navCustomers: 'customers', navAttendance: 'attendance', navReports: 'reports',
+        navEmployees: 'employees', navAudit: 'audit', navSettings: 'settings'
+    };
+    Object.entries(navMap).forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = permissions[key] ? 'flex' : 'none';
+    });
 
-    // 更新用户信息
-    document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
-    document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[role]?.label || role;
-    document.getElementById('currentUserSpan').textContent = currentUser?.name || currentUser?.username || 'Admin';
-    document.getElementById('headerUsername').textContent = currentUser?.name || currentUser?.username || 'Admin';
+    const roleDisplay = document.getElementById('userRoleDisplay');
+    if (roleDisplay) roleDisplay.textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
+    const currentRole = document.getElementById('currentRoleSpan');
+    if (currentRole) currentRole.textContent = ROLE_PERMISSIONS[role]?.label || role;
+    const currentUserSpan = document.getElementById('currentUserSpan');
+    if (currentUserSpan) currentUserSpan.textContent = currentUser?.name || currentUser?.username || 'Admin';
+    const headerUsername = document.getElementById('headerUsername');
+    if (headerUsername) headerUsername.textContent = currentUser?.name || currentUser?.username || 'Admin';
 
-    // 更新门店选择器
     updateBranchSelector();
-    
-    // 刷新所有数据
     refreshAll();
-    
-    // ===== 关键修复：使用 ModuleLoader 切换到仪表板 =====
+
+    // 使用 ModuleLoader 切换到仪表板
     if (window.ModuleLoader) {
         setTimeout(() => {
             ModuleLoader.switchTo('dashboard');
-        }, 300);
+        }, 400);
     } else {
-        console.warn('⚠️ ModuleLoader 未加载，使用兼容方式');
+        console.warn('⚠️ ModuleLoader 未加载');
         switchTab('dashboard');
     }
 }
 
-// ================================================================
-//  切换标签（兼容旧版）
-// ================================================================
 function switchTab(tab) {
-    // 权限检查
-    if (currentUser && !currentUser.role) {
-        const user = allUsers.find(u => u.id === currentUser.id);
-        if (user) {
-            currentUser = {
-                id: user.id,
-                username: user.username,
-                password_hash: user.password_hash,
-                role: user.role || 'employee',
-                name: user.name || user.username,
-                status: user.status,
-                registered_at: user.registered_at,
-                approved_by: user.approved_by,
-                approved_at: user.approved_at,
-                branch_id: user.branch_id,
-                tenant_id: user.tenant_id,
-                store_id: user.store_id,
-                role_id: user.role_id,
-                employee_code: user.employee_code,
-                phone: user.phone,
-                avatar_url: user.avatar_url,
-                last_login_at: user.last_login_at,
-                updated_at: user.updated_at
-            };
-        }
-    }
-    
-    const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
-    if (!permissions[tab]) { 
-        showToast('⚠️ 您没有权限访问此页面'); 
-        return; 
-    }
-
-    // 更新导航高亮
-    document.querySelectorAll('[data-nav]').forEach(el => {
-        el.classList.remove('nav-item-active');
-        if (el.dataset.nav === tab) el.classList.add('nav-item-active');
-    });
-
-    // 更新标题
-    const titles = { dashboard: '仪表板', cashier: '收银台', orders: '订单管理', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工审核', audit: '审计日志', settings: '系统设置' };
-    document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
-
-    // 如果 ModuleLoader 可用，使用它
     if (window.ModuleLoader) {
         ModuleLoader.switchTo(tab);
         return;
     }
-
-    // 兼容旧版：直接加载模块
-    loadModuleDirect(tab);
-}
-
-// ================================================================
-//  直接加载模块（兼容旧版）
-// ================================================================
-async function loadModuleDirect(moduleName) {
+    // 兼容旧版
+    console.warn('⚠️ 使用兼容模式切换:', tab);
     const container = document.getElementById('moduleContainer');
     if (!container) return;
-    
-    try {
-        const response = await fetch(`modules/${moduleName}.html`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const html = await response.text();
+    fetch(`modules/${tab}.html`).then(r => r.text()).then(html => {
         container.innerHTML = html;
-        
         setTimeout(() => {
             const funcMap = {
-                'dashboard': 'refreshDashboard',
-                'cashier': 'refreshPOS',
-                'orders': 'loadOrders',
-                'inventory': 'refreshInventory',
-                'members': 'refreshCustomers',
-                'reports': 'loadDailyReport',
-                'attendance': 'refreshAttendance',
-                'employees': 'loadUsersForReview',
-                'audit': 'loadAuditLog',
-                'settings': 'loadSettings'
+                dashboard: 'refreshDashboard', cashier: 'refreshPOS',
+                orders: 'loadOrders', inventory: 'refreshInventory',
+                members: 'refreshCustomers', reports: 'loadDailyReport',
+                attendance: 'refreshAttendance', employees: 'loadUsersForReview',
+                audit: 'loadAuditLog', settings: 'loadSettings'
             };
-            const fn = funcMap[moduleName];
-            if (fn && typeof window[fn] === 'function') {
-                window[fn]();
-            }
+            const fn = funcMap[tab];
+            if (fn && typeof window[fn] === 'function') window[fn]();
         }, 300);
-    } catch (error) {
-        console.error('加载模块失败:', error);
-    }
+    });
 }
 
-// ================================================================
-//  数据过滤（供其他模块使用）
-// ================================================================
 function getFilteredOrders() {
     let orders = allOrders || [];
     const role = currentUser?.role || 'employee';
@@ -422,9 +260,6 @@ function getFilteredOrders() {
     return orders.filter(o => o.staff_name === username || o.employee_id === currentUser?.id);
 }
 
-// ================================================================
-//  门店功能
-// ================================================================
 function updateBranchSelector() {
     const sel = document.getElementById('branchSelector');
     if (!sel) return;
@@ -439,34 +274,21 @@ function switchBranch() {
     showToast('已切换到: ' + branchName);
 }
 
-// ================================================================
-//  刷新所有数据
-// ================================================================
 function refreshAll() {
-    // 使用 ModuleLoader 刷新当前模块
     if (window.ModuleLoader) {
         ModuleLoader.refresh();
         return;
     }
-    
-    // 兼容旧版
     const currentTab = document.querySelector('[data-nav].nav-item-active')?.dataset?.nav || 'dashboard';
     const funcMap = {
-        'dashboard': 'refreshDashboard',
-        'cashier': 'refreshPOS',
-        'orders': 'loadOrders',
-        'inventory': 'refreshInventory',
-        'members': 'refreshCustomers',
-        'reports': 'loadDailyReport',
-        'attendance': 'refreshAttendance',
-        'employees': 'loadUsersForReview',
-        'audit': 'loadAuditLog',
-        'settings': 'loadSettings'
+        dashboard: 'refreshDashboard', cashier: 'refreshPOS',
+        orders: 'loadOrders', inventory: 'refreshInventory',
+        members: 'refreshCustomers', reports: 'loadDailyReport',
+        attendance: 'refreshAttendance', employees: 'loadUsersForReview',
+        audit: 'loadAuditLog', settings: 'loadSettings'
     };
     const fn = funcMap[currentTab];
-    if (fn && typeof window[fn] === 'function') {
-        window[fn]();
-    }
+    if (fn && typeof window[fn] === 'function') window[fn]();
 }
 
-console.log('✅ auth.js 已加载 (修复版)');
+console.log('✅ auth.js 已加载');

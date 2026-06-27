@@ -3,39 +3,29 @@
 // ================================================================
 
 const CustomersModule = {
-    // 初始化
     init() {
         console.log('👥 CustomersModule 初始化');
         if (!document.getElementById('membersList')) {
-            console.warn('⚠️ 客户元素未加载，延迟初始化');
+            console.warn('⚠️ 客户元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
         this.refresh();
-        this.bindEvents();
     },
 
-    // 销毁
     destroy() {
         console.log('👥 CustomersModule 销毁');
     },
 
-    // 绑定事件
-    bindEvents() {
-        // 可以添加搜索、筛选等事件
-    },
-
-    // 刷新客户列表
     refresh() {
         this.refreshCustomers();
     },
 
-    // 刷新客户列表
     refreshCustomers() {
         const list = document.getElementById('membersList');
         if (!list) return;
 
-        list.innerHTML = allCustomers.map(c => `
+        list.innerHTML = (allCustomers || []).map(c => `
             <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
                 <div>
                     <strong>${c.name || 'Unknown'}</strong>
@@ -50,7 +40,6 @@ const CustomersModule = {
         `).join('') || '<div class="text-center text-gray-400">暂无客户</div>';
     },
 
-    // 添加/充值客户
     async addCustomer() {
         if (!currentUser) { showToast('请先登录'); return; }
         const phone = document.getElementById('memberPhone')?.value?.trim();
@@ -60,7 +49,7 @@ const CustomersModule = {
         if (!phone || !name || !plate) { showToast('请填写完整信息'); return; }
 
         try {
-            let existing = allCustomers.find(c => c.phone === phone || c.plate_number === plate);
+            let existing = (allCustomers || []).find(c => c.phone === phone || c.plate_number === plate);
             if (existing) {
                 const newBalance = (existing.balance || 0) + amount;
                 await supabaseClient.from('customers').update({ balance: newBalance, name: name, total_spent: (existing.total_spent || 0) + amount }).eq('id', existing.id);
@@ -78,19 +67,15 @@ const CustomersModule = {
             }
             this.refreshCustomers();
             showToast('✅ 客户已保存 / 充值 ' + amount + ' SAR');
-            document.getElementById('memberPhone').value = '';
-            document.getElementById('memberName').value = '';
-            document.getElementById('memberPlate').value = '';
-            document.getElementById('rechargeAmount').value = '';
+            ['memberPhone', 'memberName', 'memberPlate', 'rechargeAmount'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
         } catch (error) { showToast('❌ 操作失败: ' + error.message); }
     }
 };
 
-// 暴露到全局
 window.CustomersModule = CustomersModule;
-
-// 兼容旧版函数
 window.refreshCustomers = function() { CustomersModule.refreshCustomers(); };
 window.addCustomer = function() { CustomersModule.addCustomer(); };
-
-console.log('✅ customers.js 已加载 (模块化)');
+console.log('✅ customers.js 已加载');

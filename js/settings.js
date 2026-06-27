@@ -3,31 +3,22 @@
 // ================================================================
 
 const SettingsModule = {
-    // 初始化
     init() {
         console.log('⚙️ SettingsModule 初始化');
         if (!document.getElementById('shopName')) {
-            console.warn('⚠️ 设置元素未加载，延迟初始化');
+            console.warn('⚠️ 设置元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
         this.loadSettings();
         this.loadBackupConfig();
         this.refreshBranches();
-        this.bindEvents();
     },
 
-    // 销毁
     destroy() {
         console.log('⚙️ SettingsModule 销毁');
     },
 
-    // 绑定事件
-    bindEvents() {
-        // 设置保存按钮等
-    },
-
-    // 加载设置
     loadSettings() {
         const shopName = document.getElementById('shopName');
         const shopTaxId = document.getElementById('shopTaxId');
@@ -40,7 +31,6 @@ const SettingsModule = {
         if (commissionRate) commissionRate.value = config.commissionRate || 5;
     },
 
-    // 保存设置
     saveSettings() {
         if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以修改设置'); return; }
         const shopName = document.getElementById('shopName');
@@ -56,7 +46,6 @@ const SettingsModule = {
         showToast('✅ 设置已保存');
     },
 
-    // 加载备份配置
     async loadBackupConfig() {
         try {
             const { data, error } = await supabaseClient.from('backup_config').select('*').eq('id', 1).single();
@@ -69,7 +58,6 @@ const SettingsModule = {
         } catch(e) {}
     },
 
-    // 保存备份配置
     async saveBackupConfig() {
         if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以修改备份设置'); return; }
         try {
@@ -82,7 +70,6 @@ const SettingsModule = {
         } catch (error) { showToast('❌ 保存失败: ' + error.message); }
     },
 
-    // 手动备份
     async manualBackup() {
         if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以执行备份'); return; }
         showToast('⏳ 正在备份...');
@@ -104,7 +91,6 @@ const SettingsModule = {
         } catch (error) { showToast('❌ 备份失败: ' + error.message); }
     },
 
-    // 刷新门店列表
     refreshBranches() {
         const list = document.getElementById('branchList');
         if (!list) return;
@@ -116,7 +102,6 @@ const SettingsModule = {
         ).join('') || '<div class="text-center text-gray-400">暂无门店</div>';
     },
 
-    // 添加门店
     async addBranch() {
         if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以添加门店'); return; }
         const name = document.getElementById('newBranchName')?.value?.trim();
@@ -130,17 +115,16 @@ const SettingsModule = {
                 this.refreshBranches();
                 if (typeof updateBranchSelector === 'function') updateBranchSelector();
                 showToast('✅ 门店已添加: ' + name);
-                document.getElementById('newBranchName').value = '';
-                document.getElementById('newBranchAddress').value = '';
+                const nameInput = document.getElementById('newBranchName');
+                const addrInput = document.getElementById('newBranchAddress');
+                if (nameInput) nameInput.value = '';
+                if (addrInput) addrInput.value = '';
             }
         } catch (error) { showToast('❌ 添加失败: ' + error.message); }
     }
 };
 
-// 暴露到全局
 window.SettingsModule = SettingsModule;
-
-// 兼容旧版函数
 window.loadSettings = function() { SettingsModule.loadSettings(); };
 window.saveSettings = function() { SettingsModule.saveSettings(); };
 window.loadBackupConfig = function() { SettingsModule.loadBackupConfig(); };
@@ -148,5 +132,4 @@ window.saveBackupConfig = function() { SettingsModule.saveBackupConfig(); };
 window.manualBackup = function() { SettingsModule.manualBackup(); };
 window.refreshBranches = function() { SettingsModule.refreshBranches(); };
 window.addBranch = function() { SettingsModule.addBranch(); };
-
-console.log('✅ settings.js 已加载 (模块化)');
+console.log('✅ settings.js 已加载');

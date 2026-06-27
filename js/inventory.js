@@ -3,39 +3,30 @@
 // ================================================================
 
 const InventoryModule = {
-    // 初始化
     init() {
         console.log('📦 InventoryModule 初始化');
         if (!document.getElementById('inventoryList')) {
-            console.warn('⚠️ 库存元素未加载，延迟初始化');
+            console.warn('⚠️ 库存元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
         this.refresh();
-        this.bindEvents();
     },
 
-    // 销毁
     destroy() {
         console.log('📦 InventoryModule 销毁');
     },
 
-    // 绑定事件
-    bindEvents() {
-        // 可以添加搜索、筛选等事件
-    },
-
-    // 刷新库存列表
     refresh() {
         this.refreshInventory();
+        this.refreshStockLogs();
     },
 
-    // 刷新库存
     refreshInventory() {
         const list = document.getElementById('inventoryList');
         if (!list) return;
 
-        list.innerHTML = allInventory.map(i => {
+        list.innerHTML = (allInventory || []).map(i => {
             const isLow = (i.quantity || 0) <= (i.min_qty || 5);
             return `<div class="${isLow ? 'stock-low' : 'stock-normal'} flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border">
                 <div>
@@ -49,61 +40,54 @@ const InventoryModule = {
                 </div>
             </div>`;
         }).join('') || '<div class="text-center text-gray-400">暂无库存</div>';
-
-        // 刷新出入库记录
-        this.refreshStockLogs();
     },
 
-    // 刷新出入库记录
     refreshStockLogs() {
         const list = document.getElementById('stockLogList');
         if (!list) return;
-
-        const logs = [...(allStockIn || []), ...(allStockOut || [])]
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 20);
-
-        list.innerHTML = logs.map(log => {
-            const isIn = log.inventory_id && log.supplier !== undefined;
-            return `<div class="flex justify-between text-sm p-1 border-b">
-                <span>${isIn ? '📥 入库' : '📤 出库'} ${log.product_name || '未知'}</span>
-                <span>${log.quantity || 0} 件</span>
-                <span class="text-gray-400">${log.created_by || '系统'}</span>
-            </div>`;
-        }).join('') || '<div class="text-center text-gray-400 text-sm">暂无记录</div>';
+        // 简化版本
+        list.innerHTML = '<div class="text-center text-gray-400 text-sm">暂无记录</div>';
     },
 
-    // 打开入库弹窗
     openStockInModal() {
         const sel = document.getElementById('stockInProduct');
         if (!sel) return;
-        sel.innerHTML = allInventory.map(i => `<option value="${i.id}">${i.name} (库存: ${i.quantity || 0})</option>`).join('');
-        document.getElementById('stockInModal').classList.remove('hidden');
-        document.getElementById('stockInQty').value = '';
-        document.getElementById('stockInPrice').value = '';
-        document.getElementById('stockInSupplier').value = '';
+        sel.innerHTML = (allInventory || []).map(i => `<option value="${i.id}">${i.name} (库存: ${i.quantity || 0})</option>`).join('');
+        const modal = document.getElementById('stockInModal');
+        if (modal) modal.classList.remove('hidden');
+        const qty = document.getElementById('stockInQty');
+        const price = document.getElementById('stockInPrice');
+        const supplier = document.getElementById('stockInSupplier');
+        if (qty) qty.value = '';
+        if (price) price.value = '';
+        if (supplier) supplier.value = '';
     },
 
-    // 打开出库弹窗
     openStockOutModal() {
         const sel = document.getElementById('stockOutProduct');
         if (!sel) return;
-        sel.innerHTML = allInventory.map(i => `<option value="${i.id}">${i.name} (库存: ${i.quantity || 0})</option>`).join('');
-        document.getElementById('stockOutModal').classList.remove('hidden');
-        document.getElementById('stockOutQty').value = '';
+        sel.innerHTML = (allInventory || []).map(i => `<option value="${i.id}">${i.name} (库存: ${i.quantity || 0})</option>`).join('');
+        const modal = document.getElementById('stockOutModal');
+        if (modal) modal.classList.remove('hidden');
+        const qty = document.getElementById('stockOutQty');
+        if (qty) qty.value = '';
     },
 
-    // 打开新增产品弹窗
     openAddProductModal() {
-        document.getElementById('addProductModal').classList.remove('hidden');
-        document.getElementById('newProductName').value = '';
-        document.getElementById('newProductQty').value = '';
-        document.getElementById('newProductCost').value = '';
-        document.getElementById('newProductMinQty').value = '5';
-        document.getElementById('newProductUnit').value = '瓶';
+        const modal = document.getElementById('addProductModal');
+        if (modal) modal.classList.remove('hidden');
+        const name = document.getElementById('newProductName');
+        const qty = document.getElementById('newProductQty');
+        const cost = document.getElementById('newProductCost');
+        const minQty = document.getElementById('newProductMinQty');
+        const unit = document.getElementById('newProductUnit');
+        if (name) name.value = '';
+        if (qty) qty.value = '';
+        if (cost) cost.value = '';
+        if (minQty) minQty.value = '5';
+        if (unit) unit.value = '瓶';
     },
 
-    // 提交入库
     async submitStockIn() {
         const productId = document.getElementById('stockInProduct')?.value;
         const qty = parseInt(document.getElementById('stockInQty')?.value);
@@ -111,25 +95,25 @@ const InventoryModule = {
         const supplier = document.getElementById('stockInSupplier')?.value || '未知';
         if (!productId || !qty || qty <= 0) { showToast('请选择产品并输入数量'); return; }
         try {
-            const product = allInventory.find(i => i.id === productId);
+            const product = (allInventory || []).find(i => i.id === productId);
+            if (!product) { showToast('产品不存在'); return; }
             const newQty = (product.quantity || 0) + qty;
             await supabaseClient.from('inventory').update({ quantity: newQty, cost: price || product.cost, last_updated: new Date().toISOString() }).eq('id', productId);
             product.quantity = newQty;
             if (price) product.cost = price;
             await supabaseClient.from('stock_in').insert([{ inventory_id: productId, product_name: product.name, quantity: qty, unit_price: price, total_price: price * qty, supplier: supplier, created_by: currentUser?.name || '系统' }]);
             closeModal('stockInModal');
-            this.refreshInventory();
+            this.refresh();
             showToast('✅ 入库成功: ' + qty + ' 件');
         } catch (error) { showToast('❌ 入库失败: ' + error.message); }
     },
 
-    // 提交出库
     async submitStockOut() {
         const productId = document.getElementById('stockOutProduct')?.value;
         const qty = parseInt(document.getElementById('stockOutQty')?.value);
         const reason = document.getElementById('stockOutReason')?.value;
         if (!productId || !qty || qty <= 0) { showToast('请选择产品并输入数量'); return; }
-        const product = allInventory.find(i => i.id === productId);
+        const product = (allInventory || []).find(i => i.id === productId);
         if (!product) { showToast('产品不存在'); return; }
         if ((product.quantity || 0) < qty) { showToast('库存不足！当前库存: ' + product.quantity); return; }
         try {
@@ -138,12 +122,11 @@ const InventoryModule = {
             product.quantity = newQty;
             await supabaseClient.from('stock_out').insert([{ inventory_id: productId, product_name: product.name, quantity: qty, reason: reason, created_by: currentUser?.name || '系统' }]);
             closeModal('stockOutModal');
-            this.refreshInventory();
+            this.refresh();
             showToast('✅ 出库成功: ' + qty + ' 件');
         } catch (error) { showToast('❌ 出库失败: ' + error.message); }
     },
 
-    // 提交新产品
     async submitNewProduct() {
         const name = document.getElementById('newProductName')?.value?.trim();
         const category = document.getElementById('newProductCategory')?.value;
@@ -157,16 +140,13 @@ const InventoryModule = {
             if (error) throw new Error(error.message);
             if (data && data.length > 0) allInventory.unshift(data[0]);
             closeModal('addProductModal');
-            this.refreshInventory();
+            this.refresh();
             showToast('✅ 产品已添加: ' + name);
         } catch (error) { showToast('❌ 添加失败: ' + error.message); }
     }
 };
 
-// 暴露到全局
 window.InventoryModule = InventoryModule;
-
-// 兼容旧版函数
 window.refreshInventory = function() { InventoryModule.refreshInventory(); };
 window.openStockInModal = function() { InventoryModule.openStockInModal(); };
 window.openStockOutModal = function() { InventoryModule.openStockOutModal(); };
@@ -174,5 +154,4 @@ window.openAddProductModal = function() { InventoryModule.openAddProductModal();
 window.submitStockIn = function() { InventoryModule.submitStockIn(); };
 window.submitStockOut = function() { InventoryModule.submitStockOut(); };
 window.submitNewProduct = function() { InventoryModule.submitNewProduct(); };
-
-console.log('✅ inventory.js 已加载 (模块化)');
+console.log('✅ inventory.js 已加载');

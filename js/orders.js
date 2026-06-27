@@ -3,53 +3,46 @@
 // ================================================================
 
 const OrdersModule = {
-    // 初始化
+    _boundFilter: null,
+    _boundDate: null,
+    _boundSearch: null,
+
     init() {
         console.log('📋 OrdersModule 初始化');
-        // 检查DOM元素是否存在
         if (!document.getElementById('ordersList')) {
-            console.warn('⚠️ 订单元素未加载，延迟初始化');
+            console.warn('⚠️ 订单元素未加载，延迟重试');
             setTimeout(() => this.init(), 300);
             return;
         }
         // 设置日期默认值
         const dateFilter = document.getElementById('orderDateFilter');
         if (dateFilter) {
-            const today = new Date().toISOString().split('T')[0];
-            dateFilter.value = today;
+            dateFilter.value = new Date().toISOString().split('T')[0];
         }
         this.loadOrders();
         this.bindEvents();
     },
-    
-    // 销毁
+
     destroy() {
         console.log('📋 OrdersModule 销毁');
         const filter = document.getElementById('orderStatusFilter');
-        if (filter && this._boundFilter) {
-            filter.removeEventListener('change', this._boundFilter);
-        }
-        const dateFilter = document.getElementById('orderDateFilter');
-        if (dateFilter && this._boundDate) {
-            dateFilter.removeEventListener('change', this._boundDate);
-        }
+        if (filter && this._boundFilter) filter.removeEventListener('change', this._boundFilter);
+        const date = document.getElementById('orderDateFilter');
+        if (date && this._boundDate) date.removeEventListener('change', this._boundDate);
         const search = document.getElementById('orderSearch');
-        if (search && this._boundSearch) {
-            search.removeEventListener('input', this._boundSearch);
-        }
+        if (search && this._boundSearch) search.removeEventListener('input', this._boundSearch);
     },
-    
-    // 绑定事件
+
     bindEvents() {
         const filter = document.getElementById('orderStatusFilter');
         if (filter) {
             this._boundFilter = () => this.loadOrders();
             filter.addEventListener('change', this._boundFilter);
         }
-        const dateFilter = document.getElementById('orderDateFilter');
-        if (dateFilter) {
+        const date = document.getElementById('orderDateFilter');
+        if (date) {
             this._boundDate = () => this.loadOrders();
-            dateFilter.addEventListener('change', this._boundDate);
+            date.addEventListener('change', this._boundDate);
         }
         const search = document.getElementById('orderSearch');
         if (search) {
@@ -57,25 +50,24 @@ const OrdersModule = {
             search.addEventListener('input', this._boundSearch);
         }
     },
-    
-    // 加载订单列表
-    async loadOrders() {
+
+    loadOrders() {
         const statusFilter = document.getElementById('orderStatusFilter')?.value || 'all';
         const dateFilter = document.getElementById('orderDateFilter')?.value || '';
         const search = document.getElementById('orderSearch')?.value?.trim() || '';
 
-        let orders = typeof getFilteredOrders === 'function' ? getFilteredOrders() : allOrders || [];
+        let orders = typeof getFilteredOrders === 'function' ? getFilteredOrders() : (allOrders || []);
         if (statusFilter !== 'all') orders = orders.filter(o => o.status === statusFilter);
         if (dateFilter) orders = orders.filter(o => o.date === dateFilter);
-        if (search) orders = orders.filter(o => 
-            o.plate_number?.includes(search) || 
-            o.order_number?.includes(search) || 
-            o.staff_name?.includes(search)
+        if (search) orders = orders.filter(o =>
+            (o.plate_number || '').includes(search) ||
+            (o.order_number || '').includes(search) ||
+            (o.staff_name || '').includes(search)
         );
 
         const list = document.getElementById('ordersList');
         if (!list) return;
-        
+
         list.innerHTML = orders.slice(0, 50).map(o => `
             <div class="bg-white p-4 rounded-xl shadow-sm border hover:border-blue-300 cursor-pointer" onclick="OrdersModule.showDetail('${o.id}')">
                 <div class="flex justify-between items-center">
@@ -98,8 +90,7 @@ const OrdersModule = {
             </div>
         `).join('') || '<div class="text-center text-gray-400">暂无订单</div>';
     },
-    
-    // 更新订单状态
+
     async updateStatus(orderId, newStatus) {
         try {
             const { data: order } = await supabaseClient.from('orders').select('status').eq('id', orderId).single();
@@ -114,13 +105,12 @@ const OrdersModule = {
             showToast('❌ 更新失败: ' + error.message);
         }
     },
-    
-    // 显示订单详情
+
     async showDetail(orderId) {
-        const order = allOrders.find(o => o.id === orderId);
+        const order = (allOrders || []).find(o => o.id === orderId);
         if (!order) { showToast('订单不存在'); return; }
-        const customer = allCustomers.find(c => c.id === order.customer_id);
-        const employee = allUsers.find(u => u.id === order.employee_id);
+        const customer = (allCustomers || []).find(c => c.id === order.customer_id);
+        const employee = (allUsers || []).find(u => u.id === order.employee_id);
         const content = document.getElementById('orderDetailContent');
         if (!content) return;
         content.innerHTML = `
@@ -141,17 +131,15 @@ const OrdersModule = {
                 <button onclick="closeModal('orderDetailModal')" class="btn-outline btn-sm w-full">关闭</button>
             </div>
         `;
-        document.getElementById('orderDetailTitle').textContent = '订单详情 #' + (order.order_number || order.id.slice(0, 8));
-        document.getElementById('orderDetailModal').classList.remove('hidden');
+        const title = document.getElementById('orderDetailTitle');
+        if (title) title.textContent = '订单详情 #' + (order.order_number || order.id.slice(0, 8));
+        const modal = document.getElementById('orderDetailModal');
+        if (modal) modal.classList.remove('hidden');
     }
 };
 
-// 暴露到全局
 window.OrdersModule = OrdersModule;
-
-// 兼容旧版函数调用
 window.loadOrders = function() { OrdersModule.loadOrders(); };
 window.updateOrderStatus = function(id, status) { OrdersModule.updateStatus(id, status); };
 window.showOrderDetail = function(id) { OrdersModule.showDetail(id); };
-
-console.log('✅ orders.js 已加载 (模块化)');
+console.log('✅ orders.js 已加载');
