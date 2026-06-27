@@ -163,69 +163,129 @@
 
 <!-- ===== 脚本加载 ===== -->
 <script>
-// ============================================================
-// 1. 首先初始化 Supabase 客户端（全局可用）
-// ============================================================
-const SUPABASE_CONFIG = {
-    url: 'https://fhwsbdokxgjqyrbvstxq.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZod3NiZG9reGdqcXlyYnZzdHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQzNjAsImV4cCI6MjA5Nzk2MDM2MH0.XXR5BhhOuF0t6lzOkeYl6OPyva_QCwcV482TzOFV_84'
-};
-
-// 创建全局 supabase 客户端
-const supabase = window.supabase.createClient(
-    SUPABASE_CONFIG.url,
-    SUPABASE_CONFIG.anonKey
-);
-window.supabase = supabase;
-
-console.log('[Supabase] 客户端初始化完成');
-</script>
-
-<script src="js/config.js"></script>
-<script src="js/store.js"></script>
-<script src="js/api.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/loader.js"></script>
-<script src="js/app.js"></script>
-<script src="services/supabase.js"></script>
-
-<script>
-// ============================================================
-// 2. 初始化 SupabaseService
-// ============================================================
-if (typeof SupabaseService !== 'undefined' && SupabaseService.init) {
-    SupabaseService.init(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-}
-
-// ============================================================
-// 3. 启动应用
-// ============================================================
-(async function initApp() {
-    const session = localStorage.getItem('cw_session');
-    if (session) {
-        try {
-            const s = JSON.parse(session);
-            const users = await AppApi.query('users', { filter: { id: s.id } });
-            if (users && users.length > 0 && users[0].status === 'approved') {
-                AppStore.set('currentUser', users[0]);
-                document.getElementById('loginModal').style.display = 'none';
-                document.getElementById('appContainer').classList.remove('hidden');
-                await App.init();
-                AppLoader.load('dashboard');
-                return;
-            }
-        } catch(e) {
-            console.error('[Init] 自动登录失败:', e);
+    // ============================================================
+    // 1. 检查 Supabase 是否加载
+    // ============================================================
+    if (typeof supabase === 'undefined' || !supabase.createClient) {
+        console.error('[Supabase] 未加载，请检查网络');
+        // 尝试重新加载
+        document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"><\/script>');
+    }
+    </script>
+    
+    <script>
+    // ============================================================
+    // 2. 初始化 Supabase 客户端
+    // ============================================================
+    const SUPABASE_CONFIG = {
+        url: 'https://fhwsbdokxgjqyrbvstxq.supabase.co',
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZod3NiZG9reGdqcXlyYnZzdHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQzNjAsImV4cCI6MjA5Nzk2MDM2MH0.XXR5BhhOuF0t6lzOkeYl6OPyva_QCwcV482TzOFV_84'
+    };
+    
+    // 等待 Supabase 加载完成
+    function initSupabase() {
+        if (typeof supabase !== 'undefined' && supabase.createClient) {
+            window.supabase = supabase.createClient(
+                SUPABASE_CONFIG.url,
+                SUPABASE_CONFIG.anonKey
+            );
+            console.log('[Supabase] 客户端初始化完成');
+            return true;
+        }
+        console.warn('[Supabase] 等待加载...');
+        return false;
+    }
+    
+    // 尝试初始化，如果失败则等待
+    let retryCount = 0;
+    function tryInitSupabase() {
+        if (initSupabase()) {
+            // 继续加载其他模块
+            loadModules();
+            return;
+        }
+        retryCount++;
+        if (retryCount < 20) {
+            setTimeout(tryInitSupabase, 200);
+        } else {
+            console.error('[Supabase] 加载超时，请刷新页面');
         }
     }
     
-    document.getElementById('loginModal').style.display = 'flex';
-    document.getElementById('syncStatusBadge').textContent = '✅ 已连接';
-    document.getElementById('syncStatusBadge').className = 'sync-status sync-online';
-    console.log('[CarWash Pro] 等待登录...');
-})();
-</script>
+    function loadModules() {
+        // 动态加载 JS 模块
+        const scripts = [
+            'js/config.js',
+            'js/store.js',
+            'js/api.js',
+            'js/utils.js',
+            'js/auth.js',
+            'js/loader.js',
+            'js/app.js',
+            'services/supabase.js'
+        ];
+        
+        let index = 0;
+        function loadNext() {
+            if (index >= scripts.length) {
+                // 所有模块加载完成，启动应用
+                startApp();
+                return;
+            }
+            const src = scripts[index];
+            const script = document.createElement('script');
+            script.src = src + '?v=' + Date.now();
+            script.onload = function() {
+                console.log('[Load] 加载完成: ' + src);
+                index++;
+                loadNext();
+            };
+            script.onerror = function() {
+                console.error('[Load] 加载失败: ' + src);
+                index++;
+                loadNext();
+            };
+            document.head.appendChild(script);
+        }
+        loadNext();
+    }
+    
+    function startApp() {
+        // 初始化 SupabaseService
+        if (typeof SupabaseService !== 'undefined' && SupabaseService.init) {
+            SupabaseService.init(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        }
+    
+        // 启动应用
+        (async function initApp() {
+            const session = localStorage.getItem('cw_session');
+            if (session) {
+                try {
+                    const s = JSON.parse(session);
+                    const users = await AppApi.query('users', { filter: { id: s.id } });
+                    if (users && users.length > 0 && users[0].status === 'approved') {
+                        AppStore.set('currentUser', users[0]);
+                        document.getElementById('loginModal').style.display = 'none';
+                        document.getElementById('appContainer').classList.remove('hidden');
+                        await App.init();
+                        AppLoader.load('dashboard');
+                        return;
+                    }
+                } catch(e) {
+                    console.error('[Init] 自动登录失败:', e);
+                }
+            }
+            
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('syncStatusBadge').textContent = '✅ 已连接';
+            document.getElementById('syncStatusBadge').className = 'sync-status sync-online';
+            console.log('[CarWash Pro] 等待登录...');
+        })();
+    }
+    
+    // 开始加载
+    tryInitSupabase();
+    </script>
 
 </body>
 </html>
