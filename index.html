@@ -27,6 +27,7 @@
             <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ 连接中...</span>
         </div>
 
+        <!-- 登录 -->
         <div id="loginView">
             <div class="mb-3"><label class="text-sm font-medium text-gray-600">用户名</label><input type="text" id="loginUsername" placeholder="请输入用户名" class="w-full p-3 border border-gray-200 rounded-xl mt-1"></div>
             <div class="mb-3"><label class="text-sm font-medium text-gray-600">密码</label><input type="password" id="loginPassword" placeholder="请输入密码" class="w-full p-3 border border-gray-200 rounded-xl mt-1" onkeydown="if(event.key==='Enter') AppAuth.login()"></div>
@@ -41,6 +42,7 @@
             <div class="mt-3 text-center text-xs text-gray-400">📌 注册后需管理员审核才能登录</div>
         </div>
 
+        <!-- 注册 -->
         <div id="registerView" class="hidden">
             <h3 class="text-xl font-bold text-gray-800 mb-4">📝 注册新账号</h3>
             <p class="text-sm text-gray-500 mb-4">注册后需等待管理员审核</p>
@@ -62,6 +64,7 @@
             </div>
         </div>
 
+        <!-- 忘记密码 -->
         <div id="forgotPasswordView" class="hidden">
             <h3 class="text-xl font-bold text-gray-800 mb-4">🔑 重置密码</h3>
             <div class="space-y-3">
@@ -73,6 +76,7 @@
             </div>
         </div>
 
+        <!-- 修改密码 -->
         <div id="changePasswordView" class="hidden">
             <h3 class="text-xl font-bold text-gray-800 mb-4">🔒 修改密码</h3>
             <div class="space-y-3">
@@ -158,6 +162,25 @@
 </div>
 
 <!-- ===== 脚本加载 ===== -->
+<script>
+// ============================================================
+// 1. 首先初始化 Supabase 客户端（全局可用）
+// ============================================================
+const SUPABASE_CONFIG = {
+    url: 'https://fhwsbdokxgjqyrbvstxq.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZod3NiZG9reGdqcXlyYnZzdHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQzNjAsImV4cCI6MjA5Nzk2MDM2MH0.XXR5BhhOuF0t6lzOkeYl6OPyva_QCwcV482TzOFV_84'
+};
+
+// 创建全局 supabase 客户端
+const supabase = window.supabase.createClient(
+    SUPABASE_CONFIG.url,
+    SUPABASE_CONFIG.anonKey
+);
+window.supabase = supabase;
+
+console.log('[Supabase] 客户端初始化完成');
+</script>
+
 <script src="js/config.js"></script>
 <script src="js/store.js"></script>
 <script src="js/api.js"></script>
@@ -165,15 +188,20 @@
 <script src="js/auth.js"></script>
 <script src="js/loader.js"></script>
 <script src="js/app.js"></script>
+<script src="services/supabase.js"></script>
 
 <script>
-const supabase = supabase.createClient(
-    AppConfig.supabase.url,
-    AppConfig.supabase.anonKey
-);
-window.supabase = supabase;
+// ============================================================
+// 2. 初始化 SupabaseService
+// ============================================================
+if (typeof SupabaseService !== 'undefined' && SupabaseService.init) {
+    SupabaseService.init(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+}
 
-(async function init() {
+// ============================================================
+// 3. 启动应用
+// ============================================================
+(async function initApp() {
     const session = localStorage.getItem('cw_session');
     if (session) {
         try {
