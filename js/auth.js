@@ -298,7 +298,6 @@ function updateUIAfterLogin() {
     updateBranchSelector();
     refreshAll();
     switchTab('dashboard');
-    updatePOSPrice();
 }
 
 function switchTab(tab) {
