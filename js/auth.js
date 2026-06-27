@@ -1,4 +1,9 @@
 // ================================================================
+//  auth.js - 认证模块
+//  功能：登录、注册、修改密码、权限控制
+// ================================================================
+
+// ================================================================
 //  Auth UI 控制
 // ================================================================
 function showLogin() {
@@ -159,7 +164,6 @@ async function authLogin() {
         document.getElementById('appContainer').classList.remove('hidden');
         updateUIAfterLogin();
         showToast('👋 欢迎 ' + (user.name || user.username));
-        switchTab('dashboard');
     } catch (error) {
         showToast('❌ 登录失败: ' + error.message);
     }
@@ -274,12 +278,13 @@ function logout() {
 }
 
 // ================================================================
-//  UI更新
+//  UI更新（登录后调用）
 // ================================================================
 function updateUIAfterLogin() {
     const role = currentUser?.role || 'employee';
     const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.employee;
 
+    // 显示/隐藏导航项
     document.getElementById('navCashier').style.display = permissions.cashier ? 'flex' : 'none';
     document.getElementById('navOrders').style.display = permissions.orders ? 'flex' : 'none';
     document.getElementById('navInventory').style.display = permissions.inventory ? 'flex' : 'none';
@@ -290,17 +295,34 @@ function updateUIAfterLogin() {
     document.getElementById('navAudit').style.display = permissions.audit ? 'flex' : 'none';
     document.getElementById('navSettings').style.display = permissions.settings ? 'flex' : 'none';
 
+    // 更新用户信息
     document.getElementById('userRoleDisplay').textContent = (ROLE_PERMISSIONS[role]?.icon || '') + ' ' + (ROLE_PERMISSIONS[role]?.label || role);
     document.getElementById('currentRoleSpan').textContent = ROLE_PERMISSIONS[role]?.label || role;
     document.getElementById('currentUserSpan').textContent = currentUser?.name || currentUser?.username || 'Admin';
     document.getElementById('headerUsername').textContent = currentUser?.name || currentUser?.username || 'Admin';
 
+    // 更新门店选择器
     updateBranchSelector();
+    
+    // 刷新所有数据
     refreshAll();
-    switchTab('dashboard');
+    
+    // ===== 关键修复：使用 ModuleLoader 切换到仪表板 =====
+    if (window.ModuleLoader) {
+        setTimeout(() => {
+            ModuleLoader.switchTo('dashboard');
+        }, 300);
+    } else {
+        console.warn('⚠️ ModuleLoader 未加载，使用兼容方式');
+        switchTab('dashboard');
+    }
 }
 
+// ================================================================
+//  切换标签（兼容旧版）
+// ================================================================
 function switchTab(tab) {
+    // 权限检查
     if (currentUser && !currentUser.role) {
         const user = allUsers.find(u => u.id === currentUser.id);
         if (user) {
@@ -324,11 +346,6 @@ function switchTab(tab) {
                 last_login_at: user.last_login_at,
                 updated_at: user.updated_at
             };
-            localStorage.setItem('cw_session', JSON.stringify({ 
-                id: user.id, 
-                username: user.username,
-                role: user.role || 'employee'
-            }));
         }
     }
     
@@ -338,39 +355,67 @@ function switchTab(tab) {
         return; 
     }
 
-    document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('module' + tab.charAt(0).toUpperCase() + tab.slice(1));
-    if (target) target.classList.remove('hidden');
-
+    // 更新导航高亮
     document.querySelectorAll('[data-nav]').forEach(el => {
         el.classList.remove('nav-item-active');
         if (el.dataset.nav === tab) el.classList.add('nav-item-active');
     });
 
+    // 更新标题
     const titles = { dashboard: '仪表板', cashier: '收银台', orders: '订单管理', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工审核', audit: '审计日志', settings: '系统设置' };
     document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
 
-    if (tab === 'dashboard') refreshDashboard();
-    if (tab === 'cashier') refreshPOS();
-    if (tab === 'orders') loadOrders();
-    if (tab === 'inventory') refreshInventory();
-    if (tab === 'members') refreshCustomers();
-    if (tab === 'attendance') refreshAttendance();
-    if (tab === 'employees') loadUsersForReview();
-    if (tab === 'reports') { loadDailyReport(); loadCommission(); loadCustomerRank(); }
-    if (tab === 'audit') loadAuditLog();
-    if (tab === 'settings') { loadSettings(); loadBackupConfig(); refreshBranches(); }
+    // 如果 ModuleLoader 可用，使用它
+    if (window.ModuleLoader) {
+        ModuleLoader.switchTo(tab);
+        return;
+    }
+
+    // 兼容旧版：直接加载模块
+    loadModuleDirect(tab);
 }
 
-document.querySelectorAll('[data-nav]').forEach(el => {
-    el.addEventListener('click', (e) => { e.preventDefault(); switchTab(el.dataset.nav); });
-});
+// ================================================================
+//  直接加载模块（兼容旧版）
+// ================================================================
+async function loadModuleDirect(moduleName) {
+    const container = document.getElementById('moduleContainer');
+    if (!container) return;
+    
+    try {
+        const response = await fetch(`modules/${moduleName}.html`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const html = await response.text();
+        container.innerHTML = html;
+        
+        setTimeout(() => {
+            const funcMap = {
+                'dashboard': 'refreshDashboard',
+                'cashier': 'refreshPOS',
+                'orders': 'loadOrders',
+                'inventory': 'refreshInventory',
+                'members': 'refreshCustomers',
+                'reports': 'loadDailyReport',
+                'attendance': 'refreshAttendance',
+                'employees': 'loadUsersForReview',
+                'audit': 'loadAuditLog',
+                'settings': 'loadSettings'
+            };
+            const fn = funcMap[moduleName];
+            if (fn && typeof window[fn] === 'function') {
+                window[fn]();
+            }
+        }, 300);
+    } catch (error) {
+        console.error('加载模块失败:', error);
+    }
+}
 
 // ================================================================
-//  数据过滤
+//  数据过滤（供其他模块使用）
 // ================================================================
 function getFilteredOrders() {
-    let orders = allOrders;
+    let orders = allOrders || [];
     const role = currentUser?.role || 'employee';
     if (role === 'owner' || role === 'manager') return orders;
     const username = currentUser?.name || currentUser?.username || '';
@@ -383,47 +428,45 @@ function getFilteredOrders() {
 function updateBranchSelector() {
     const sel = document.getElementById('branchSelector');
     if (!sel) return;
-    sel.innerHTML = '<option value="all">🏪 全部门店</option>' + allBranches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    sel.innerHTML = '<option value="all">🏪 全部门店</option>' + (allBranches || []).map(b => `<option value="${b.id}">${b.name}</option>`).join('');
     if (currentBranch && currentBranch !== 'all') sel.value = currentBranch;
 }
 
 function switchBranch() {
     currentBranch = document.getElementById('branchSelector').value;
     refreshAll();
-    const branchName = currentBranch === 'all' ? '全部门店' : allBranches.find(b => b.id === currentBranch)?.name || '未知';
+    const branchName = currentBranch === 'all' ? '全部门店' : (allBranches || []).find(b => b.id === currentBranch)?.name || '未知';
     showToast('已切换到: ' + branchName);
 }
 
-async function addBranch() {
-    if (!currentUser || currentUser.role !== 'owner') { showToast('只有老板可以添加门店'); return; }
-    const name = document.getElementById('newBranchName').value.trim();
-    const address = document.getElementById('newBranchAddress').value.trim();
-    if (!name) { showToast('请输入门店名称'); return; }
-    try {
-        const { data, error } = await supabaseClient.from('stores').insert([{ name, address, status: 'active' }]).select();
-        if (error) throw new Error(error.message);
-        if (data && data.length > 0) { allBranches.push(data[0]); refreshBranches(); updateBranchSelector(); showToast('✅ 门店已添加: ' + name); document.getElementById('newBranchName').value = ''; document.getElementById('newBranchAddress').value = ''; }
-    } catch (error) { showToast('❌ 添加失败: ' + error.message); }
-}
-
-function refreshBranches() {
-    const list = document.getElementById('branchList');
-    if (!list) return;
-    list.innerHTML = allBranches.map(b => `<div class="flex justify-between items-center p-2 bg-gray-50 rounded"><span><strong>${b.name}</strong> <span class="text-sm text-gray-400">${b.address || ''}</span></span><span class="text-xs text-gray-400">${b.status || 'active'}</span></div>`).join('') || '<div class="text-center text-gray-400">暂无门店</div>';
-}
-
 // ================================================================
-//  刷新所有
+//  刷新所有数据
 // ================================================================
 function refreshAll() {
-    refreshDashboard();
-    refreshCustomers();
-    refreshInventory();
-    refreshAttendance();
-    refreshEmployees();
-    refreshPOS();
-    if (!document.getElementById('moduleOrders').classList.contains('hidden')) loadOrders();
-    if (!document.getElementById('moduleReports').classList.contains('hidden')) { loadDailyReport(); loadCommission(); loadCustomerRank(); }
-    if (!document.getElementById('moduleAudit').classList.contains('hidden')) loadAuditLog();
-    if (!document.getElementById('moduleEmployees').classList.contains('hidden')) loadUsersForReview();
+    // 使用 ModuleLoader 刷新当前模块
+    if (window.ModuleLoader) {
+        ModuleLoader.refresh();
+        return;
+    }
+    
+    // 兼容旧版
+    const currentTab = document.querySelector('[data-nav].nav-item-active')?.dataset?.nav || 'dashboard';
+    const funcMap = {
+        'dashboard': 'refreshDashboard',
+        'cashier': 'refreshPOS',
+        'orders': 'loadOrders',
+        'inventory': 'refreshInventory',
+        'members': 'refreshCustomers',
+        'reports': 'loadDailyReport',
+        'attendance': 'refreshAttendance',
+        'employees': 'loadUsersForReview',
+        'audit': 'loadAuditLog',
+        'settings': 'loadSettings'
+    };
+    const fn = funcMap[currentTab];
+    if (fn && typeof window[fn] === 'function') {
+        window[fn]();
+    }
 }
+
+console.log('✅ auth.js 已加载 (修复版)');

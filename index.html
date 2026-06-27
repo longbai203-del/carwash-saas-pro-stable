@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- ===== 登录模态框 ===== -->
+<!-- ==================== 登录模态框 ==================== -->
 <div id="loginModal" class="modal-glass">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
@@ -26,6 +26,7 @@
             <span id="syncStatusBadge" class="sync-status sync-syncing mt-2 inline-block">⏳ 连接中...</span>
         </div>
 
+        <!-- ===== 登录视图 ===== -->
         <div id="loginView">
             <div class="mb-3">
                 <label class="text-sm font-medium text-gray-600">用户名</label>
@@ -36,25 +37,45 @@
                 <input type="password" id="loginPassword" placeholder="请输入密码" class="w-full p-3 border border-gray-200 rounded-xl mt-1" onkeydown="if(event.key==='Enter') authLogin()">
             </div>
             <button onclick="authLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition">登录</button>
-            <div class="auth-divider mt-4"><span class="text-xs text-gray-400">还没有账号？</span></div>
+
+            <div class="auth-divider mt-4">
+                <span class="text-xs text-gray-400">还没有账号？</span>
+            </div>
+
             <button onclick="showRegister()" class="w-full btn-success py-3 rounded-xl font-bold text-lg">📝 注册新账号</button>
+
             <div class="mt-3 text-center text-xs">
                 <span class="auth-link" onclick="showForgotPassword()">🔑 忘记密码</span>
                 <span class="text-gray-300 mx-2">|</span>
                 <span class="auth-link" onclick="showChangePassword()">🔒 修改密码</span>
             </div>
+
             <div class="mt-3 text-center text-xs text-gray-400">📌 注册后需管理员审核才能登录</div>
         </div>
 
+        <!-- ===== 注册视图 ===== -->
         <div id="registerView" class="hidden">
             <h3 class="text-xl font-bold text-gray-800 mb-4">📝 注册新账号</h3>
             <p class="text-sm text-gray-500 mb-4">注册后需等待管理员审核，审核通过后即可登录</p>
             <div class="space-y-3">
-                <div><label class="text-sm font-medium text-gray-600">用户名 *</label><input id="regUsername" placeholder="设置用户名" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">姓名</label><input id="regName" placeholder="您的姓名" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">密码 *（至少6位）</label><input id="regPassword" type="password" placeholder="设置密码" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">确认密码 *</label><input id="regPasswordConfirm" type="password" placeholder="再次输入密码" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">申请角色</label>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">用户名 *</label>
+                    <input id="regUsername" placeholder="设置用户名" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">姓名</label>
+                    <input id="regName" placeholder="您的姓名" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">密码 *（至少6位）</label>
+                    <input id="regPassword" type="password" placeholder="设置密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">确认密码 *</label>
+                    <input id="regPasswordConfirm" type="password" placeholder="再次输入密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">申请角色</label>
                     <select id="regRole" class="w-full p-3 border rounded-xl mt-1">
                         <option value="employee">员工</option>
                         <option value="cashier">收银员</option>
@@ -67,26 +88,49 @@
             </div>
         </div>
 
+        <!-- ===== 忘记密码视图 ===== -->
         <div id="forgotPasswordView" class="hidden">
             <h3 class="text-xl font-bold text-gray-800 mb-4">🔑 重置密码</h3>
             <p class="text-sm text-gray-500 mb-4">输入用户名和新密码重置密码（需账号已审核通过）</p>
             <div class="space-y-3">
-                <div><label class="text-sm font-medium text-gray-600">用户名</label><input id="forgotUsername" placeholder="输入用户名" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">新密码</label><input id="forgotNewPassword" type="password" placeholder="设置新密码（至少6位）" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">确认新密码</label><input id="forgotConfirmPassword" type="password" placeholder="再次输入新密码" class="w-full p-3 border rounded-xl mt-1"></div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">用户名</label>
+                    <input id="forgotUsername" placeholder="输入用户名" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">新密码</label>
+                    <input id="forgotNewPassword" type="password" placeholder="设置新密码（至少6位）" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">确认新密码</label>
+                    <input id="forgotConfirmPassword" type="password" placeholder="再次输入新密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
                 <button onclick="resetPassword()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">重置密码</button>
                 <button onclick="showLogin()" class="w-full text-gray-500 mt-2 text-sm hover:text-gray-700">← 返回登录</button>
             </div>
         </div>
 
+        <!-- ===== 修改密码视图 ===== -->
         <div id="changePasswordView" class="hidden">
             <h3 class="text-xl font-bold text-gray-800 mb-4">🔒 修改密码</h3>
             <p class="text-sm text-gray-500 mb-4">输入当前密码和新密码来修改密码（需要先登录）</p>
             <div class="space-y-3">
-                <div><label class="text-sm font-medium text-gray-600">当前用户名</label><input id="changeUsername" placeholder="输入用户名" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">当前密码</label><input id="changeOldPassword" type="password" placeholder="输入当前密码" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">新密码</label><input id="changeNewPassword" type="password" placeholder="设置新密码（至少6位）" class="w-full p-3 border rounded-xl mt-1"></div>
-                <div><label class="text-sm font-medium text-gray-600">确认新密码</label><input id="changeConfirmPassword" type="password" placeholder="再次输入新密码" class="w-full p-3 border rounded-xl mt-1"></div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">当前用户名</label>
+                    <input id="changeUsername" placeholder="输入用户名" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">当前密码</label>
+                    <input id="changeOldPassword" type="password" placeholder="输入当前密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">新密码</label>
+                    <input id="changeNewPassword" type="password" placeholder="设置新密码（至少6位）" class="w-full p-3 border rounded-xl mt-1">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">确认新密码</label>
+                    <input id="changeConfirmPassword" type="password" placeholder="再次输入新密码" class="w-full p-3 border rounded-xl mt-1">
+                </div>
                 <button onclick="changePassword()" class="w-full bg-amber-500 text-white py-3 rounded-xl font-bold hover:bg-amber-600 transition">确认修改密码</button>
                 <button onclick="showLogin()" class="w-full text-gray-500 mt-2 text-sm hover:text-gray-700">← 返回登录</button>
             </div>
@@ -94,10 +138,10 @@
     </div>
 </div>
 
-<!-- ===== 主应用 ===== -->
+<!-- ==================== 主应用容器 ==================== -->
 <div id="appContainer" class="hidden flex h-screen overflow-hidden">
 
-    <!-- 侧边栏 -->
+    <!-- ========== 侧边栏 ========== -->
     <aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100">
         <div class="p-5 border-b border-gray-100 flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-md">
@@ -109,6 +153,7 @@
             </div>
         </div>
 
+        <!-- 门店选择器 -->
         <div class="px-4 py-3 border-b border-gray-100">
             <label class="text-xs text-gray-400 block mb-1">🏪 当前门店</label>
             <select id="branchSelector" class="w-full p-2 border rounded-lg text-sm bg-gray-50" onchange="switchBranch()">
@@ -148,7 +193,7 @@
         </div>
     </aside>
 
-    <!-- 内容区 -->
+    <!-- ========== 主内容区 ========== -->
     <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
         <header class="bg-white shadow-sm py-3 px-6 flex justify-between items-center border-b border-gray-100">
             <h2 id="currentPageTitle" class="text-xl font-bold text-gray-800">仪表板</h2>
@@ -160,20 +205,28 @@
         </header>
 
         <main class="flex-1 overflow-y-auto p-6 space-y-6" id="mainContent">
+            <!-- 模块容器 -->
             <div id="moduleContainer"></div>
         </main>
     </div>
 </div>
 
-<!-- ===== 模态框 ===== -->
+<!-- ==================== 模态框 ==================== -->
 <div id="orderDetailModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 mx-4 max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-blue-600" id="orderDetailTitle">订单详情</h3><button onclick="closeModal('orderDetailModal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button></div><div id="orderDetailContent"></div></div></div>
 <div id="stockInModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-blue-600 mb-4">📥 入库</h3><div class="form-group"><label>产品</label><select id="stockInProduct" class="w-full p-2 border rounded"></select></div><div class="form-group"><label>数量</label><input id="stockInQty" type="number" min="1" class="w-full p-2 border rounded"></div><div class="form-group"><label>单价 (SAR)</label><input id="stockInPrice" type="number" step="0.01" class="w-full p-2 border rounded"></div><div class="form-group"><label>供应商</label><input id="stockInSupplier" class="w-full p-2 border rounded"></div><div class="flex gap-3 mt-4"><button onclick="submitStockIn()" class="btn-success flex-1 py-2 rounded-lg">确认入库</button><button onclick="closeModal('stockInModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
 <div id="stockOutModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-amber-600 mb-4">📤 出库</h3><div class="form-group"><label>产品</label><select id="stockOutProduct" class="w-full p-2 border rounded"></select></div><div class="form-group"><label>数量</label><input id="stockOutQty" type="number" min="1" class="w-full p-2 border rounded"></div><div class="form-group"><label>出库原因</label><select id="stockOutReason" class="w-full p-2 border rounded"><option value="日常消耗">日常消耗</option><option value="客户使用">客户使用</option><option value="过期报废">过期报废</option><option value="其他">其他</option></select></div><div class="flex gap-3 mt-4"><button onclick="submitStockOut()" class="btn-warning flex-1 py-2 rounded-lg">确认出库</button><button onclick="closeModal('stockOutModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
 <div id="addProductModal" class="modal-glass hidden"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4"><h3 class="text-xl font-bold text-blue-600 mb-4">➕ 新产品</h3><div class="form-group"><label>产品名称</label><input id="newProductName" class="w-full p-2 border rounded"></div><div class="form-group"><label>分类</label><select id="newProductCategory" class="w-full p-2 border rounded"><option value="耗材">耗材</option><option value="工具">工具</option><option value="其他">其他</option></select></div><div class="form-group"><label>单位</label><input id="newProductUnit" class="w-full p-2 border rounded" value="瓶"></div><div class="form-group"><label>初始数量</label><input id="newProductQty" type="number" min="0" class="w-full p-2 border rounded"></div><div class="form-group"><label>成本价 (SAR)</label><input id="newProductCost" type="number" step="0.01" class="w-full p-2 border rounded"></div><div class="form-group"><label>最低库存预警</label><input id="newProductMinQty" type="number" min="1" class="w-full p-2 border rounded" value="5"></div><div class="flex gap-3 mt-4"><button onclick="submitNewProduct()" class="btn-success flex-1 py-2 rounded-lg">添加产品</button><button onclick="closeModal('addProductModal')" class="btn-outline flex-1 py-2 rounded-lg">取消</button></div></div></div>
 
+<!-- ================================================================ -->
+<!--  JS 加载顺序：先加载基础库，再加载模块                            -->
+<!-- ================================================================ -->
+
+<!-- 基础库 -->
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
+
+<!-- 所有模块 -->
 <script src="js/dashboard.js"></script>
 <script src="js/cashier.js"></script>
 <script src="js/orders.js"></script>
@@ -185,32 +238,10 @@
 <script src="js/audit.js"></script>
 <script src="js/settings.js"></script>
 
+<!-- 模块加载器（最后加载） -->
+<script src="js/loader.js"></script>
+
 <script>
-// ================================================================
-//  模块加载器
-// ================================================================
-const moduleCache = {};
-
-async function loadModule(moduleName) {
-    const container = document.getElementById('moduleContainer');
-    if (!container) return;
-    
-    try {
-        if (moduleCache[moduleName]) {
-            container.innerHTML = moduleCache[moduleName];
-            return;
-        }
-        const response = await fetch(`modules/${moduleName}.html`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const html = await response.text();
-        moduleCache[moduleName] = html;
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('加载模块失败:', error);
-        container.innerHTML = `<div class="text-center text-red-500 p-8">❌ 加载模块失败: ${error.message}</div>`;
-    }
-}
-
 // ================================================================
 //  启动
 // ================================================================
@@ -254,6 +285,14 @@ async function loadModule(moduleName) {
                 document.getElementById('appContainer').classList.remove('hidden');
                 updateUIAfterLogin();
                 console.log('✅ CarWash Pro 已启动，当前用户:', currentUser.username, '角色:', currentUser.role);
+                
+                // 预加载所有模块（提升切换速度）
+                setTimeout(() => {
+                    if (window.ModuleLoader) {
+                        ModuleLoader.preloadAll();
+                    }
+                }, 3000);
+                
                 return;
             } else if (user && user.status === 'pending') {
                 showToast('⏳ 账号正在审核中');
@@ -273,131 +312,41 @@ async function loadModule(moduleName) {
 })();
 
 // ================================================================
-//  switchTab - 模块切换
+//  导航点击绑定（使用 ModuleLoader）
 // ================================================================
-window.switchTab = async function(tab) {
-    // 权限检查
-    if (currentUser && !currentUser.role) {
-        const user = allUsers.find(u => u.id === currentUser.id);
-        if (user) {
-            currentUser = {
-                id: user.id,
-                username: user.username,
-                password_hash: user.password_hash,
-                role: user.role || 'employee',
-                name: user.name || user.username,
-                status: user.status,
-                registered_at: user.registered_at,
-                approved_by: user.approved_by,
-                approved_at: user.approved_at,
-                branch_id: user.branch_id,
-                tenant_id: user.tenant_id,
-                store_id: user.store_id,
-                role_id: user.role_id,
-                employee_code: user.employee_code,
-                phone: user.phone,
-                avatar_url: user.avatar_url,
-                last_login_at: user.last_login_at,
-                updated_at: user.updated_at
-            };
-            localStorage.setItem('cw_session', JSON.stringify({ 
-                id: user.id, 
-                username: user.username,
-                role: user.role || 'employee'
-            }));
-        }
-    }
-    
-    const permissions = ROLE_PERMISSIONS[currentUser?.role] || ROLE_PERMISSIONS.employee;
-    if (!permissions[tab]) { 
-        showToast('⚠️ 您没有权限访问此页面'); 
-        return; 
-    }
-
-    // 更新导航高亮
-    document.querySelectorAll('[data-nav]').forEach(el => {
-        el.classList.remove('nav-item-active');
-        if (el.dataset.nav === tab) el.classList.add('nav-item-active');
-    });
-
-    // 更新标题
-    const titles = { dashboard: '仪表板', cashier: '收银台', orders: '订单管理', inventory: '库存管理', members: '客户管理', attendance: '考勤管理', reports: '财务管理', employees: '员工审核', audit: '审计日志', settings: '系统设置' };
-    document.getElementById('currentPageTitle').textContent = titles[tab] || tab;
-
-    // 加载模块
-    await loadModule(tab);
-
-    // 延迟初始化
-    setTimeout(() => {
-        try {
-            if (tab === 'dashboard' && typeof refreshDashboard === 'function') refreshDashboard();
-            if (tab === 'cashier' && typeof refreshPOS === 'function') {
-                refreshPOS();
-                setTimeout(updatePOSPrice, 100);
-            }
-            if (tab === 'orders' && typeof loadOrders === 'function') loadOrders();
-            if (tab === 'inventory' && typeof refreshInventory === 'function') refreshInventory();
-            if (tab === 'members' && typeof refreshCustomers === 'function') refreshCustomers();
-            if (tab === 'attendance' && typeof refreshAttendance === 'function') refreshAttendance();
-            if (tab === 'employees' && typeof loadUsersForReview === 'function') loadUsersForReview();
-            if (tab === 'reports') {
-                const today = new Date().toISOString().split('T')[0];
-                const picker = document.getElementById('reportDatePicker');
-                if (picker) picker.value = today;
-                if (typeof loadDailyReport === 'function') loadDailyReport();
-                if (typeof loadCommission === 'function') loadCommission();
-                if (typeof loadCustomerRank === 'function') loadCustomerRank();
-            }
-            if (tab === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
-            if (tab === 'settings') {
-                if (typeof loadSettings === 'function') loadSettings();
-                if (typeof loadBackupConfig === 'function') loadBackupConfig();
-                if (typeof refreshBranches === 'function') refreshBranches();
-            }
-        } catch(e) {
-            console.warn('模块初始化警告:', e.message);
-        }
-    }, 350);
-};
-
-// 绑定导航点击
 document.querySelectorAll('[data-nav]').forEach(el => {
-    el.addEventListener('click', (e) => { 
-        e.preventDefault(); 
-        window.switchTab(el.dataset.nav); 
+    el.addEventListener('click', function(e) {
+        e.preventDefault();
+        const tab = this.dataset.nav;
+        if (window.ModuleLoader) {
+            ModuleLoader.switchTo(tab);
+        } else {
+            console.error('❌ ModuleLoader 未加载，使用兼容方式');
+            switchTab(tab);
+        }
     });
 });
 
 // ================================================================
-//  refreshAll
+//  兼容旧版 switchTab
 // ================================================================
-window.refreshAll = function() {
-    const currentTab = document.querySelector('[data-nav].nav-item-active')?.dataset?.nav || 'dashboard';
-    try {
-        if (currentTab === 'dashboard' && typeof refreshDashboard === 'function') refreshDashboard();
-        if (currentTab === 'cashier' && typeof refreshPOS === 'function') refreshPOS();
-        if (currentTab === 'orders' && typeof loadOrders === 'function') loadOrders();
-        if (currentTab === 'inventory' && typeof refreshInventory === 'function') refreshInventory();
-        if (currentTab === 'members' && typeof refreshCustomers === 'function') refreshCustomers();
-        if (currentTab === 'attendance' && typeof refreshAttendance === 'function') refreshAttendance();
-        if (currentTab === 'employees' && typeof loadUsersForReview === 'function') loadUsersForReview();
-        if (currentTab === 'reports') {
-            if (typeof loadDailyReport === 'function') loadDailyReport();
-            if (typeof loadCommission === 'function') loadCommission();
-            if (typeof loadCustomerRank === 'function') loadCustomerRank();
-        }
-        if (currentTab === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
-        if (currentTab === 'settings') {
-            if (typeof loadSettings === 'function') loadSettings();
-            if (typeof loadBackupConfig === 'function') loadBackupConfig();
-            if (typeof refreshBranches === 'function') refreshBranches();
-        }
-    } catch(e) {
-        console.warn('刷新数据警告:', e.message);
+window.switchTab = function(tab) {
+    if (window.ModuleLoader) {
+        ModuleLoader.switchTo(tab);
+    } else {
+        console.error('❌ ModuleLoader 未加载');
     }
 };
 
-console.log('✅ CarWash Pro 模块加载器已初始化');
-</script>
-</body>
+// ================================================================
+//  兼容旧版 refreshAll
+// ================================================================
+window.refreshAll = function() {
+    if (window.ModuleLoader) {
+        ModuleLoader.refresh();
+    }
+};
+
+console.log('✅ index.html 启动脚本已加载 (使用 ModuleLoader v3.0)');
+</script></body>
 </html>
