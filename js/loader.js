@@ -10,6 +10,7 @@
         _active: null,
         _loading: false,
 
+        // ===== 模块配置 =====
         _modules: {
             dashboard: { obj: 'DashboardModule', label: '仪表板' },
             cashier: { obj: 'CashierModule', label: 'POS收银' },
@@ -23,7 +24,9 @@
             settings: { obj: 'SettingsModule', label: '系统设置' }
         },
 
-        async load(moduleName) {
+        // ===== 加载模块 =====
+        load: async function(moduleName) {
+            // 防止重复加载
             if (this._loading) {
                 console.log('[Loader] 正在加载中，跳过');
                 return;
@@ -40,7 +43,9 @@
             if (user) {
                 var perms = AppConfig.permissions[user.role] || [];
                 if (!perms.includes(moduleName)) {
-                    AppUtils.toast('您没有权限访问此页面', 'warning');
+                    if (window.AppUtils && AppUtils.toast) {
+                        AppUtils.toast('您没有权限访问此页面', 'warning');
+                    }
                     return;
                 }
             }
@@ -129,6 +134,7 @@
             }
         },
 
+        // ===== 等待 DOM 渲染 =====
         _waitForDOM: function(moduleName) {
             return new Promise(function(resolve) {
                 var attempts = 0;
@@ -149,12 +155,41 @@
             });
         },
 
+        // ===== 获取当前激活的模块 =====
         getActive: function() {
             return this._active;
         },
 
+        // ===== 获取模块实例 =====
         getModule: function(moduleName) {
             return this._loaded[moduleName] || null;
+        },
+
+        // ===== 预加载模块 =====
+        preload: function(moduleName) {
+            try {
+                var module = this._modules[moduleName];
+                if (!module) return;
+                var jsPath = 'modules/' + moduleName + '/' + moduleName + '.js';
+                var script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = jsPath + '?v=' + Date.now();
+                document.head.appendChild(script);
+                return new Promise(function(resolve) {
+                    script.onload = function() {
+                        var moduleObj = window[module.obj];
+                        if (moduleObj && typeof moduleObj.init === 'function') {
+                            window.ModuleLoader._loaded[moduleName] = moduleObj;
+                        }
+                        resolve();
+                    };
+                    script.onerror = function() { resolve(); };
+                    setTimeout(resolve, 5000);
+                });
+            } catch (e) {
+                console.warn('[Loader] 预加载失败:', e);
+                return Promise.resolve();
+            }
         }
     };
 
