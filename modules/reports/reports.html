@@ -1,34 +1,187 @@
 <div id="reportsContainer" class="space-y-6">
+
+    <!-- ===== 财务概览 ===== -->
     <div class="glass-card p-6">
-        <h2 class="text-xl font-bold text-blue-600 mb-4">📊 财务管理</h2>
-
-        <!-- 日期选择 -->
-        <div class="flex gap-3 mb-4 flex-wrap">
-            <input type="date" id="reportDatePicker" class="p-3 border rounded-xl bg-gray-50 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200">
-            <button onclick="ReportsModule.loadData()" class="btn-primary px-6 py-3 rounded-xl"><i class="fas fa-search"></i> 查看</button>
-            <button onclick="alert('导出功能开发中')" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl"><i class="fas fa-file-excel"></i> 导出</button>
-        </div>
-
-        <!-- 统计 -->
-        <div class="grid grid-cols-4 gap-3 mb-4">
-            <div class="bg-blue-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-blue-600" id="dailyOrders">0</div>
-                <div class="text-xs text-gray-500">📋 今日订单</div>
-            </div>
+        <h2 class="text-xl font-bold text-blue-600 mb-4">💰 财务概览</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="bg-green-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-green-600" id="dailyRevenue">0 SAR</div>
-                <div class="text-xs text-gray-500">💰 今日收入</div>
+                <div class="text-2xl font-bold text-green-600" id="financeTotalIncome">0 SAR</div>
+                <div class="text-xs text-gray-500">📈 总收入</div>
+            </div>
+            <div class="bg-red-50 p-3 rounded-xl text-center">
+                <div class="text-2xl font-bold text-red-600" id="financeTotalExpense">0 SAR</div>
+                <div class="text-xs text-gray-500">📉 总支出</div>
+            </div>
+            <div class="bg-blue-50 p-3 rounded-xl text-center">
+                <div class="text-2xl font-bold text-blue-600" id="financeNetProfit">0 SAR</div>
+                <div class="text-xs text-gray-500">📊 净利润</div>
             </div>
             <div class="bg-purple-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-purple-600" id="dailyVat">0 SAR</div>
-                <div class="text-xs text-gray-500">🧾 增值税</div>
-            </div>
-            <div class="bg-orange-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-orange-600" id="dailyProfit">0 SAR</div>
-                <div class="text-xs text-gray-500">📈 净利润</div>
+                <div class="text-2xl font-bold text-purple-600" id="financeCommissionTotal">0 SAR</div>
+                <div class="text-xs text-gray-500">💰 总提成</div>
             </div>
         </div>
+    </div>
 
-        <div id="reportTableBody" class="text-sm max-h-72 overflow-auto bg-gray-50 rounded-xl p-2"></div>
+    <!-- ===== 现金流 ===== -->
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">💵 现金流</h2>
+            <div class="flex gap-2">
+                <button onclick="ReportsModule.showAddCashFlow()" class="btn-success btn-sm">
+                    <i class="fas fa-plus"></i> 添加
+                </button>
+                <select id="cashFlowPeriod" class="p-2 border rounded-lg text-sm" onchange="ReportsModule.loadCashFlow()">
+                    <option value="today">今日</option>
+                    <option value="week">本周</option>
+                    <option value="month">本月</option>
+                    <option value="all">全部</option>
+                </select>
+            </div>
+        </div>
+        <div id="cashFlowList" class="space-y-1 max-h-64 overflow-auto text-sm"></div>
+        <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-green-50 p-2 rounded text-center">
+                <span class="text-gray-500">总收入</span>
+                <span class="font-bold text-green-600" id="cashFlowIncome">0 SAR</span>
+            </div>
+            <div class="bg-red-50 p-2 rounded text-center">
+                <span class="text-gray-500">总支出</span>
+                <span class="font-bold text-red-600" id="cashFlowExpense">0 SAR</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 员工工资 ===== -->
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">👔 员工工资</h2>
+            <button onclick="ReportsModule.showAddSalary()" class="btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 添加工资
+            </button>
+        </div>
+        <div id="salaryList" class="space-y-1 max-h-48 overflow-auto text-sm"></div>
+    </div>
+
+    <!-- ===== 每日结算 ===== -->
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">📋 每日结算</h2>
+            <button onclick="ReportsModule.generateDailyClosing()" class="btn-warning btn-sm">
+                <i class="fas fa-calculator"></i> 生成今日结算
+            </button>
+        </div>
+        <div id="dailyClosingList" class="space-y-1 max-h-48 overflow-auto text-sm"></div>
+    </div>
+
+    <!-- ===== 月度报表 ===== -->
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold text-blue-600 mb-4">📊 月度报表</h2>
+        <div class="flex gap-3 mb-4 flex-wrap">
+            <input type="month" id="monthlyReportDate" class="p-2 border rounded-lg bg-gray-50">
+            <button onclick="ReportsModule.loadMonthlyReport()" class="btn-primary btn-sm">查看</button>
+            <button onclick="ReportsModule.exportMonthlyReport()" class="bg-green-600 text-white btn-sm">📊 导出</button>
+        </div>
+        <div id="monthlyReportContent" class="space-y-2 text-sm"></div>
+    </div>
+</div>
+
+<!-- ===== 添加现金流模态框 ===== -->
+<div id="cashFlowModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">💵 添加现金流</h3>
+            <button onclick="ReportsModule.closeModal('cashFlowModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">类型</label>
+                <select id="cashFlowType" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                    <option value="income">💰 收入</option>
+                    <option value="expense">💸 支出</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">金额 (SAR)</label>
+                <input type="number" id="cashFlowAmount" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">分类</label>
+                <select id="cashFlowCategory" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                    <option value="sales">销售</option>
+                    <option value="salary">工资</option>
+                    <option value="rent">房租</option>
+                    <option value="utility">水电</option>
+                    <option value="supplies">耗材</option>
+                    <option value="maintenance">维修</option>
+                    <option value="marketing">营销</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">描述</label>
+                <input id="cashFlowDesc" class="w-full p-3 border rounded-xl mt-1 bg-gray-50" placeholder="描述信息">
+            </div>
+            <button onclick="ReportsModule.saveCashFlow()" class="btn-primary py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-save"></i> 保存
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 添加工资模态框 ===== -->
+<div id="salaryModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">👔 添加工资</h3>
+            <button onclick="ReportsModule.closeModal('salaryModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">员工</label>
+                <select id="salaryEmployee" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">开始日期</label>
+                    <input type="date" id="salaryStart" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">结束日期</label>
+                    <input type="date" id="salaryEnd" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">底薪</label>
+                    <input type="number" id="salaryBase" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">提成</label>
+                    <input type="number" id="salaryCommission" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">奖金</label>
+                    <input type="number" id="salaryBonus" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">扣款</label>
+                    <input type="number" id="salaryDeduction" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">备注</label>
+                <input id="salaryNotes" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <button onclick="ReportsModule.saveSalary()" class="btn-primary py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-save"></i> 保存工资
+            </button>
+        </div>
     </div>
 </div>
