@@ -22,6 +22,23 @@ window.AppConfig = {
         shopTaxId: '310245678900003',
         commissionRate: 5
     },
+
+    // 订单状态显示
+    orderStatusLabels: {
+        pending: '待处理',
+        confirmed: '已确认',
+        in_progress: '进行中',
+        completed: '已完成',
+        cancelled: '已取消'
+    },
+
+    orderStatusClasses: {
+        pending: 'status-pending',
+        confirmed: 'status-confirmed',
+        in_progress: 'status-in_progress',
+        completed: 'status-completed',
+        cancelled: 'status-cancelled'
+    },
     
     // 模块列表
     modules: {

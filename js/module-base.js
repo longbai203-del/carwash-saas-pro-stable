@@ -18,14 +18,19 @@
             console.log('[' + this.moduleName + '] 初始化...');
 
             var self = this;
-            return new Promise(function(resolve) {
+            return new Promise(function(resolve, reject) {
                 setTimeout(function() {
-                    self.cacheDom();
-                    self.bindEvents();
-                    self.loadData();
-                    self.initialized = true;
-                    console.log('[' + self.moduleName + '] 初始化完成');
-                    resolve();
+                    try {
+                        self.cacheDom();
+                        self.bindEvents();
+                        self.loadData();
+                        self.initialized = true;
+                        console.log('[' + self.moduleName + '] 初始化完成');
+                        resolve();
+                    } catch (error) {
+                        console.error('[' + self.moduleName + '] 初始化失败:', error);
+                        reject(error);
+                    }
                 }, 50);
             });
         },
