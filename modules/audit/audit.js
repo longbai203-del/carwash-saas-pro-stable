@@ -41,15 +41,15 @@ window.AuditModule = {
 
     async loadData() {
         try {
-            const { data } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50);
-            if (data) AppState.allAuditLogs = data;
+            const { data } = await AppApi.query('audit_logs').select('*').order('created_at', { ascending: false }).limit(50);
+            if (data) AppStore.allAuditLogs = data;
         } catch (e) { console.error(e); }
     },
 
     render() {
         const action = document.getElementById('auditActionFilter')?.value || 'all';
         const table = document.getElementById('auditTableFilter')?.value || 'all';
-        let logs = AppState.allAuditLogs || [];
+        let logs = AppStore.allAuditLogs || [];
         if (action !== 'all') logs = logs.filter(l => l.action === action);
         if (table !== 'all') logs = logs.filter(l => l.table_name === table);
 
@@ -79,3 +79,4 @@ window.AuditModule = {
 };
 
 console.log('[Audit] 模块已注册');
+

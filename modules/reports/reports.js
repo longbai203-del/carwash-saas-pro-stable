@@ -39,7 +39,7 @@ window.ReportsModule = {
 
     async loadData() {
         const date = document.getElementById('reportDatePicker')?.value || new Date().toISOString().split('T')[0];
-        const orders = (AppState.allOrders || []).filter(o => o.date === date);
+        const orders = (AppStore.allOrders || []).filter(o => o.date === date);
         const total = orders.reduce((s, o) => s + (o.total || 0), 0);
         const vat = orders.reduce((s, o) => s + (o.vat || 0), 0);
         this.reportData = { orders, total, vat, date };
@@ -63,3 +63,4 @@ window.ReportsModule = {
 };
 
 console.log('[Reports] 模块已注册');
+

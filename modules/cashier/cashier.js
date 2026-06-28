@@ -72,13 +72,13 @@ window.CashierModule = {
                 .select('id, username, name, role')
                 .in('role', ['cashier', 'manager', 'employee'])
                 .eq('status', 'approved');
-            AppState.allUsers = users || [];
+            AppStore.allUsers = users || [];
 
             const { data: customers } = await supabase
                 .from('customers')
                 .select('*')
                 .order('created_at', { ascending: false });
-            AppState.allCustomers = customers || [];
+            AppStore.allCustomers = customers || [];
 
             const today = new Date().toISOString().split('T')[0];
             const { data: orders } = await supabase
@@ -86,7 +86,7 @@ window.CashierModule = {
                 .select('*')
                 .eq('date', today)
                 .order('created_at', { ascending: false });
-            AppState.allOrders = orders || [];
+            AppStore.allOrders = orders || [];
         } catch (error) {
             console.error('[Cashier] 加载数据失败:', error);
         }
@@ -103,8 +103,8 @@ window.CashierModule = {
     renderEmployees() {
         const sel = document.getElementById('posEmployee');
         if (!sel) return;
-        const staff = AppState.allUsers.filter(u => u.role !== 'owner');
-        const currentUser = AppState.currentUser;
+        const staff = AppStore.allUsers.filter(u => u.role !== 'owner');
+        const currentUser = AppStore.currentUser;
         sel.innerHTML = staff.map(u =>
             '<option value="' + u.id + '" ' + (u.id === currentUser?.id ? 'selected' : '') + '>' + (u.name || u.username) + '</option>'
         ).join('') || '<option value="">暂无员工</option>';
@@ -115,7 +115,7 @@ window.CashierModule = {
         if (!sel) return;
         const val = sel.value;
         sel.innerHTML = '<option value="">散客</option>' +
-            AppState.allCustomers.map(c =>
+            AppStore.allCustomers.map(c =>
                 '<option value="' + c.id + '">' + c.name + ' (' + (c.plate_number || '') + ')</option>'
             ).join('');
         if (val) sel.value = val;
@@ -125,7 +125,7 @@ window.CashierModule = {
         const list = document.getElementById('todayOrdersList');
         if (!list) return;
         const today = new Date().toISOString().split('T')[0];
-        const todayOrders = (AppState.allOrders || [])
+        const todayOrders = (AppStore.allOrders || [])
             .filter(o => o.date === today)
             .slice(0, 20);
         list.innerHTML = todayOrders.map(o => 
@@ -145,7 +145,7 @@ window.CashierModule = {
         const total = document.getElementById('posTotal');
         if (!service || !amount || !subtotal || !vat || !total) return;
         const val = parseFloat(amount.value) || this.servicePrices[service.value] || 30;
-        const vatRate = AppState.config.vatRate || 15;
+        const vatRate = AppStore.config.vatRate || 15;
         const vatAmount = val * vatRate / 100;
         amount.value = val;
         subtotal.textContent = val.toFixed(2) + ' SAR';
@@ -159,7 +159,7 @@ window.CashierModule = {
         if (!plate || !info) return;
         const val = plate.value.trim().toUpperCase();
         if (!val) { info.classList.add('hidden'); return; }
-        const customer = AppState.allCustomers.find(c => c.plate_number === val);
+        const customer = AppStore.allCustomers.find(c => c.plate_number === val);
         if (customer) {
             info.classList.remove('hidden');
             if (document.getElementById('posCustName')) document.getElementById('posCustName').textContent = customer.name || '未知';
@@ -182,7 +182,7 @@ window.CashierModule = {
         const info = document.getElementById('posCustomerInfo');
         if (!sel || !info) return;
         if (!sel.value) { info.classList.add('hidden'); return; }
-        const customer = AppState.allCustomers.find(c => c.id === sel.value);
+        const customer = AppStore.allCustomers.find(c => c.id === sel.value);
         if (customer) {
             info.classList.remove('hidden');
             if (document.getElementById('posCustName')) document.getElementById('posCustName').textContent = customer.name || '未知';
@@ -193,7 +193,7 @@ window.CashierModule = {
     },
 
     async saveOrder() {
-        const user = AppState.currentUser;
+        const user = AppStore.currentUser;
         if (!user) { showToast('请先登录'); return; }
         const plate = document.getElementById('posPlate');
         const amount = document.getElementById('posAmount');
@@ -211,17 +211,17 @@ window.CashierModule = {
             const customerId = customer?.value || null;
             const serviceName = service.value;
             const paymentMethod = payment.value;
-            const vat = amt * (AppState.config.vatRate || 15) / 100;
+            const vat = amt * (AppStore.config.vatRate || 15) / 100;
             const total = amt + vat;
             const today = new Date().toISOString().split('T')[0];
             const orderNumber = 'ORD-' + today.replace(/-/g, '') + '-' +
-                String((AppState.allOrders || []).filter(o => o.date === today).length + 1).padStart(4, '0');
+                String((AppStore.allOrders || []).filter(o => o.date === today).length + 1).padStart(4, '0');
             const orderData = {
                 order_number: orderNumber,
                 plate_number: val,
                 customer_id: customerId,
                 employee_id: employeeId,
-                staff_name: employeeId ? AppState.allUsers.find(u => u.id === employeeId)?.name : user.name,
+                staff_name: employeeId ? AppStore.allUsers.find(u => u.id === employeeId)?.name : user.name,
                 service_name: serviceName,
                 amount: amt,
                 vat: vat,
@@ -231,10 +231,10 @@ window.CashierModule = {
                 date: today,
                 created_at: new Date().toISOString()
             };
-            const { data, error } = await supabase.from('orders').insert([orderData]).select();
+            const { data, error } = await AppApi.query('orders').insert([orderData]).select();
             if (error) throw new Error(error.message);
             if (data && data.length > 0) {
-                AppState.allOrders.unshift(data[0]);
+                AppStore.allOrders.unshift(data[0]);
                 this.renderTodayOrders();
             }
             showToast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR');
@@ -281,15 +281,15 @@ window.CashierModule = {
     },
 
     setupRealtime() {
-        if (AppState.realtimeSubscription) {
-            AppState.realtimeSubscription.unsubscribe();
+        if (AppStore.realtimeSubscription) {
+            AppStore.realtimeSubscription.unsubscribe();
         }
-        AppState.realtimeSubscription = supabase
+        AppStore.realtimeSubscription = supabase
             .channel('cashier-realtime')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
                 const today = new Date().toISOString().split('T')[0];
                 if (payload.new.date === today) {
-                    AppState.allOrders.unshift(payload.new);
+                    AppStore.allOrders.unshift(payload.new);
                     this.renderTodayOrders();
                     showToast('🔔 新订单: ' + payload.new.plate_number + ' ' + payload.new.total + ' SAR');
                 }
@@ -305,3 +305,4 @@ window.CashierModuleVoiceTotal = () => CashierModule.voiceTotal();
 window.CashierModuleFindCustomer = () => CashierModule.findCustomerByPlate();
 
 console.log('[Cashier] 模块已注册');
+

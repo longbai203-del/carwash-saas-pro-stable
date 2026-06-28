@@ -33,15 +33,15 @@ window.CustomersModule = {
 
     async loadData() {
         try {
-            const { data } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
-            if (data) AppState.allCustomers = data;
+            const { data } = await AppApi.query('customers').select('*').order('created_at', { ascending: false });
+            if (data) AppStore.allCustomers = data;
         } catch (e) { console.error(e); }
     },
 
     render() {
         const list = document.getElementById('membersList');
         if (!list) return;
-        list.innerHTML = (AppState.allCustomers || []).map(c => 
+        list.innerHTML = (AppStore.allCustomers || []).map(c => 
             <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
                 <div>
                     <strong></strong>
@@ -58,3 +58,4 @@ window.CustomersModule = {
 };
 
 console.log('[Customers] 模块已注册');
+

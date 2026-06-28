@@ -39,14 +39,14 @@ window.EmployeesModule = {
 
     async loadData() {
         try {
-            const { data } = await supabase.from('users').select('*').order('registered_at', { ascending: false });
-            if (data) AppState.allUsers = data;
+            const { data } = await AppApi.query('users').select('*').order('registered_at', { ascending: false });
+            if (data) AppStore.allUsers = data;
         } catch (e) { console.error(e); }
     },
 
     render() {
         const statusFilter = document.getElementById('userStatusFilter')?.value || 'all';
-        let users = AppState.allUsers || [];
+        let users = AppStore.allUsers || [];
         if (statusFilter !== 'all') users = users.filter(u => u.status === statusFilter);
 
         const list = document.getElementById('usersReviewList');
@@ -90,13 +90,13 @@ window.EmployeesModule = {
     },
 
     async approve(userId) {
-        if (!AppState.currentUser || (AppState.currentUser.role !== 'owner' && AppState.currentUser.role !== 'manager')) {
+        if (!AppStore.currentUser || (AppStore.currentUser.role !== 'owner' && AppStore.currentUser.role !== 'manager')) {
             showToast('❌ 只有老板和店长可以审核');
             return;
         }
         try {
-            await supabase.from('users').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', userId);
-            const user = AppState.allUsers.find(u => u.id === userId);
+            await AppApi.query('users').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', userId);
+            const user = AppStore.allUsers.find(u => u.id === userId);
             if (user) user.status = 'approved';
             showToast('✅ 用户已审核通过');
             this.render();
@@ -104,14 +104,14 @@ window.EmployeesModule = {
     },
 
     async reject(userId) {
-        if (!AppState.currentUser || (AppState.currentUser.role !== 'owner' && AppState.currentUser.role !== 'manager')) {
+        if (!AppStore.currentUser || (AppStore.currentUser.role !== 'owner' && AppStore.currentUser.role !== 'manager')) {
             showToast('❌ 只有老板和店长可以审核');
             return;
         }
         if (!confirm('确认拒绝/停用该用户？')) return;
         try {
-            await supabase.from('users').update({ status: 'rejected', approved_at: new Date().toISOString() }).eq('id', userId);
-            const user = AppState.allUsers.find(u => u.id === userId);
+            await AppApi.query('users').update({ status: 'rejected', approved_at: new Date().toISOString() }).eq('id', userId);
+            const user = AppStore.allUsers.find(u => u.id === userId);
             if (user) user.status = 'rejected';
             showToast('✅ 用户已拒绝/停用');
             this.render();
@@ -120,3 +120,4 @@ window.EmployeesModule = {
 };
 
 console.log('[Employees] 模块已注册');
+

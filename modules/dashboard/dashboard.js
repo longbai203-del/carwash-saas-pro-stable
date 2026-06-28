@@ -1,134 +1,141 @@
 ﻿/**
  * dashboard.js - 仪表板模块
- * 生命周期: init() -> loadData() -> render() -> destroy()
  */
 window.DashboardModule = {
     initialized: false,
     moduleName: 'dashboard',
     charts: [],
 
-    async init() {
+    init() {
         if (this.initialized) return;
         console.log('[Dashboard] 初始化...');
-        await this.loadData();
-        this.render();
-        this.setupRealtime();
+        this.cacheDom();
+        this.bindEvents();
+        this.loadData();
         this.initialized = true;
         console.log('[Dashboard] 初始化完成');
     },
 
     destroy() {
         console.log('[Dashboard] 销毁...');
-        this.charts.forEach(c => { if (c && typeof c.destroy === 'function') c.destroy(); });
+        this.charts.forEach(c => { if (c && c.destroy) c.destroy(); });
         this.charts = [];
         this.initialized = false;
     },
 
+    cacheDom() {
+        this.el = {
+            todayRevenue: document.getElementById('todayRevenue'),
+            todayOrders: document.getElementById('todayOrdersValue'),
+            customers: document.getElementById('customersValue'),
+            totalSales: document.getElementById('totalSalesValue'),
+            employees: document.getElementById('employeesCount'),
+            preview: document.getElementById('todayOrdersPreview'),
+            topServices: document.getElementById('topServicesContent'),
+            alertBar: document.getElementById('stockAlertBar'),
+            alertText: document.getElementById('stockAlertText'),
+            kpiTodayOrders: document.getElementById('kpiTodayOrders'),
+            kpiTodayRevenue: document.getElementById('kpiTodayRevenue'),
+            kpiTotalRevenue: document.getElementById('kpiTotalRevenue'),
+            kpiLowStock: document.getElementById('kpiLowStock'),
+            kpiPendingOrders: document.getElementById('kpiPendingOrders'),
+            kpiAvgOrder: document.getElementById('kpiAvgOrder'),
+            kpiTopStaff: document.getElementById('kpiTopStaff'),
+            kpiTopService: document.getElementById('kpiTopService')
+        };
+    },
+
+    bindEvents() {
+        // 无需额外事件
+    },
+
     async loadData() {
         try {
-            const today = new Date().toISOString().split('T')[0];
-            const { data: orders } = await supabase
-                .from('orders')
-                .select('*')
-                .gte('date', today)
-                .order('created_at', { ascending: false });
-            if (orders) AppState.allOrders = orders;
+            const orders = AppStore.get('allOrders') || [];
+            const customers = AppStore.get('allCustomers') || [];
+            const inventory = AppStore.get('allInventory') || [];
+            const users = AppStore.get('allUsers') || [];
 
-            const { data: customers } = await supabase.from('customers').select('*');
-            if (customers) AppState.allCustomers = customers;
-
-            const { data: inventory } = await supabase.from('inventory').select('*');
-            if (inventory) AppState.allInventory = inventory;
-
-            const { data: users } = await supabase.from('users').select('*');
-            if (users) AppState.allUsers = users;
-
+            this.render(orders, customers, inventory, users);
+            this.initCharts(orders);
         } catch (error) {
-            console.error('[Dashboard] 加载数据失败:', error);
+            console.error('[Dashboard] 加载失败:', error);
         }
     },
 
-    render() {
-        this.updateStats();
-        this.updateTodayOrders();
-        this.updateTopServices();
-        this.initCharts();
-    },
-
-    updateStats() {
-        const orders = AppState.allOrders || [];
+    render(orders, customers, inventory, users) {
         const total = orders.reduce((s, o) => s + (o.total || 0), 0);
         const today = new Date().toISOString().split('T')[0];
         const todayOrders = orders.filter(o => o.date === today);
         const todayRevenue = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
 
-        const el = (id) => document.getElementById(id);
-        if (el('todayRevenue')) el('todayRevenue').textContent = todayRevenue.toFixed(2) + ' SAR';
-        if (el('todayOrdersValue')) el('todayOrdersValue').textContent = todayOrders.length;
-        if (el('customersValue')) el('customersValue').textContent = AppState.allCustomers?.length || 0;
-        if (el('totalSalesValue')) el('totalSalesValue').textContent = total.toFixed(2) + ' SAR';
-        if (el('employeesCount')) el('employeesCount').textContent = AppState.allUsers?.filter(u => u.status === 'approved' && u.role !== 'owner').length || 0;
+        if (this.el.todayRevenue) this.el.todayRevenue.textContent = todayRevenue.toFixed(2) + ' SAR';
+        if (this.el.todayOrders) this.el.todayOrders.textContent = todayOrders.length;
+        if (this.el.customers) this.el.customers.textContent = customers.length;
+        if (this.el.totalSales) this.el.totalSales.textContent = total.toFixed(2) + ' SAR';
+        if (this.el.employees) this.el.employees.textContent = users.filter(u => u.role !== 'owner' && u.status === 'approved').length;
 
-        const lowStock = AppState.allInventory?.filter(i => (i.quantity || 0) <= (i.min_qty || 5)).length || 0;
+        // KPI
+        const lowStock = inventory.filter(i => (i.quantity || 0) <= (i.min_qty || 5)).length;
         const avgOrder = orders.length > 0 ? total / orders.length : 0;
         const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'confirmed' || o.status === 'in_progress').length;
 
-        if (el('kpiTodayOrders')) el('kpiTodayOrders').textContent = todayOrders.length;
-        if (el('kpiTodayRevenue')) el('kpiTodayRevenue').textContent = todayRevenue.toFixed(2) + ' SAR';
-        if (el('kpiTotalRevenue')) el('kpiTotalRevenue').textContent = total.toFixed(2) + ' SAR';
-        if (el('kpiLowStock')) el('kpiLowStock').textContent = lowStock;
-        if (el('kpiPendingOrders')) el('kpiPendingOrders').textContent = pendingOrders;
-        if (el('kpiAvgOrder')) el('kpiAvgOrder').textContent = avgOrder.toFixed(2) + ' SAR';
+        if (this.el.kpiTodayOrders) this.el.kpiTodayOrders.textContent = todayOrders.length;
+        if (this.el.kpiTodayRevenue) this.el.kpiTodayRevenue.textContent = todayRevenue.toFixed(2) + ' SAR';
+        if (this.el.kpiTotalRevenue) this.el.kpiTotalRevenue.textContent = total.toFixed(2) + ' SAR';
+        if (this.el.kpiLowStock) this.el.kpiLowStock.textContent = lowStock;
+        if (this.el.kpiPendingOrders) this.el.kpiPendingOrders.textContent = pendingOrders;
+        if (this.el.kpiAvgOrder) this.el.kpiAvgOrder.textContent = avgOrder.toFixed(2) + ' SAR';
 
+        // 最佳员工
         const staffStats = {};
-        orders.forEach(o => { const name = o.staff_name || '未知'; staffStats[name] = (staffStats[name] || 0) + (o.total || 0); });
+        orders.forEach(o => {
+            const name = o.staff_name || '未知';
+            staffStats[name] = (staffStats[name] || 0) + (o.total || 0);
+        });
         const topStaff = Object.entries(staffStats).sort((a, b) => b[1] - a[1])[0];
-        if (el('kpiTopStaff')) el('kpiTopStaff').textContent = topStaff ? topStaff[0] + ' (' + topStaff[1].toFixed(0) + ' SAR)' : '-';
+        if (this.el.kpiTopStaff) this.el.kpiTopStaff.textContent = topStaff ? topStaff[0] + ' (' + topStaff[1].toFixed(0) + ' SAR)' : '-';
 
+        // 热门服务
         const serviceStats = {};
-        orders.forEach(o => { const name = o.service_name || '基础'; serviceStats[name] = (serviceStats[name] || 0) + 1; });
+        orders.forEach(o => {
+            const name = o.service_name || '基础';
+            serviceStats[name] = (serviceStats[name] || 0) + 1;
+        });
         const topService = Object.entries(serviceStats).sort((a, b) => b[1] - a[1])[0];
-        if (el('kpiTopService')) el('kpiTopService').textContent = topService ? topService[0] + ' (' + topService[1] + '单)' : '-';
+        if (this.el.kpiTopService) this.el.kpiTopService.textContent = topService ? topService[0] + ' (' + topService[1] + '单)' : '-';
 
-        const lowItems = AppState.allInventory?.filter(i => (i.quantity || 0) <= (i.min_qty || 5)) || [];
-        const alertBar = document.getElementById('stockAlertBar');
-        const alertText = document.getElementById('stockAlertText');
-        if (alertBar && alertText) {
+        // 库存预警
+        const lowItems = inventory.filter(i => (i.quantity || 0) <= (i.min_qty || 5));
+        if (this.el.alertBar && this.el.alertText) {
             if (lowItems.length > 0) {
-                alertBar.classList.remove('hidden');
-                alertText.textContent = '⚠️ ' + lowItems.map(i => i.name + '(' + i.quantity + '/' + i.min_qty + ')').join('、');
+                this.el.alertBar.classList.remove('hidden');
+                this.el.alertText.textContent = '⚠️ ' + lowItems.map(i => i.name + '(' + i.quantity + '/' + i.min_qty + ')').join('、');
             } else {
-                alertBar.classList.add('hidden');
+                this.el.alertBar.classList.add('hidden');
             }
+        }
+
+        // 今日订单预览
+        if (this.el.preview) {
+            this.el.preview.innerHTML = todayOrders.slice(0, 10).map(o => `
+                <div class="flex justify-between p-2 bg-gray-50 rounded-lg">
+                    <span>${o.plate_number || 'N/A'}</span>
+                    <span class="status-badge ${ORDER_STATUS_CLASSES?.[o.status] || 'status-pending'}">${ORDER_STATUS_LABELS?.[o.status] || o.status}</span>
+                    <span>${(o.total || 0).toFixed(2)} SAR</span>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-center">今日暂无订单</div>';
+        }
+
+        // 热门服务
+        if (this.el.topServices) {
+            this.el.topServices.innerHTML = Object.entries(serviceStats).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) =>
+                `<div class="flex justify-between"><span>${name}</span><span>${count} 单</span></div>`
+            ).join('') || '<div class="text-gray-400 text-center">暂无数据</div>';
         }
     },
 
-    updateTodayOrders() {
-        const preview = document.getElementById('todayOrdersPreview');
-        if (!preview) return;
-        const today = new Date().toISOString().split('T')[0];
-        const todayOrders = (AppState.allOrders || []).filter(o => o.date === today).slice(0, 10);
-        preview.innerHTML = todayOrders.map(o => 
-            <div class="flex justify-between p-2 bg-gray-50 rounded-lg">
-                <span></span>
-                <span class="status-badge "></span>
-                <span> SAR</span>
-            </div>
-        ).join('') || '<div class="text-gray-400 text-center">今日暂无订单</div>';
-    },
-
-    updateTopServices() {
-        const container = document.getElementById('topServicesContent');
-        if (!container) return;
-        const counts = {};
-        (AppState.allOrders || []).forEach(o => { const n = o.service_name || 'Basic'; counts[n] = (counts[n] || 0) + 1; });
-        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        container.innerHTML = sorted.map(([name, count]) =>
-            '<div class="flex justify-between"><span>' + name + '</span><span>' + count + ' 单</span></div>'
-        ).join('') || '<div class="text-gray-400 text-center">暂无数据</div>';
-    },
-
-    initCharts() {
+    initCharts(orders) {
         const ctx1 = document.getElementById('serviceStatsChart');
         if (ctx1) {
             if (this.charts[0]) { this.charts[0].destroy(); }
@@ -151,20 +158,5 @@ window.DashboardModule = {
                 options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
         }
-    },
-
-    setupRealtime() {
-        if (AppState.realtimeSubscription) {
-            AppState.realtimeSubscription.unsubscribe();
-        }
-        AppState.realtimeSubscription = supabase
-            .channel('dashboard-realtime')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
-                this.loadData();
-                this.render();
-            })
-            .subscribe();
     }
 };
-
-console.log('[Dashboard] 模块已注册');

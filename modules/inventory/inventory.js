@@ -33,15 +33,15 @@ window.InventoryModule = {
 
     async loadData() {
         try {
-            const { data } = await supabase.from('inventory').select('*');
-            if (data) AppState.allInventory = data;
+            const { data } = await AppApi.query('inventory').select('*');
+            if (data) AppStore.allInventory = data;
         } catch (e) { console.error(e); }
     },
 
     render() {
         const list = document.getElementById('inventoryList');
         if (!list) return;
-        list.innerHTML = (AppState.allInventory || []).map(i => {
+        list.innerHTML = (AppStore.allInventory || []).map(i => {
             const isLow = (i.quantity || 0) <= (i.min_qty || 5);
             return \
             <div class="\ flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border">
@@ -61,3 +61,4 @@ window.InventoryModule = {
 };
 
 console.log('[Inventory] 模块已注册');
+

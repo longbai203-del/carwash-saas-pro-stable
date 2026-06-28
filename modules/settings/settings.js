@@ -37,7 +37,7 @@ window.SettingsModule = {
     },
 
     loadSettings() {
-        const config = AppState.config || {};
+        const config = AppStore.config || {};
         if (document.getElementById('shopName')) document.getElementById('shopName').value = config.shopName || '';
         if (document.getElementById('shopTaxId')) document.getElementById('shopTaxId').value = config.shopTaxId || '';
         if (document.getElementById('vatRateInput')) document.getElementById('vatRateInput').value = config.vatRate || 15;
@@ -45,17 +45,18 @@ window.SettingsModule = {
     },
 
     saveSettings() {
-        if (!AppState.currentUser || AppState.currentUser.role !== 'owner') {
+        if (!AppStore.currentUser || AppStore.currentUser.role !== 'owner') {
             showToast('只有老板可以修改设置');
             return;
         }
-        AppState.config.shopName = document.getElementById('shopName')?.value.trim() || AppState.config.shopName;
-        AppState.config.shopTaxId = document.getElementById('shopTaxId')?.value.trim() || AppState.config.shopTaxId;
-        AppState.config.vatRate = parseFloat(document.getElementById('vatRateInput')?.value) || 15;
-        AppState.config.commissionRate = parseFloat(document.getElementById('commissionRate')?.value) || 5;
-        localStorage.setItem('cw_config', JSON.stringify(AppState.config));
+        AppStore.config.shopName = document.getElementById('shopName')?.value.trim() || AppStore.config.shopName;
+        AppStore.config.shopTaxId = document.getElementById('shopTaxId')?.value.trim() || AppStore.config.shopTaxId;
+        AppStore.config.vatRate = parseFloat(document.getElementById('vatRateInput')?.value) || 15;
+        AppStore.config.commissionRate = parseFloat(document.getElementById('commissionRate')?.value) || 5;
+        localStorage.setItem('cw_config', JSON.stringify(AppStore.config));
         showToast('✅ 设置已保存');
     }
 };
 
 console.log('[Settings] 模块已注册');
+

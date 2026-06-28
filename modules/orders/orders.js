@@ -54,7 +54,7 @@ window.OrdersModule = {
         const status = document.getElementById('orderStatusFilter')?.value || 'all';
         const date = document.getElementById('orderDateFilter')?.value || '';
         const search = document.getElementById('orderSearch')?.value?.trim() || '';
-        let orders = AppState.allOrders || [];
+        let orders = AppStore.allOrders || [];
         if (status !== 'all') orders = orders.filter(o => o.status === status);
         if (date) orders = orders.filter(o => o.date === date);
         if (search) orders = orders.filter(o => o.plate_number?.includes(search) || o.order_number?.includes(search) || o.staff_name?.includes(search));
@@ -84,10 +84,11 @@ window.OrdersModule = {
     },
 
     showDetail(orderId) {
-        const order = AppState.allOrders.find(o => o.id === orderId);
+        const order = AppStore.allOrders.find(o => o.id === orderId);
         if (!order) { showToast('订单不存在'); return; }
         showToast('📋 订单 #' + (order.order_number || order.id.slice(0, 8)) + ' | ' + (order.total || 0) + ' SAR');
     }
 };
 
 console.log('[Orders] 模块已注册');
+
