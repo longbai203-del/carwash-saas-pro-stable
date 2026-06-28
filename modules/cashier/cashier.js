@@ -1,308 +1,361 @@
 ﻿/**
- * cashier.js - POS收银模块
- * 生命周期: init() -> bindEvents() -> loadData() -> render()
+ * cashier.js - POS收银模块 V5
+ * 无 JSX，全部使用 AppApi，按钮统一调用 Module.method()
  */
 window.CashierModule = {
     initialized: false,
     moduleName: 'cashier',
-    events: [],
-    timers: [],
-    servicePrices: { '基础清洗': 30, '深度清洗': 55, '外部抛光': 65, '内部护理': 70, '全车精洗': 110 },
 
-    async init() {
-        if (this.initialized) { console.log('[Cashier] 已初始化，跳过'); return; }
-        console.log('[Cashier] 初始化...');
-        await this.waitForDOM();
-        this.bindEvents();
-        await this.loadData();
-        this.render();
-        this.setupRealtime();
-        this.initialized = true;
-        console.log('[Cashier] 初始化完成');
+    // ===== 价格配置 =====
+    servicePrices: {
+        '基础清洗': 30,
+        '深度清洗': 55,
+        '外部抛光': 65,
+        '内部护理': 70,
+        '全车精洗': 110
     },
 
-    destroy() {
-        console.log('[Cashier] 销毁...');
-        this.events.forEach(({ el, event, handler }) => {
-            if (el) el.removeEventListener(event, handler);
+    // ===== 生命周期：初始化 =====
+    init: function() {
+        if (this.initialized) return;
+        console.log('[Cashier] 初始化...');
+        var self = this;
+
+        // 等待 DOM 渲染完成
+        return new Promise(function(resolve) {
+            setTimeout(function() {
+                self.cacheDom();
+                self.bindEvents();
+                self.loadData();
+                self.initialized = true;
+                console.log('[Cashier] 初始化完成');
+                resolve();
+            }, 50);
         });
-        this.events = [];
-        this.timers.forEach(t => clearTimeout(t));
-        this.timers = [];
+    },
+
+    // ===== 生命周期：销毁 =====
+    destroy: function() {
+        console.log('[Cashier] 销毁...');
         this.initialized = false;
     },
 
-    waitForDOM() {
-        return new Promise((resolve) => {
-            let attempts = 0;
-            const check = () => {
-                attempts++;
-                if (document.getElementById('posService')) { resolve(); }
-                else if (attempts < 60) { setTimeout(check, 50); }
-                else { resolve(); }
-            };
-            check();
-        });
+    // ===== 缓存 DOM =====
+    cacheDom: function() {
+        this.el = {
+            customer: document.getElementById('posCustomer'),
+            employee: document.getElementById('posEmployee'),
+            service: document.getElementById('posService'),
+            payment: document.getElementById('posPayment'),
+            plate: document.getElementById('posPlate'),
+            amount: document.getElementById('posAmount'),
+            subtotal: document.getElementById('posSubtotal'),
+            vat: document.getElementById('posVat'),
+            total: document.getElementById('posTotal'),
+            todayList: document.getElementById('todayOrdersList'),
+            customerInfo: document.getElementById('posCustomerInfo'),
+            custName: document.getElementById('posCustName'),
+            custBalance: document.getElementById('posCustBalance'),
+            custPoints: document.getElementById('posCustPoints'),
+            custLevel: document.getElementById('posCustLevel')
+        };
     },
 
-    bindEvents() {
-        console.log('[Cashier] 绑定事件...');
-        this.bindEvent('posService', 'change', () => this.updatePrice());
-        this.bindEvent('posAmount', 'input', () => this.updatePrice());
-        this.bindEvent('posPlate', 'blur', () => this.findCustomerByPlate());
-        this.bindEvent('posCustomer', 'change', () => this.onCustomerChange());
-    },
+    // ===== 绑定事件 =====
+    bindEvents: function() {
+        var self = this;
 
-    bindEvent(id, event, handler) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener(event, handler);
-            this.events.push({ el, event, handler });
-        } else {
-            console.warn('[Cashier] 元素不存在: #' + id);
+        if (this.el.service) {
+            this.el.service.addEventListener('change', function() {
+                self.updatePrice();
+            });
         }
-        return el;
-    },
-
-    async loadData() {
-        console.log('[Cashier] 加载数据...');
-        try {
-            const { data: users } = await supabase
-                .from('users')
-                .select('id, username, name, role')
-                .in('role', ['cashier', 'manager', 'employee'])
-                .eq('status', 'approved');
-            AppStore.allUsers = users || [];
-
-            const { data: customers } = await supabase
-                .from('customers')
-                .select('*')
-                .order('created_at', { ascending: false });
-            AppStore.allCustomers = customers || [];
-
-            const today = new Date().toISOString().split('T')[0];
-            const { data: orders } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('date', today)
-                .order('created_at', { ascending: false });
-            AppStore.allOrders = orders || [];
-        } catch (error) {
-            console.error('[Cashier] 加载数据失败:', error);
+        if (this.el.amount) {
+            this.el.amount.addEventListener('input', function() {
+                self.updatePrice();
+            });
+        }
+        if (this.el.plate) {
+            this.el.plate.addEventListener('blur', function() {
+                self.findCustomer();
+            });
+        }
+        if (this.el.customer) {
+            this.el.customer.addEventListener('change', function() {
+                self.onCustomerChange();
+            });
         }
     },
 
-    render() {
-        console.log('[Cashier] 渲染...');
-        this.renderEmployees();
-        this.renderCustomers();
-        this.renderTodayOrders();
+    // ===== 加载数据 =====
+    loadData: function() {
+        var self = this;
+        var users = AppStore.get('allUsers') || [];
+        var customers = AppStore.get('allCustomers') || [];
+        var orders = AppStore.get('allOrders') || [];
+
+        this.renderEmployees(users);
+        this.renderCustomers(customers);
+        this.renderTodayOrders(orders);
         this.updatePrice();
     },
 
-    renderEmployees() {
-        const sel = document.getElementById('posEmployee');
-        if (!sel) return;
-        const staff = AppStore.allUsers.filter(u => u.role !== 'owner');
-        const currentUser = AppStore.currentUser;
-        sel.innerHTML = staff.map(u =>
-            '<option value="' + u.id + '" ' + (u.id === currentUser?.id ? 'selected' : '') + '>' + (u.name || u.username) + '</option>'
-        ).join('') || '<option value="">暂无员工</option>';
+    // ===== 渲染员工下拉 =====
+    renderEmployees: function(users) {
+        if (!this.el.employee) return;
+        users = users || [];
+        var staff = users.filter(function(u) {
+            return u.role !== 'owner' && u.status === 'approved';
+        });
+        var currentUser = AppStore.get('currentUser') || {};
+        var html = '';
+        staff.forEach(function(u) {
+            var selected = (u.id === currentUser.id) ? 'selected' : '';
+            html += '<option value="' + u.id + '" ' + selected + '>' + (u.name || u.username) + '</option>';
+        });
+        this.el.employee.innerHTML = html || '<option value="">暂无员工</option>';
     },
 
-    renderCustomers() {
-        const sel = document.getElementById('posCustomer');
-        if (!sel) return;
-        const val = sel.value;
-        sel.innerHTML = '<option value="">散客</option>' +
-            AppStore.allCustomers.map(c =>
-                '<option value="' + c.id + '">' + c.name + ' (' + (c.plate_number || '') + ')</option>'
-            ).join('');
-        if (val) sel.value = val;
+    // ===== 渲染客户下拉 =====
+    renderCustomers: function(customers) {
+        if (!this.el.customer) return;
+        customers = customers || [];
+        var val = this.el.customer.value;
+        var html = '<option value="">散客</option>';
+        customers.forEach(function(c) {
+            html += '<option value="' + c.id + '">' + c.name + ' (' + (c.plate_number || '') + ')</option>';
+        });
+        this.el.customer.innerHTML = html;
+        if (val) this.el.customer.value = val;
     },
 
-    renderTodayOrders() {
-        const list = document.getElementById('todayOrdersList');
-        if (!list) return;
-        const today = new Date().toISOString().split('T')[0];
-        const todayOrders = (AppStore.allOrders || [])
-            .filter(o => o.date === today)
-            .slice(0, 20);
-        list.innerHTML = todayOrders.map(o => 
-            <div class="flex justify-between p-2 border-b hover:bg-gray-50">
-                <span class="text-sm"></span>
-                <span class="font-medium"></span>
-                <span class="font-bold text-blue-600"> SAR</span>
-            </div>
-        ).join('') || '<div class="text-center text-gray-400 py-4">今日暂无订单</div>';
+    // ===== 渲染今日订单 =====
+    renderTodayOrders: function(orders) {
+        if (!this.el.todayList) return;
+        orders = orders || [];
+        var today = new Date().toISOString().split('T')[0];
+        var todayOrders = orders.filter(function(o) {
+            return o.date === today;
+        }).slice(0, 20);
+
+        if (todayOrders.length === 0) {
+            this.el.todayList.innerHTML = '<div class="text-center text-gray-400 py-4">今日暂无订单</div>';
+            return;
+        }
+
+        var html = '';
+        todayOrders.forEach(function(o) {
+            html += '<div class="flex justify-between p-2 border-b hover:bg-gray-50">';
+            html += '<span class="text-sm">' + (o.created_at ? new Date(o.created_at).toLocaleTimeString() : '') + '</span>';
+            html += '<span class="font-medium">' + (o.plate_number || 'N/A') + '</span>';
+            html += '<span class="font-bold text-blue-600">' + (o.total || 0).toFixed(2) + ' SAR</span>';
+            html += '</div>';
+        });
+        this.el.todayList.innerHTML = html;
     },
 
-    updatePrice() {
-        const service = document.getElementById('posService');
-        const amount = document.getElementById('posAmount');
-        const subtotal = document.getElementById('posSubtotal');
-        const vat = document.getElementById('posVat');
-        const total = document.getElementById('posTotal');
-        if (!service || !amount || !subtotal || !vat || !total) return;
-        const val = parseFloat(amount.value) || this.servicePrices[service.value] || 30;
-        const vatRate = AppStore.config.vatRate || 15;
-        const vatAmount = val * vatRate / 100;
-        amount.value = val;
-        subtotal.textContent = val.toFixed(2) + ' SAR';
-        vat.textContent = vatAmount.toFixed(2) + ' SAR';
-        total.textContent = (val + vatAmount).toFixed(2) + ' SAR';
+    // ===== 更新价格 =====
+    updatePrice: function() {
+        var service = this.el.service ? this.el.service.value : '基础清洗';
+        var amount = this.el.amount ? parseFloat(this.el.amount.value) || this.servicePrices[service] || 30 : 30;
+        var config = AppStore.get('config') || {};
+        var vatRate = config.vatRate || 15;
+        var vatAmount = amount * vatRate / 100;
+        var total = amount + vatAmount;
+
+        if (this.el.amount) this.el.amount.value = amount;
+        if (this.el.subtotal) this.el.subtotal.textContent = amount.toFixed(2) + ' SAR';
+        if (this.el.vat) this.el.vat.textContent = vatAmount.toFixed(2) + ' SAR';
+        if (this.el.total) this.el.total.textContent = total.toFixed(2) + ' SAR';
     },
 
-    findCustomerByPlate() {
-        const plate = document.getElementById('posPlate');
-        const info = document.getElementById('posCustomerInfo');
-        if (!plate || !info) return;
-        const val = plate.value.trim().toUpperCase();
-        if (!val) { info.classList.add('hidden'); return; }
-        const customer = AppStore.allCustomers.find(c => c.plate_number === val);
+    // ===== 查找客户 =====
+    findCustomer: function() {
+        if (!this.el.plate) return;
+        var plate = this.el.plate.value.trim().toUpperCase();
+        if (!plate) {
+            if (this.el.customerInfo) this.el.customerInfo.classList.add('hidden');
+            return;
+        }
+
+        var customers = AppStore.get('allCustomers') || [];
+        var customer = customers.find(function(c) {
+            return c.plate_number === plate;
+        });
+
         if (customer) {
-            info.classList.remove('hidden');
-            if (document.getElementById('posCustName')) document.getElementById('posCustName').textContent = customer.name || '未知';
-            if (document.getElementById('posCustBalance')) document.getElementById('posCustBalance').textContent = (customer.balance || 0).toFixed(2) + ' SAR';
-            if (document.getElementById('posCustPoints')) document.getElementById('posCustPoints').textContent = customer.points || 0;
-            if (document.getElementById('posCustLevel')) document.getElementById('posCustLevel').textContent = customer.level || '普通';
-            const sel = document.getElementById('posCustomer');
-            if (sel) {
-                for (let opt of sel.options) {
-                    if (opt.value === customer.id) { opt.selected = true; break; }
+            if (this.el.customerInfo) this.el.customerInfo.classList.remove('hidden');
+            if (this.el.custName) this.el.custName.textContent = customer.name || '未知';
+            if (this.el.custBalance) this.el.custBalance.textContent = (customer.balance || 0).toFixed(2) + ' SAR';
+            if (this.el.custPoints) this.el.custPoints.textContent = customer.points || 0;
+            if (this.el.custLevel) this.el.custLevel.textContent = customer.level || '普通';
+
+            if (this.el.customer) {
+                var options = this.el.customer.options;
+                for (var i = 0; i < options.length; i++) {
+                    if (options[i].value === customer.id) {
+                        options[i].selected = true;
+                        break;
+                    }
                 }
             }
         } else {
-            info.classList.add('hidden');
+            if (this.el.customerInfo) this.el.customerInfo.classList.add('hidden');
         }
     },
 
-    onCustomerChange() {
-        const sel = document.getElementById('posCustomer');
-        const info = document.getElementById('posCustomerInfo');
-        if (!sel || !info) return;
-        if (!sel.value) { info.classList.add('hidden'); return; }
-        const customer = AppStore.allCustomers.find(c => c.id === sel.value);
+    // ===== 客户选择变化 =====
+    onCustomerChange: function() {
+        if (!this.el.customer || !this.el.customerInfo) return;
+        if (!this.el.customer.value) {
+            this.el.customerInfo.classList.add('hidden');
+            return;
+        }
+
+        var customers = AppStore.get('allCustomers') || [];
+        var customer = customers.find(function(c) {
+            return c.id === this.el.customer.value;
+        }.bind(this));
+
         if (customer) {
-            info.classList.remove('hidden');
-            if (document.getElementById('posCustName')) document.getElementById('posCustName').textContent = customer.name || '未知';
-            if (document.getElementById('posCustBalance')) document.getElementById('posCustBalance').textContent = (customer.balance || 0).toFixed(2) + ' SAR';
-            if (document.getElementById('posCustPoints')) document.getElementById('posCustPoints').textContent = customer.points || 0;
-            if (document.getElementById('posCustLevel')) document.getElementById('posCustLevel').textContent = customer.level || '普通';
+            this.el.customerInfo.classList.remove('hidden');
+            if (this.el.custName) this.el.custName.textContent = customer.name || '未知';
+            if (this.el.custBalance) this.el.custBalance.textContent = (customer.balance || 0).toFixed(2) + ' SAR';
+            if (this.el.custPoints) this.el.custPoints.textContent = customer.points || 0;
+            if (this.el.custLevel) this.el.custLevel.textContent = customer.level || '普通';
         }
     },
 
-    async saveOrder() {
-        const user = AppStore.currentUser;
-        if (!user) { showToast('请先登录'); return; }
-        const plate = document.getElementById('posPlate');
-        const amount = document.getElementById('posAmount');
-        const service = document.getElementById('posService');
-        const payment = document.getElementById('posPayment');
-        const employee = document.getElementById('posEmployee');
-        const customer = document.getElementById('posCustomer');
-        if (!plate || !amount || !service || !payment) { showToast('页面加载未完成'); return; }
-        const val = plate.value.trim().toUpperCase();
-        if (!val) { showToast('请输入车牌号'); return; }
-        const amt = parseFloat(amount.value) || 0;
-        if (amt <= 0) { showToast('金额必须大于0'); return; }
-        try {
-            const employeeId = employee?.value || null;
-            const customerId = customer?.value || null;
-            const serviceName = service.value;
-            const paymentMethod = payment.value;
-            const vat = amt * (AppStore.config.vatRate || 15) / 100;
-            const total = amt + vat;
-            const today = new Date().toISOString().split('T')[0];
-            const orderNumber = 'ORD-' + today.replace(/-/g, '') + '-' +
-                String((AppStore.allOrders || []).filter(o => o.date === today).length + 1).padStart(4, '0');
-            const orderData = {
-                order_number: orderNumber,
-                plate_number: val,
-                customer_id: customerId,
-                employee_id: employeeId,
-                staff_name: employeeId ? AppStore.allUsers.find(u => u.id === employeeId)?.name : user.name,
-                service_name: serviceName,
-                amount: amt,
-                vat: vat,
-                total: total,
-                payment_method: paymentMethod,
-                status: 'completed',
-                date: today,
-                created_at: new Date().toISOString()
-            };
-            const { data, error } = await AppApi.query('orders').insert([orderData]).select();
-            if (error) throw new Error(error.message);
-            if (data && data.length > 0) {
-                AppStore.allOrders.unshift(data[0]);
-                this.renderTodayOrders();
-            }
-            showToast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR');
-            plate.value = '';
-            amount.value = '';
-            const info = document.getElementById('posCustomerInfo');
-            if (info) info.classList.add('hidden');
-            this.updatePrice();
-        } catch (error) {
-            showToast('❌ 保存失败: ' + error.message);
+    // ===== 保存订单 =====
+    saveOrder: function() {
+        var self = this;
+        var currentUser = AppStore.get('currentUser') || {};
+
+        if (!currentUser.id) {
+            AppUtils.toast('请先登录', 'error');
+            return;
         }
+
+        if (!this.el.plate) {
+            AppUtils.toast('页面加载未完成', 'error');
+            return;
+        }
+
+        var plate = this.el.plate.value.trim().toUpperCase();
+        if (!plate) {
+            AppUtils.toast('请输入车牌号', 'error');
+            return;
+        }
+
+        var amount = this.el.amount ? parseFloat(this.el.amount.value) || 0 : 0;
+        if (amount <= 0) {
+            AppUtils.toast('金额必须大于0', 'error');
+            return;
+        }
+
+        var employeeId = this.el.employee ? this.el.employee.value || null : null;
+        var customerId = this.el.customer ? this.el.customer.value || null : null;
+        var serviceName = this.el.service ? this.el.service.value : '基础清洗';
+        var paymentMethod = this.el.payment ? this.el.payment.value : 'cash';
+
+        var config = AppStore.get('config') || {};
+        var vatRate = config.vatRate || 15;
+        var vat = amount * vatRate / 100;
+        var total = amount + vat;
+        var today = new Date().toISOString().split('T')[0];
+
+        var orders = AppStore.get('allOrders') || [];
+        var todayOrders = orders.filter(function(o) { return o.date === today; });
+        var orderNumber = 'ORD-' + today.replace(/-/g, '') + '-' + String(todayOrders.length + 1).padStart(4, '0');
+
+        var users = AppStore.get('allUsers') || [];
+        var employee = users.find(function(u) { return u.id === employeeId; });
+
+        var orderData = {
+            order_number: orderNumber,
+            plate_number: plate,
+            customer_id: customerId,
+            employee_id: employeeId,
+            staff_name: employee ? employee.name : currentUser.name,
+            service_name: serviceName,
+            amount: amount,
+            vat: vat,
+            total: total,
+            payment_method: paymentMethod,
+            status: 'completed',
+            date: today,
+            created_at: new Date().toISOString()
+        };
+
+        AppApi.insert('orders', orderData)
+            .then(function(data) {
+                if (data && data.length > 0) {
+                    var allOrders = AppStore.get('allOrders') || [];
+                    allOrders.unshift(data[0]);
+                    AppStore.set('allOrders', allOrders);
+                    self.renderTodayOrders(allOrders);
+                    AppUtils.toast('✅ 订单保存成功: ' + total.toFixed(2) + ' SAR', 'success');
+
+                    if (self.el.plate) self.el.plate.value = '';
+                    if (self.el.amount) self.el.amount.value = '';
+                    if (self.el.customerInfo) self.el.customerInfo.classList.add('hidden');
+                    self.updatePrice();
+                }
+            })
+            .catch(function(error) {
+                AppUtils.toast('❌ 保存失败: ' + error.message, 'error');
+            });
     },
 
-    printReceipt() {
-        const total = document.getElementById('posTotal');
-        const plate = document.getElementById('posPlate');
-        if (!total || !plate) return;
-        const win = window.open('', '_blank');
-        if (!win) { showToast('请允许弹窗'); return; }
-        win.document.write(
-            <html><head><title>发票</title>
-            <style>body{font-family:sans-serif;padding:40px;text-align:center;}
-            .inv{max-width:400px;margin:auto;border:1px solid #ddd;padding:30px;border-radius:12px;}
-            .tot{font-size:28px;font-weight:bold;color:#0091D5;}</style>
-            </head><body>
-            <div class="inv"><h2>🧼 CarWash Pro</h2>
-            <p></p>
-            <p>税号: </p><hr>
-            <p><strong>车牌:</strong> </p>
-            <p><strong>日期:</strong> </p><hr>
-            <p class="tot">总计: </p>
-            <p style="font-size:12px;color:#999;">感谢光临</p></div>
-            <script>setTimeout(()=>window.print(),300)<\/script>
-            </body></html>
-        );
+    // ===== 打印小票 =====
+    printReceipt: function() {
+        var total = this.el.total ? this.el.total.textContent : '0 SAR';
+        var plate = this.el.plate ? this.el.plate.value || 'N/A' : 'N/A';
+        var config = AppStore.get('config') || {};
+        var shopName = config.shopName || 'Car Wash Pro';
+        var taxId = config.shopTaxId || 'N/A';
+
+        var win = window.open('', '_blank');
+        if (!win) {
+            AppUtils.toast('请允许弹窗', 'error');
+            return;
+        }
+
+        win.document.write(`
+            <html>
+            <head>
+                <title>发票</title>
+                <style>
+                    body { font-family: sans-serif; padding: 40px; text-align: center; }
+                    .inv { max-width: 400px; margin: auto; border: 1px solid #ddd; padding: 30px; border-radius: 12px; }
+                    .tot { font-size: 28px; font-weight: bold; color: #0091D5; }
+                </style>
+            </head>
+            <body>
+                <div class="inv">
+                    <h2>🧼 CarWash Pro</h2>
+                    <p>${shopName}</p>
+                    <p>税号: ${taxId}</p>
+                    <hr>
+                    <p><strong>车牌:</strong> ${plate}</p>
+                    <p><strong>日期:</strong> ${new Date().toLocaleString()}</p>
+                    <hr>
+                    <p class="tot">总计: ${total}</p>
+                    <p style="font-size:12px;color:#999;">感谢光临</p>
+                </div>
+                <script>setTimeout(function(){ window.print(); }, 300)<\/script>
+            </body>
+            </html>
+        `);
         win.document.close();
     },
 
-    voiceTotal() {
-        const total = document.getElementById('posTotal');
-        if (!total) return;
-        const msg = new SpeechSynthesisUtterance('总计 ' + total.textContent);
+    // ===== 语音播报 =====
+    voiceTotal: function() {
+        var total = this.el.total ? this.el.total.textContent : '0 SAR';
+        var msg = new SpeechSynthesisUtterance('总计 ' + total);
         window.speechSynthesis.speak(msg);
-    },
-
-    setupRealtime() {
-        if (AppStore.realtimeSubscription) {
-            AppStore.realtimeSubscription.unsubscribe();
-        }
-        AppStore.realtimeSubscription = supabase
-            .channel('cashier-realtime')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-                const today = new Date().toISOString().split('T')[0];
-                if (payload.new.date === today) {
-                    AppStore.allOrders.unshift(payload.new);
-                    this.renderTodayOrders();
-                    showToast('🔔 新订单: ' + payload.new.plate_number + ' ' + payload.new.total + ' SAR');
-                }
-            })
-            .subscribe();
     }
 };
 
-// 暴露全局方法
-window.CashierModuleSaveOrder = () => CashierModule.saveOrder();
-window.CashierModulePrintReceipt = () => CashierModule.printReceipt();
-window.CashierModuleVoiceTotal = () => CashierModule.voiceTotal();
-window.CashierModuleFindCustomer = () => CashierModule.findCustomerByPlate();
-
-console.log('[Cashier] 模块已注册');
-
+console.log('[Cashier] V5 模块已注册');

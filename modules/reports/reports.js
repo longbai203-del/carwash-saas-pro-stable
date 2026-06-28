@@ -4,7 +4,7 @@
 window.ReportsModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Reports] 初始化...');
         await this.waitForDOM();
@@ -15,7 +15,7 @@ window.ReportsModule = {
         console.log('[Reports] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -63,4 +63,5 @@ window.ReportsModule = {
 };
 
 console.log('[Reports] 模块已注册');
+
 

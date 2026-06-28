@@ -1,5 +1,6 @@
 ﻿/**
- * loader.js - 模块加载器
+ * loader.js - 模块加载器 V5
+ * 统一加载 HTML + JS，确保 DOM 渲染完成后再初始化
  */
 (function() {
     'use strict';
@@ -7,6 +8,7 @@
     window.ModuleLoader = {
         _loaded: {},
         _active: null,
+        _loading: false,
 
         _modules: {
             dashboard: { obj: 'DashboardModule', label: '仪表板' },
@@ -22,16 +24,21 @@
         },
 
         async load(moduleName) {
-            const container = document.getElementById('moduleContent');
+            if (this._loading) {
+                console.log('[Loader] 正在加载中，跳过');
+                return;
+            }
+
+            var container = document.getElementById('moduleContent');
             if (!container) {
                 console.error('[Loader] 容器不存在');
                 return;
             }
 
             // 权限检查
-            const user = AppStore.get('currentUser');
+            var user = AppStore.get('currentUser');
             if (user) {
-                const perms = AppConfig.permissions[user.role] || [];
+                var perms = AppConfig.permissions[user.role] || [];
                 if (!perms.includes(moduleName)) {
                     AppUtils.toast('您没有权限访问此页面', 'warning');
                     return;
@@ -40,47 +47,57 @@
 
             // 销毁旧模块
             if (this._active && this._loaded[this._active]) {
-                const old = this._loaded[this._active];
+                var old = this._loaded[this._active];
                 if (typeof old.destroy === 'function') {
                     old.destroy();
                 }
                 delete this._loaded[this._active];
             }
 
+            this._loading = true;
             container.innerHTML = '<div class="text-center text-gray-400 py-20">⏳ 加载中...</div>';
 
             try {
-                const module = this._modules[moduleName];
+                var module = this._modules[moduleName];
                 if (!module) throw new Error('模块未配置: ' + moduleName);
 
-                // 加载 HTML
-                const htmlPath = 'modules/' + moduleName + '/' + moduleName + '.html';
-                const htmlRes = await fetch(htmlPath);
+                // 1. 加载 HTML
+                var htmlPath = 'modules/' + moduleName + '/' + moduleName + '.html';
+                var htmlRes = await fetch(htmlPath);
                 if (!htmlRes.ok) throw new Error('HTML加载失败: ' + htmlRes.status);
                 container.innerHTML = await htmlRes.text();
 
-                // 加载 JS
-                const jsPath = 'modules/' + moduleName + '/' + moduleName + '.js';
-                const oldScript = document.querySelector('script[data-module="' + moduleName + '"]');
+                // 2. 等待 DOM 渲染
+                await this._waitForDOM(moduleName);
+
+                // 3. 加载 JS
+                var jsPath = 'modules/' + moduleName + '/' + moduleName + '.js';
+                var oldScript = document.querySelector('script[data-module="' + moduleName + '"]');
                 if (oldScript) oldScript.remove();
 
-                return new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
+                var self = this;
+                await new Promise(function(resolve, reject) {
+                    var script = document.createElement('script');
                     script.setAttribute('data-module', moduleName);
                     script.type = 'text/javascript';
                     script.src = jsPath + '?v=' + Date.now();
 
-                    script.onload = () => {
-                        let attempts = 0;
-                        const maxAttempts = 50;
-                        const check = () => {
+                    script.onload = function() {
+                        var attempts = 0;
+                        var maxAttempts = 50;
+                        var check = function() {
                             attempts++;
-                            const moduleObj = window[module.obj];
+                            var moduleObj = window[module.obj];
                             if (moduleObj && typeof moduleObj.init === 'function') {
-                                this._loaded[moduleName] = moduleObj;
-                                this._active = moduleName;
-                                moduleObj.init();
-                                resolve();
+                                self._loaded[moduleName] = moduleObj;
+                                self._active = moduleName;
+                                // 等待模块初始化完成
+                                var result = moduleObj.init();
+                                if (result && typeof result.then === 'function') {
+                                    result.then(resolve).catch(reject);
+                                } else {
+                                    resolve();
+                                }
                             } else if (attempts < maxAttempts) {
                                 setTimeout(check, 100);
                             } else {
@@ -90,11 +107,17 @@
                         check();
                     };
 
-                    script.onerror = () => reject(new Error('JS加载失败: ' + jsPath));
+                    script.onerror = function() {
+                        reject(new Error('JS加载失败: ' + jsPath));
+                    };
                     document.head.appendChild(script);
                 });
 
+                this._loading = false;
+                console.log('[Loader] 加载完成: ' + moduleName);
+
             } catch (error) {
+                this._loading = false;
                 console.error('[Loader] 加载失败:', error);
                 container.innerHTML = `
                     <div class="text-center py-20">
@@ -106,14 +129,34 @@
             }
         },
 
-        getActive() {
+        _waitForDOM: function(moduleName) {
+            return new Promise(function(resolve) {
+                var attempts = 0;
+                var maxAttempts = 50;
+                var check = function() {
+                    attempts++;
+                    // 检查模块特定的 DOM 元素是否存在
+                    var el = document.getElementById(moduleName + 'Container');
+                    if (el || attempts > maxAttempts) {
+                        // 额外等待 50ms 确保渲染完成
+                        setTimeout(resolve, 50);
+                    } else {
+                        setTimeout(check, 50);
+                    }
+                };
+                // 第一次检查延迟 30ms
+                setTimeout(check, 30);
+            });
+        },
+
+        getActive: function() {
             return this._active;
         },
 
-        getModule(moduleName) {
+        getModule: function(moduleName) {
             return this._loaded[moduleName] || null;
         }
     };
 
-    console.log('[Loader] 加载完成');
+    console.log('[Loader] V5 加载完成');
 })();

@@ -4,7 +4,7 @@
 window.AuditModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Audit] 初始化...');
         await this.waitForDOM();
@@ -15,7 +15,7 @@ window.AuditModule = {
         console.log('[Audit] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -41,7 +41,7 @@ window.AuditModule = {
 
     async loadData() {
         try {
-            const { data } = await AppApi.query('audit_logs').select('*').order('created_at', { ascending: false }).limit(50);
+            const { data } = await AppApi.query('audit_logs').limit(50);
             if (data) AppStore.allAuditLogs = data;
         } catch (e) { console.error(e); }
     },
@@ -79,4 +79,5 @@ window.AuditModule = {
 };
 
 console.log('[Audit] 模块已注册');
+
 

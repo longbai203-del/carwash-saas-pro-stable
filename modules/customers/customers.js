@@ -4,7 +4,7 @@
 window.CustomersModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Customers] 初始化...');
         await this.waitForDOM();
@@ -14,7 +14,7 @@ window.CustomersModule = {
         console.log('[Customers] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -33,7 +33,7 @@ window.CustomersModule = {
 
     async loadData() {
         try {
-            const { data } = await AppApi.query('customers').select('*').order('created_at', { ascending: false });
+            const { data } = await AppApi.query('customers');
             if (data) AppStore.allCustomers = data;
         } catch (e) { console.error(e); }
     },
@@ -58,4 +58,5 @@ window.CustomersModule = {
 };
 
 console.log('[Customers] 模块已注册');
+
 

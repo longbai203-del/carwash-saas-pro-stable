@@ -4,7 +4,7 @@
 window.AttendanceModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Attendance] 初始化...');
         await this.waitForDOM();
@@ -14,7 +14,7 @@ window.AttendanceModule = {
         console.log('[Attendance] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -33,7 +33,7 @@ window.AttendanceModule = {
 
     async loadData() {
         try {
-            const { data } = await AppApi.query('attendance').select('*').order('time', { ascending: false }).limit(100);
+            const { data } = await AppApi.query('attendance').limit(100);
             if (data) AppStore.allAttendance = data;
         } catch (e) { console.error(e); }
     },
@@ -48,4 +48,5 @@ window.AttendanceModule = {
 };
 
 console.log('[Attendance] 模块已注册');
+
 

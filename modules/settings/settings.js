@@ -4,7 +4,7 @@
 window.SettingsModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Settings] 初始化...');
         await this.waitForDOM();
@@ -14,7 +14,7 @@ window.SettingsModule = {
         console.log('[Settings] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -59,4 +59,5 @@ window.SettingsModule = {
 };
 
 console.log('[Settings] 模块已注册');
+
 

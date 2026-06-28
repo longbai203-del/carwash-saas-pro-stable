@@ -4,7 +4,7 @@
 window.EmployeesModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Employees] 初始化...');
         await this.waitForDOM();
@@ -15,7 +15,7 @@ window.EmployeesModule = {
         console.log('[Employees] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -39,7 +39,7 @@ window.EmployeesModule = {
 
     async loadData() {
         try {
-            const { data } = await AppApi.query('users').select('*').order('registered_at', { ascending: false });
+            const { data } = await AppApi.query('users');
             if (data) AppStore.allUsers = data;
         } catch (e) { console.error(e); }
     },
@@ -95,7 +95,7 @@ window.EmployeesModule = {
             return;
         }
         try {
-            await AppApi.query('users').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', userId);
+            await AppApi.query('users').update({ status: 'approved', approved_at: new Date().toISOString() });
             const user = AppStore.allUsers.find(u => u.id === userId);
             if (user) user.status = 'approved';
             showToast('✅ 用户已审核通过');
@@ -110,7 +110,7 @@ window.EmployeesModule = {
         }
         if (!confirm('确认拒绝/停用该用户？')) return;
         try {
-            await AppApi.query('users').update({ status: 'rejected', approved_at: new Date().toISOString() }).eq('id', userId);
+            await AppApi.query('users').update({ status: 'rejected', approved_at: new Date().toISOString() });
             const user = AppStore.allUsers.find(u => u.id === userId);
             if (user) user.status = 'rejected';
             showToast('✅ 用户已拒绝/停用');
@@ -120,4 +120,5 @@ window.EmployeesModule = {
 };
 
 console.log('[Employees] 模块已注册');
+
 

@@ -6,7 +6,7 @@ window.OrdersModule = {
     events: [],
     filteredOrders: [],
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Orders] 初始化...');
         await this.waitForDOM();
@@ -17,7 +17,7 @@ window.OrdersModule = {
         console.log('[Orders] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.events.forEach(({ el, event, handler }) => {
             if (el) el.removeEventListener(event, handler);
         });
@@ -91,4 +91,5 @@ window.OrdersModule = {
 };
 
 console.log('[Orders] 模块已注册');
+
 

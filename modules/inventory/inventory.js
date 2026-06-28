@@ -4,7 +4,7 @@
 window.InventoryModule = {
     initialized: false,
 
-    async init() {
+    async init: function() {
         if (this.initialized) return;
         console.log('[Inventory] 初始化...');
         await this.waitForDOM();
@@ -14,7 +14,7 @@ window.InventoryModule = {
         console.log('[Inventory] 初始化完成');
     },
 
-    destroy() {
+    destroy: function() {
         this.initialized = false;
     },
 
@@ -33,7 +33,7 @@ window.InventoryModule = {
 
     async loadData() {
         try {
-            const { data } = await AppApi.query('inventory').select('*');
+            const { data } = await AppApi.query('inventory');
             if (data) AppStore.allInventory = data;
         } catch (e) { console.error(e); }
     },
@@ -61,4 +61,5 @@ window.InventoryModule = {
 };
 
 console.log('[Inventory] 模块已注册');
+
 
