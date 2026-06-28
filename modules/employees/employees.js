@@ -4,6 +4,14 @@
 (function() {
     'use strict';
 
+    // ===== 角色标签 =====
+    var ROLE_LABELS = {
+        owner: '老板',
+        manager: '店长',
+        cashier: '收银员',
+        employee: '员工'
+    };
+
     window.EmployeesModule = Object.create(ModuleBase);
     window.EmployeesModule.moduleName = 'employees';
 
@@ -44,7 +52,7 @@
             var statusClass = u.status === 'pending' ? 'status-badge-pending' : u.status === 'approved' ? 'status-badge-approved' : 'status-badge-rejected';
             var statusLabel = u.status === 'pending' ? '⏳ 待审核' : u.status === 'approved' ? '✅ 已通过' : '❌ 已拒绝';
             var rowClass = u.status === 'pending' ? 'pending-user' : u.status === 'approved' ? 'approved-user' : 'rejected-user';
-            var roleLabel = ROLE_PERMISSIONS ? ROLE_PERMISSIONS[u.role]?.label || u.role : u.role;
+            var roleLabel = ROLE_LABELS[u.role] || u.role;
 
             html += '<div class="' + rowClass + ' flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border">';
             html += '<div><span class="font-bold">' + (u.name || u.username) + '</span>';

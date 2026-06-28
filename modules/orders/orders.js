@@ -4,6 +4,25 @@
 (function() {
     'use strict';
 
+    // ===== 订单状态常量 =====
+    var ORDER_STATUS_LABELS = {
+        pending: '待确认',
+        confirmed: '已确认',
+        in_progress: '施工中',
+        completed: '已完成',
+        cancelled: '已取消',
+        refunded: '已退款'
+    };
+
+    var ORDER_STATUS_CLASSES = {
+        pending: 'status-pending',
+        confirmed: 'status-confirmed',
+        in_progress: 'status-in_progress',
+        completed: 'status-completed',
+        cancelled: 'status-cancelled',
+        refunded: 'status-refunded'
+    };
+
     window.OrdersModule = Object.create(ModuleBase);
     window.OrdersModule.moduleName = 'orders';
 
@@ -62,8 +81,8 @@
 
         var html = '';
         orders.slice(0, 50).forEach(function(o) {
-            var statusLabel = ORDER_STATUS_LABELS ? ORDER_STATUS_LABELS[o.status] || o.status : o.status;
-            var statusClass = ORDER_STATUS_CLASSES ? ORDER_STATUS_CLASSES[o.status] || 'status-pending' : 'status-pending';
+            var statusLabel = ORDER_STATUS_LABELS[o.status] || o.status;
+            var statusClass = ORDER_STATUS_CLASSES[o.status] || 'status-pending';
             html += '<div class="bg-white p-4 rounded-xl shadow-sm border hover:border-blue-300 cursor-pointer" onclick="window.OrdersModule.showDetail(\'' + o.id + '\')">';
             html += '<div class="flex justify-between items-center">';
             html += '<div><span class="font-bold text-blue-600">#' + (o.order_number || o.id.slice(0, 8)) + '</span>';
