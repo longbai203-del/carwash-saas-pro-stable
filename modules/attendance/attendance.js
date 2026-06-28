@@ -1,48 +1,41 @@
 ﻿/**
  * attendance.js - 考勤管理模块
  */
-window.AttendanceModule = {
-    initialized: false,
-    moduleName: 'attendance',
+(function() {
+    'use strict';
 
-    init: function() {
-        if (this.initialized) return;
-        console.log('[Attendance] 初始化...');
-        var self = this;
-        setTimeout(function() {
-            self.cacheDom();
-            self.bindEvents();
-            self.loadData();
-            self.initialized = true;
-            console.log('[Attendance] 初始化完成');
-        }, 50);
-    },
+    window.AttendanceModule = Object.create(ModuleBase);
+    window.AttendanceModule.moduleName = 'attendance';
 
-    destroy: function() {
-        console.log('[Attendance] 销毁...');
-        this.initialized = false;
-    },
-
-    cacheDom: function() {
+    window.AttendanceModule.cacheDom = function() {
         this.el = {
-            list: document.getElementById('attendanceList'),
-            staff: document.getElementById('attendanceStaff')
+            list: this.getEl('attendanceList'),
+            staff: this.getEl('attendanceStaff'),
+            clockInBtn: document.querySelector('[onclick="clockIn()"]'),
+            clockOutBtn: document.querySelector('[onclick="clockOut()"]')
         };
-    },
+    };
 
-    bindEvents: function() {
-        // 无需额外事件
-    },
+    window.AttendanceModule.bindEvents = function() {
+        var self = this;
+        if (this.el.clockInBtn) {
+            this.el.clockInBtn.addEventListener('click', function() { self.clockIn(); });
+        }
+        if (this.el.clockOutBtn) {
+            this.el.clockOutBtn.addEventListener('click', function() { self.clockOut(); });
+        }
+    };
 
-    loadData: function() {
-        var attendance = AppStore.get('allAttendance') || [];
+    window.AttendanceModule.loadData = function() {
+        var attendance = this.getData('allAttendance');
         this.render(attendance);
-    },
+    };
 
-    render: function(attendance) {
-        if (!this.el.list) return;
+    window.AttendanceModule.render = function(attendance) {
+        var list = this.el.list;
+        if (!list) return;
         if (!attendance || attendance.length === 0) {
-            this.el.list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无记录</div>';
+            this.setEmpty(list);
             return;
         }
 
@@ -52,8 +45,60 @@ window.AttendanceModule = {
             html += (a.staff_name || '') + ' · ' + (a.type || '') + ' · ' + (a.time ? new Date(a.time).toLocaleString() : '');
             html += '</div>';
         });
-        this.el.list.innerHTML = html;
-    }
-};
+        list.innerHTML = html;
+    };
 
-console.log('[Attendance] 模块已注册');
+    window.AttendanceModule.clockIn = function() {
+        var self = this;
+        var currentUser = this.getCurrentUser();
+        if (!currentUser.id) {
+            this.toast('请先登录', 'error');
+            return;
+        }
+        var staff = this.el.staff ? this.el.staff.value || currentUser.name || currentUser.username : currentUser.name || currentUser.username;
+
+        AppApi.insert('attendance', [{
+            staff_name: staff,
+            type: '上班打卡',
+            time: new Date().toISOString()
+        }]).then(function(data) {
+            if (data && data.length > 0) {
+                var attendance = self.getData('allAttendance');
+                attendance.unshift(data[0]);
+                self.setData('allAttendance', attendance);
+                self.loadData();
+                self.toast('✅ ' + staff + ' 上班打卡成功', 'success');
+            }
+        }).catch(function(error) {
+            self.toast('❌ 打卡失败: ' + error.message, 'error');
+        });
+    };
+
+    window.AttendanceModule.clockOut = function() {
+        var self = this;
+        var currentUser = this.getCurrentUser();
+        if (!currentUser.id) {
+            this.toast('请先登录', 'error');
+            return;
+        }
+        var staff = this.el.staff ? this.el.staff.value || currentUser.name || currentUser.username : currentUser.name || currentUser.username;
+
+        AppApi.insert('attendance', [{
+            staff_name: staff,
+            type: '下班打卡',
+            time: new Date().toISOString()
+        }]).then(function(data) {
+            if (data && data.length > 0) {
+                var attendance = self.getData('allAttendance');
+                attendance.unshift(data[0]);
+                self.setData('allAttendance', attendance);
+                self.loadData();
+                self.toast('✅ ' + staff + ' 下班打卡成功', 'success');
+            }
+        }).catch(function(error) {
+            self.toast('❌ 打卡失败: ' + error.message, 'error');
+        });
+    };
+
+    console.log('[Attendance] 模块已注册');
+})();

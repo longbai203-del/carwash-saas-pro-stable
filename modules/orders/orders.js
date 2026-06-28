@@ -1,38 +1,22 @@
 ﻿/**
  * orders.js - 订单管理模块
  */
-window.OrdersModule = {
-    initialized: false,
-    moduleName: 'orders',
+(function() {
+    'use strict';
 
-    init: function() {
-        if (this.initialized) return;
-        console.log('[Orders] 初始化...');
-        var self = this;
-        setTimeout(function() {
-            self.cacheDom();
-            self.bindEvents();
-            self.loadData();
-            self.initialized = true;
-            console.log('[Orders] 初始化完成');
-        }, 50);
-    },
+    window.OrdersModule = Object.create(ModuleBase);
+    window.OrdersModule.moduleName = 'orders';
 
-    destroy: function() {
-        console.log('[Orders] 销毁...');
-        this.initialized = false;
-    },
-
-    cacheDom: function() {
+    window.OrdersModule.cacheDom = function() {
         this.el = {
-            list: document.getElementById('ordersList'),
-            statusFilter: document.getElementById('orderStatusFilter'),
-            dateFilter: document.getElementById('orderDateFilter'),
-            search: document.getElementById('orderSearch')
+            list: this.getEl('ordersList'),
+            statusFilter: this.getEl('orderStatusFilter'),
+            dateFilter: this.getEl('orderDateFilter'),
+            search: this.getEl('orderSearch')
         };
-    },
+    };
 
-    bindEvents: function() {
+    window.OrdersModule.bindEvents = function() {
         var self = this;
         if (this.el.statusFilter) {
             this.el.statusFilter.addEventListener('change', function() { self.loadData(); });
@@ -43,10 +27,10 @@ window.OrdersModule = {
         if (this.el.search) {
             this.el.search.addEventListener('input', function() { self.loadData(); });
         }
-    },
+    };
 
-    loadData: function() {
-        var orders = AppStore.get('allOrders') || [];
+    window.OrdersModule.loadData = function() {
+        var orders = this.getData('allOrders');
         var status = this.el.statusFilter ? this.el.statusFilter.value : 'all';
         var date = this.el.dateFilter ? this.el.dateFilter.value : '';
         var search = this.el.search ? this.el.search.value.trim() : '';
@@ -66,12 +50,13 @@ window.OrdersModule = {
             });
         }
         this.render(filtered);
-    },
+    };
 
-    render: function(orders) {
-        if (!this.el.list) return;
+    window.OrdersModule.render = function(orders) {
+        var list = this.el.list;
+        if (!list) return;
         if (!orders || orders.length === 0) {
-            this.el.list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无订单</div>';
+            this.setEmpty(list);
             return;
         }
 
@@ -87,18 +72,18 @@ window.OrdersModule = {
             html += '<div class="text-right"><div class="font-bold text-lg">' + (o.total || 0).toFixed(2) + ' SAR</div>';
             html += '<div class="text-sm text-gray-400">' + (o.plate_number || 'N/A') + '</div></div></div></div>';
         });
-        this.el.list.innerHTML = html;
-    },
+        list.innerHTML = html;
+    };
 
-    showDetail: function(orderId) {
-        var orders = AppStore.get('allOrders') || [];
+    window.OrdersModule.showDetail = function(orderId) {
+        var orders = this.getData('allOrders');
         var order = orders.find(function(o) { return o.id === orderId; });
         if (!order) {
-            AppUtils.toast('订单不存在', 'error');
+            this.toast('订单不存在', 'error');
             return;
         }
-        AppUtils.toast('📋 订单 #' + (order.order_number || order.id.slice(0, 8)) + ' | ' + (order.total || 0) + ' SAR', 'info');
-    }
-};
+        this.toast('📋 订单 #' + (order.order_number || order.id.slice(0, 8)) + ' | ' + (order.total || 0) + ' SAR', 'info');
+    };
 
-console.log('[Orders] 模块已注册');
+    console.log('[Orders] 模块已注册');
+})();

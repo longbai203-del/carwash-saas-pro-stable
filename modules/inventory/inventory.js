@@ -1,44 +1,28 @@
 ﻿/**
  * inventory.js - 库存管理模块
  */
-window.InventoryModule = {
-    initialized: false,
-    moduleName: 'inventory',
+(function() {
+    'use strict';
 
-    init: function() {
-        if (this.initialized) return;
-        console.log('[Inventory] 初始化...');
-        var self = this;
-        setTimeout(function() {
-            self.cacheDom();
-            self.bindEvents();
-            self.loadData();
-            self.initialized = true;
-            console.log('[Inventory] 初始化完成');
-        }, 50);
-    },
+    window.InventoryModule = Object.create(ModuleBase);
+    window.InventoryModule.moduleName = 'inventory';
 
-    destroy: function() {
-        console.log('[Inventory] 销毁...');
-        this.initialized = false;
-    },
-
-    cacheDom: function() {
+    window.InventoryModule.cacheDom = function() {
         this.el = {
-            list: document.getElementById('inventoryList'),
-            search: document.getElementById('invSearch')
+            list: this.getEl('inventoryList'),
+            search: this.getEl('invSearch')
         };
-    },
+    };
 
-    bindEvents: function() {
+    window.InventoryModule.bindEvents = function() {
         var self = this;
         if (this.el.search) {
             this.el.search.addEventListener('input', function() { self.loadData(); });
         }
-    },
+    };
 
-    loadData: function() {
-        var inventory = AppStore.get('allInventory') || [];
+    window.InventoryModule.loadData = function() {
+        var inventory = this.getData('allInventory');
         var search = this.el.search ? this.el.search.value.trim() : '';
         if (search) {
             inventory = inventory.filter(function(i) {
@@ -46,12 +30,13 @@ window.InventoryModule = {
             });
         }
         this.render(inventory);
-    },
+    };
 
-    render: function(inventory) {
-        if (!this.el.list) return;
+    window.InventoryModule.render = function(inventory) {
+        var list = this.el.list;
+        if (!list) return;
         if (!inventory || inventory.length === 0) {
-            this.el.list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无库存</div>';
+            this.setEmpty(list);
             return;
         }
 
@@ -70,8 +55,8 @@ window.InventoryModule = {
             html += '<span class="text-sm text-gray-400">' + (i.cost || 0).toFixed(2) + ' SAR</span>';
             html += '</div></div>';
         });
-        this.el.list.innerHTML = html;
-    }
-};
+        list.innerHTML = html;
+    };
 
-console.log('[Inventory] 模块已注册');
+    console.log('[Inventory] 模块已注册');
+})();

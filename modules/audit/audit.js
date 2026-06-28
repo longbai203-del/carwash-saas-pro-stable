@@ -1,83 +1,67 @@
 ﻿/**
  * audit.js - 审计日志模块
  */
-window.AuditModule = {
-    initialized: false,
+(function() {
+    'use strict';
 
-    async init: function() {
-        if (this.initialized) return;
-        console.log('[Audit] 初始化...');
-        await this.waitForDOM();
-        this.bindEvents();
-        await this.loadData();
-        this.render();
-        this.initialized = true;
-        console.log('[Audit] 初始化完成');
-    },
+    window.AuditModule = Object.create(ModuleBase);
+    window.AuditModule.moduleName = 'audit';
 
-    destroy: function() {
-        this.initialized = false;
-    },
+    window.AuditModule.cacheDom = function() {
+        this.el = {
+            list: this.getEl('auditLogList'),
+            count: this.getEl('auditCount'),
+            actionFilter: this.getEl('auditActionFilter'),
+            tableFilter: this.getEl('auditTableFilter')
+        };
+    };
 
-    waitForDOM() {
-        return new Promise((resolve) => {
-            let attempts = 0;
-            const check = () => {
-                attempts++;
-                if (document.getElementById('auditLogList')) { resolve(); }
-                else if (attempts < 60) { setTimeout(check, 50); }
-                else { resolve(); }
-            };
-            check();
-        });
-    },
+    window.AuditModule.bindEvents = function() {
+        var self = this;
+        if (this.el.actionFilter) {
+            this.el.actionFilter.addEventListener('change', function() { self.loadData(); });
+        }
+        if (this.el.tableFilter) {
+            this.el.tableFilter.addEventListener('change', function() { self.loadData(); });
+        }
+    };
 
-    bindEvents() {
-        ['auditActionFilter', 'auditTableFilter'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('change', () => this.loadData());
-        });
-    },
+    window.AuditModule.loadData = function() {
+        var logs = this.getData('allAuditLogs');
+        var action = this.el.actionFilter ? this.el.actionFilter.value : 'all';
+        var table = this.el.tableFilter ? this.el.tableFilter.value : 'all';
 
-    async loadData() {
-        try {
-            const { data } = await AppApi.query('audit_logs').limit(50);
-            if (data) AppStore.allAuditLogs = data;
-        } catch (e) { console.error(e); }
-    },
+        if (action !== 'all') {
+            logs = logs.filter(function(l) { return l.action === action; });
+        }
+        if (table !== 'all') {
+            logs = logs.filter(function(l) { return l.table_name === table; });
+        }
+        this.render(logs);
+    };
 
-    render() {
-        const action = document.getElementById('auditActionFilter')?.value || 'all';
-        const table = document.getElementById('auditTableFilter')?.value || 'all';
-        let logs = AppStore.allAuditLogs || [];
-        if (action !== 'all') logs = logs.filter(l => l.action === action);
-        if (table !== 'all') logs = logs.filter(l => l.table_name === table);
-
-        const list = document.getElementById('auditLogList');
+    window.AuditModule.render = function(logs) {
+        var list = this.el.list;
         if (!list) return;
-        const actions = { INSERT: '🟢 新增', UPDATE: '🟡 修改', DELETE: '🔴 删除' };
-
-        if (logs.length === 0) {
-            list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无审计记录</div>';
-            if (document.getElementById('auditCount')) document.getElementById('auditCount').textContent = '0';
+        if (!logs || logs.length === 0) {
+            this.setEmpty(list);
+            if (this.el.count) this.el.count.textContent = '0';
             return;
         }
 
-        let html = '';
-        for (let i = 0; i < logs.length; i++) {
-            const log = logs[i];
+        var actions = { INSERT: '🟢 新增', UPDATE: '🟡 修改', DELETE: '🔴 删除' };
+        var html = '';
+        logs.slice(0, 50).forEach(function(log) {
             html += '<div class="flex justify-between p-2 border-b hover:bg-gray-50">';
             html += '<div><span class="font-medium">' + (actions[log.action] || log.action) + '</span>';
             html += '<span class="text-gray-600 ml-2">' + log.table_name + '</span>';
             html += '<span class="text-xs text-gray-400 ml-2">' + (log.username || '系统') + '</span></div>';
             html += '<div class="text-right"><span class="text-xs text-gray-400">' + (log.created_at ? new Date(log.created_at).toLocaleString() : '') + '</span></div>';
             html += '</div>';
-        }
+        });
         list.innerHTML = html;
-        if (document.getElementById('auditCount')) document.getElementById('auditCount').textContent = logs.length;
-    }
-};
+        if (this.el.count) this.el.count.textContent = logs.length;
+    };
 
-console.log('[Audit] 模块已注册');
-
-
+    console.log('[Audit] 模块已注册');
+})();
