@@ -1,34 +1,174 @@
-<!-- ===== DASHBOARD ===== -->
-<div id="moduleDashboard" class="module-content space-y-6">
+<div id="dashboardContainer" class="space-y-6">
+
+    <!-- ===== 时间筛选 ===== -->
     <div class="glass-card p-4">
-        <h3 class="font-bold text-gray-800 mb-3">📊 实时数据看板</h3>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div class="kpi-card text-center p-3 bg-blue-50 rounded-xl"><div class="text-2xl font-bold text-blue-600" id="kpiTodayOrders">0</div><div class="text-xs text-gray-500">今日订单</div></div>
-            <div class="kpi-card text-center p-3 bg-green-50 rounded-xl"><div class="text-2xl font-bold text-green-600" id="kpiTodayRevenue">0 SAR</div><div class="text-xs text-gray-500">今日收入</div></div>
-            <div class="kpi-card text-center p-3 bg-purple-50 rounded-xl"><div class="text-2xl font-bold text-purple-600" id="kpiTotalRevenue">0 SAR</div><div class="text-xs text-gray-500">累计收入</div></div>
-            <div class="kpi-card text-center p-3 bg-orange-50 rounded-xl"><div class="text-2xl font-bold text-orange-600" id="kpiLowStock">0</div><div class="text-xs text-gray-500">低库存预警</div></div>
-            <div class="kpi-card text-center p-3 bg-pink-50 rounded-xl"><div class="text-2xl font-bold text-pink-600" id="kpiPendingOrders">0</div><div class="text-xs text-gray-500">待处理订单</div></div>
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="text-sm font-medium text-gray-600">📅 时间：</span>
+            <div class="flex gap-1 flex-wrap">
+                <button class="time-filter-btn btn-primary btn-sm" data-period="today">今日</button>
+                <button class="time-filter-btn btn-outline btn-sm" data-period="yesterday">昨日</button>
+                <button class="time-filter-btn btn-outline btn-sm" data-period="week">本周</button>
+                <button class="time-filter-btn btn-outline btn-sm" data-period="month" id="defaultTimeBtn">本月</button>
+                <button class="time-filter-btn btn-outline btn-sm" data-period="quarter">本季度</button>
+                <button class="time-filter-btn btn-outline btn-sm" data-period="year">今年</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="date" id="dashboardStartDate" class="p-1.5 border rounded-lg text-sm">
+                <span class="text-sm">至</span>
+                <input type="date" id="dashboardEndDate" class="p-1.5 border rounded-lg text-sm">
+                <button onclick="DashboardModule.applyCustomDate()" class="btn-primary btn-sm">应用</button>
+            </div>
+            <button onclick="DashboardModule.exportDashboard()" class="bg-green-600 text-white btn-sm ml-auto">
+                <i class="fas fa-file-excel"></i> 导出
+            </button>
         </div>
-        <div class="grid grid-cols-3 gap-3 mt-3">
-            <div class="text-center p-2 bg-gray-50 rounded-lg"><div class="text-sm font-bold" id="kpiAvgOrder">0 SAR</div><div class="text-xs text-gray-400">平均订单</div></div>
-            <div class="text-center p-2 bg-gray-50 rounded-lg"><div class="text-sm font-bold" id="kpiTopStaff">-</div><div class="text-xs text-gray-400">最佳员工</div></div>
-            <div class="text-center p-2 bg-gray-50 rounded-lg"><div class="text-sm font-bold" id="kpiTopService">-</div><div class="text-xs text-gray-400">热门服务</div></div>
+    </div>
+
+    <!-- ===== KPI 卡片 ===== -->
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div class="glass-card p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600" id="kpiRevenue">0 SAR</div>
+            <div class="text-xs text-gray-500">📊 今日营业额</div>
+            <div class="text-xs" id="kpiRevenueChange">-</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <div class="text-2xl font-bold text-green-600" id="kpiProfit">0 SAR</div>
+            <div class="text-xs text-gray-500">💰 本月利润</div>
+            <div class="text-xs" id="kpiProfitChange">-</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <div class="text-2xl font-bold text-purple-600" id="kpiCustomers">0</div>
+            <div class="text-xs text-gray-500">👥 本月客流量</div>
+            <div class="text-xs" id="kpiCustomersChange">-</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <div class="text-2xl font-bold text-amber-600" id="kpiAvgOrder">0 SAR</div>
+            <div class="text-xs text-gray-500">🧾 本月客单价</div>
+            <div class="text-xs" id="kpiAvgOrderChange">-</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <div class="text-2xl font-bold text-red-600" id="kpiRepeatRate">0%</div>
+            <div class="text-xs text-gray-500">🔄 复购率</div>
+            <div class="text-xs" id="kpiRepeatRateChange">-</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <div class="text-2xl font-bold text-pink-600" id="kpiNewCustomers">0</div>
+            <div class="text-xs text-gray-500">🌟 新客户</div>
+            <div class="text-xs" id="kpiNewCustomersChange">-</div>
         </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div class="glass-card p-4"><p class="text-gray-500 text-sm">今日收入</p><h3 class="stat-number text-green-600" id="todayRevenue">0 SAR</h3></div>
-        <div class="glass-card p-4"><p class="text-gray-500 text-sm">今日订单</p><h3 class="stat-number" id="todayOrdersValue">0</h3></div>
-        <div class="glass-card p-4"><p class="text-gray-500 text-sm">客户数</p><h3 class="stat-number" id="customersValue">0</h3></div>
-        <div class="glass-card p-4"><p class="text-gray-500 text-sm">总销售额</p><h3 class="stat-number" id="totalSalesValue">0 SAR</h3></div>
-        <div class="glass-card p-4"><p class="text-gray-500 text-sm">员工</p><h3 class="stat-number" id="employeesCount">0</h3></div>
-    </div>
-    <div id="stockAlertBar" class="glass-card p-3 hidden"><p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle"></i> <span id="stockAlertText"></span></p></div>
+
+    <!-- ===== 图表区域 ===== -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">服务统计</h3><canvas id="serviceStatsChart" height="180"></canvas></div>
-        <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-4">收入趋势</h3><canvas id="monthlyRevenueChart" height="180"></canvas></div>
+        <div class="glass-card p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-800">📈 营业额趋势</h3>
+                <select id="trendChartType" class="p-1 border rounded text-sm" onchange="DashboardModule.loadCharts()">
+                    <option value="daily">按日</option>
+                    <option value="weekly">按周</option>
+                    <option value="monthly">按月</option>
+                </select>
+            </div>
+            <canvas id="revenueTrendChart" height="200"></canvas>
+        </div>
+        <div class="glass-card p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-800">📊 利润趋势</h3>
+            </div>
+            <canvas id="profitTrendChart" height="200"></canvas>
+        </div>
     </div>
+
+    <!-- ===== 第二行图表 ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glass-card p-5">
+            <h3 class="font-bold text-gray-800 mb-4">🏪 门店业绩对比</h3>
+            <canvas id="storeCompareChart" height="180"></canvas>
+        </div>
+        <div class="glass-card p-5">
+            <h3 class="font-bold text-gray-800 mb-4">📊 服务收入占比</h3>
+            <canvas id="servicePieChart" height="180"></canvas>
+        </div>
+        <div class="glass-card p-5">
+            <h3 class="font-bold text-gray-800 mb-4">👤 客户流量趋势</h3>
+            <canvas id="customerTrendChart" height="180"></canvas>
+        </div>
+    </div>
+
+    <!-- ===== 热门排行 ===== -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">今日订单</h3><div id="todayOrdersPreview" class="space-y-2 max-h-64 overflow-auto"></div></div>
-        <div class="glass-card p-5"><h3 class="font-bold text-gray-800 mb-3">热门服务</h3><div id="topServicesContent" class="space-y-3"></div></div>
+        <div class="glass-card p-5">
+            <h3 class="font-bold text-gray-800 mb-3">🔥 最热服务排行</h3>
+            <div id="topServicesList" class="space-y-2 max-h-64 overflow-auto"></div>
+        </div>
+        <div class="glass-card p-5">
+            <h3 class="font-bold text-gray-800 mb-3">🏆 Top客户消费榜</h3>
+            <div id="topCustomersList" class="space-y-2 max-h-64 overflow-auto"></div>
+        </div>
+    </div>
+
+    <!-- ===== 员工效能 ===== -->
+    <div class="glass-card p-5">
+        <h3 class="font-bold text-gray-800 mb-3">👔 员工效能排行</h3>
+        <div id="topEmployeesList" class="space-y-2 max-h-48 overflow-auto"></div>
+    </div>
+
+    <!-- ===== 风险预警 ===== -->
+    <div class="glass-card p-5 border-l-4 border-red-500">
+        <h3 class="font-bold text-gray-800 mb-3">⚠️ 风险预警</h3>
+        <div id="alertList" class="space-y-1 max-h-32 overflow-auto text-sm"></div>
+    </div>
+
+    <!-- ===== KPI 目标管理 ===== -->
+    <div class="glass-card p-5">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-gray-800">🎯 KPI 目标管理</h3>
+            <button onclick="DashboardModule.showSetKPI()" class="btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 设定目标
+            </button>
+        </div>
+        <div id="kpiTargetList" class="space-y-2 max-h-48 overflow-auto"></div>
+    </div>
+
+    <!-- ===== 多门店汇总 ===== -->
+    <div class="glass-card p-5">
+        <h3 class="font-bold text-gray-800 mb-3">🏢 多门店汇总</h3>
+        <div id="storeSummaryList" class="space-y-2 max-h-48 overflow-auto"></div>
+    </div>
+</div>
+
+<!-- ===== KPI 目标设定模态框 ===== -->
+<div id="setKPIModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">🎯 设定KPI目标</h3>
+            <button onclick="DashboardModule.closeModal('setKPIModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">指标</label>
+                <select id="kpiTypeSelect" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                    <option value="revenue">营业额</option>
+                    <option value="profit">利润</option>
+                    <option value="new_customers">新客户</option>
+                    <option value="avg_order">客单价</option>
+                    <option value="repeat_rate">复购率</option>
+                    <option value="orders">订单数</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">目标值</label>
+                <input type="number" id="kpiTargetValue" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">门店</label>
+                <select id="kpiStoreSelect" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
+            </div>
+            <button onclick="DashboardModule.saveKPITarget()" class="btn-primary py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-save"></i> 保存目标
+            </button>
+        </div>
     </div>
 </div>
