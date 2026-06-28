@@ -3,65 +3,76 @@
  */
 window.ReportsModule = {
     initialized: false,
+    moduleName: 'reports',
 
-    async init: function() {
+    init: function() {
         if (this.initialized) return;
         console.log('[Reports] 初始化...');
-        await this.waitForDOM();
-        this.bindEvents();
-        await this.loadData();
-        this.render();
-        this.initialized = true;
-        console.log('[Reports] 初始化完成');
+        var self = this;
+        setTimeout(function() {
+            self.cacheDom();
+            self.bindEvents();
+            self.loadData();
+            self.initialized = true;
+            console.log('[Reports] 初始化完成');
+        }, 50);
     },
 
     destroy: function() {
+        console.log('[Reports] 销毁...');
         this.initialized = false;
     },
 
-    waitForDOM() {
-        return new Promise((resolve) => {
-            let attempts = 0;
-            const check = () => {
-                attempts++;
-                if (document.getElementById('reportTableBody')) { resolve(); }
-                else if (attempts < 60) { setTimeout(check, 50); }
-                else { resolve(); }
-            };
-            check();
-        });
+    cacheDom: function() {
+        this.el = {
+            orders: document.getElementById('dailyOrders'),
+            revenue: document.getElementById('dailyRevenue'),
+            vat: document.getElementById('dailyVat'),
+            profit: document.getElementById('dailyProfit'),
+            table: document.getElementById('reportTableBody'),
+            picker: document.getElementById('reportDatePicker')
+        };
     },
 
-    bindEvents() {
-        const picker = document.getElementById('reportDatePicker');
-        if (picker) picker.addEventListener('change', () => this.loadData());
-    },
-
-    async loadData() {
-        const date = document.getElementById('reportDatePicker')?.value || new Date().toISOString().split('T')[0];
-        const orders = (AppStore.allOrders || []).filter(o => o.date === date);
-        const total = orders.reduce((s, o) => s + (o.total || 0), 0);
-        const vat = orders.reduce((s, o) => s + (o.vat || 0), 0);
-        this.reportData = { orders, total, vat, date };
-        this.render();
-    },
-
-    render() {
-        const data = this.reportData || { orders: [], total: 0, vat: 0 };
-        if (document.getElementById('dailyOrders')) document.getElementById('dailyOrders').textContent = data.orders.length;
-        if (document.getElementById('dailyRevenue')) document.getElementById('dailyRevenue').textContent = data.total.toFixed(2) + ' SAR';
-        if (document.getElementById('dailyVat')) document.getElementById('dailyVat').textContent = data.vat.toFixed(2) + ' SAR';
-        if (document.getElementById('dailyProfit')) document.getElementById('dailyProfit').textContent = data.total.toFixed(2) + ' SAR';
-
-        const table = document.getElementById('reportTableBody');
-        if (table) {
-            table.innerHTML = data.orders.slice(0, 30).map(o => 
-                <div class="flex justify-between p-1 border-b text-sm"><span></span><span></span><span> SAR</span></div>
-            ).join('') || '<div class="text-center text-gray-400 py-4">暂无数据</div>';
+    bindEvents: function() {
+        var self = this;
+        if (this.el.picker) {
+            this.el.picker.addEventListener('change', function() { self.loadData(); });
         }
+    },
+
+    loadData: function() {
+        var date = this.el.picker ? this.el.picker.value || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        var orders = AppStore.get('allOrders') || [];
+        var filtered = orders.filter(function(o) { return o.date === date; });
+        var total = filtered.reduce(function(s, o) { return s + (o.total || 0); }, 0);
+        var vat = filtered.reduce(function(s, o) { return s + (o.vat || 0); }, 0);
+
+        if (this.el.orders) this.el.orders.textContent = filtered.length;
+        if (this.el.revenue) this.el.revenue.textContent = total.toFixed(2) + ' SAR';
+        if (this.el.vat) this.el.vat.textContent = vat.toFixed(2) + ' SAR';
+        if (this.el.profit) this.el.profit.textContent = total.toFixed(2) + ' SAR';
+
+        this.render(filtered);
+    },
+
+    render: function(orders) {
+        if (!this.el.table) return;
+        if (!orders || orders.length === 0) {
+            this.el.table.innerHTML = '<div class="text-center text-gray-400 py-4">暂无数据</div>';
+            return;
+        }
+
+        var html = '';
+        orders.slice(0, 30).forEach(function(o) {
+            html += '<div class="flex justify-between p-1 border-b text-sm">';
+            html += '<span>' + (o.date || '') + '</span>';
+            html += '<span>' + (o.plate_number || 'N/A') + '</span>';
+            html += '<span>' + (o.total || 0).toFixed(2) + ' SAR</span>';
+            html += '</div>';
+        });
+        this.el.table.innerHTML = html;
     }
 };
 
 console.log('[Reports] 模块已注册');
-
-

@@ -3,50 +3,57 @@
  */
 window.AttendanceModule = {
     initialized: false,
+    moduleName: 'attendance',
 
-    async init: function() {
+    init: function() {
         if (this.initialized) return;
         console.log('[Attendance] 初始化...');
-        await this.waitForDOM();
-        await this.loadData();
-        this.render();
-        this.initialized = true;
-        console.log('[Attendance] 初始化完成');
+        var self = this;
+        setTimeout(function() {
+            self.cacheDom();
+            self.bindEvents();
+            self.loadData();
+            self.initialized = true;
+            console.log('[Attendance] 初始化完成');
+        }, 50);
     },
 
     destroy: function() {
+        console.log('[Attendance] 销毁...');
         this.initialized = false;
     },
 
-    waitForDOM() {
-        return new Promise((resolve) => {
-            let attempts = 0;
-            const check = () => {
-                attempts++;
-                if (document.getElementById('attendanceList')) { resolve(); }
-                else if (attempts < 60) { setTimeout(check, 50); }
-                else { resolve(); }
-            };
-            check();
+    cacheDom: function() {
+        this.el = {
+            list: document.getElementById('attendanceList'),
+            staff: document.getElementById('attendanceStaff')
+        };
+    },
+
+    bindEvents: function() {
+        // 无需额外事件
+    },
+
+    loadData: function() {
+        var attendance = AppStore.get('allAttendance') || [];
+        this.render(attendance);
+    },
+
+    render: function(attendance) {
+        if (!this.el.list) return;
+        if (!attendance || attendance.length === 0) {
+            this.el.list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无记录</div>';
+            return;
+        }
+
+        var html = '';
+        attendance.slice(0, 20).forEach(function(a) {
+            html += '<div class="text-sm p-2 bg-gray-50 rounded">';
+            html += (a.staff_name || '') + ' · ' + (a.type || '') + ' · ' + (a.time ? new Date(a.time).toLocaleString() : '');
+            html += '</div>';
         });
-    },
-
-    async loadData() {
-        try {
-            const { data } = await AppApi.query('attendance').limit(100);
-            if (data) AppStore.allAttendance = data;
-        } catch (e) { console.error(e); }
-    },
-
-    render() {
-        const list = document.getElementById('attendanceList');
-        if (!list) return;
-        list.innerHTML = (AppStore.allAttendance || []).slice(0, 20).map(a => 
-            <div class="text-sm p-2 bg-gray-50 rounded"> ·  · </div>
-        ).join('') || '<div class="text-center text-gray-400 py-8">暂无记录</div>';
+        this.el.list.innerHTML = html;
     }
 };
 
 console.log('[Attendance] 模块已注册');
-
-

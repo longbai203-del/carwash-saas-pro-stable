@@ -3,77 +3,70 @@
  */
 window.EmployeesModule = {
     initialized: false,
+    moduleName: 'employees',
 
-    async init: function() {
+    init: function() {
         if (this.initialized) return;
         console.log('[Employees] 初始化...');
-        await this.waitForDOM();
-        this.bindEvents();
-        await this.loadData();
-        this.render();
-        this.initialized = true;
-        console.log('[Employees] 初始化完成');
+        var self = this;
+        setTimeout(function() {
+            self.cacheDom();
+            self.bindEvents();
+            self.loadData();
+            self.initialized = true;
+            console.log('[Employees] 初始化完成');
+        }, 50);
     },
 
     destroy: function() {
+        console.log('[Employees] 销毁...');
         this.initialized = false;
     },
 
-    waitForDOM() {
-        return new Promise((resolve) => {
-            let attempts = 0;
-            const check = () => {
-                attempts++;
-                if (document.getElementById('usersReviewList')) { resolve(); }
-                else if (attempts < 60) { setTimeout(check, 50); }
-                else { resolve(); }
-            };
-            check();
-        });
+    cacheDom: function() {
+        this.el = {
+            list: document.getElementById('usersReviewList'),
+            filter: document.getElementById('userStatusFilter')
+        };
     },
 
-    bindEvents() {
-        const filter = document.getElementById('userStatusFilter');
-        if (filter) filter.addEventListener('change', () => this.loadData());
+    bindEvents: function() {
+        var self = this;
+        if (this.el.filter) {
+            this.el.filter.addEventListener('change', function() { self.loadData(); });
+        }
     },
 
-    async loadData() {
-        try {
-            const { data } = await AppApi.query('users');
-            if (data) AppStore.allUsers = data;
-        } catch (e) { console.error(e); }
+    loadData: function() {
+        var users = AppStore.get('allUsers') || [];
+        var status = this.el.filter ? this.el.filter.value : 'all';
+        if (status !== 'all') {
+            users = users.filter(function(u) { return u.status === status; });
+        }
+        this.render(users);
     },
 
-    render() {
-        const statusFilter = document.getElementById('userStatusFilter')?.value || 'all';
-        let users = AppStore.allUsers || [];
-        if (statusFilter !== 'all') users = users.filter(u => u.status === statusFilter);
-
-        const list = document.getElementById('usersReviewList');
-        if (!list) return;
-
-        if (users.length === 0) {
-            list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无用户</div>';
+    render: function(users) {
+        if (!this.el.list) return;
+        if (!users || users.length === 0) {
+            this.el.list.innerHTML = '<div class="text-center text-gray-400 py-8">暂无用户</div>';
             return;
         }
 
-        let html = '';
-        for (let i = 0; i < users.length; i++) {
-            const u = users[i];
-            const statusClass = u.status === 'pending' ? 'status-badge-pending' : u.status === 'approved' ? 'status-badge-approved' : 'status-badge-rejected';
-            const statusLabel = u.status === 'pending' ? '⏳ 待审核' : u.status === 'approved' ? '✅ 已通过' : '❌ 已拒绝';
-            const rowClass = u.status === 'pending' ? 'pending-user' : u.status === 'approved' ? 'approved-user' : 'rejected-user';
-            const roleLabel = ROLE_PERMISSIONS?.[u.role]?.label || u.role;
+        var html = '';
+        users.forEach(function(u) {
+            var statusClass = u.status === 'pending' ? 'status-badge-pending' : u.status === 'approved' ? 'status-badge-approved' : 'status-badge-rejected';
+            var statusLabel = u.status === 'pending' ? '⏳ 待审核' : u.status === 'approved' ? '✅ 已通过' : '❌ 已拒绝';
+            var rowClass = u.status === 'pending' ? 'pending-user' : u.status === 'approved' ? 'approved-user' : 'rejected-user';
+            var roleLabel = ROLE_PERMISSIONS ? ROLE_PERMISSIONS[u.role]?.label || u.role : u.role;
 
             html += '<div class="' + rowClass + ' flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border">';
-            html += '<div>';
-            html += '<span class="font-bold">' + (u.name || u.username) + '</span>';
+            html += '<div><span class="font-bold">' + (u.name || u.username) + '</span>';
             html += '<span class="text-sm text-gray-400 ml-2">@' + u.username + '</span>';
             html += '<span class="role-badge role-' + u.role + '">' + roleLabel + '</span>';
             html += '<span class="status-badge ' + statusClass + ' ml-2">' + statusLabel + '</span>';
             html += '<div class="text-xs text-gray-400">注册: ' + (u.registered_at ? new Date(u.registered_at).toLocaleString() : '未知') + '</div>';
-            html += '</div>';
-            html += '<div class="flex gap-2">';
+            html += '</div><div class="flex gap-2">';
 
             if (u.status === 'pending') {
                 html += '<button onclick="window.EmployeesModule.approve(\'' + u.id + '\')" class="btn-success btn-sm">✅ 通过</button>';
@@ -85,40 +78,50 @@ window.EmployeesModule = {
             }
 
             html += '</div></div>';
-        }
-        list.innerHTML = html;
+        });
+        this.el.list.innerHTML = html;
     },
 
-    async approve(userId) {
-        if (!AppStore.currentUser || (AppStore.currentUser.role !== 'owner' && AppStore.currentUser.role !== 'manager')) {
-            showToast('❌ 只有老板和店长可以审核');
+    approve: function(userId) {
+        var currentUser = AppStore.get('currentUser') || {};
+        if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
+            AppUtils.toast('❌ 只有老板和店长可以审核', 'error');
             return;
         }
-        try {
-            await AppApi.query('users').update({ status: 'approved', approved_at: new Date().toISOString() });
-            const user = AppStore.allUsers.find(u => u.id === userId);
-            if (user) user.status = 'approved';
-            showToast('✅ 用户已审核通过');
-            this.render();
-        } catch (e) { showToast('❌ 操作失败: ' + e.message); }
+        AppApi.update('users', userId, { status: 'approved', approved_at: new Date().toISOString() })
+            .then(function() {
+                var users = AppStore.get('allUsers') || [];
+                var user = users.find(function(u) { return u.id === userId; });
+                if (user) user.status = 'approved';
+                AppStore.set('allUsers', users);
+                AppUtils.toast('✅ 用户已审核通过', 'success');
+                window.EmployeesModule.loadData();
+            })
+            .catch(function(error) {
+                AppUtils.toast('❌ 操作失败: ' + error.message, 'error');
+            });
     },
 
-    async reject(userId) {
-        if (!AppStore.currentUser || (AppStore.currentUser.role !== 'owner' && AppStore.currentUser.role !== 'manager')) {
-            showToast('❌ 只有老板和店长可以审核');
+    reject: function(userId) {
+        var currentUser = AppStore.get('currentUser') || {};
+        if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'manager')) {
+            AppUtils.toast('❌ 只有老板和店长可以审核', 'error');
             return;
         }
         if (!confirm('确认拒绝/停用该用户？')) return;
-        try {
-            await AppApi.query('users').update({ status: 'rejected', approved_at: new Date().toISOString() });
-            const user = AppStore.allUsers.find(u => u.id === userId);
-            if (user) user.status = 'rejected';
-            showToast('✅ 用户已拒绝/停用');
-            this.render();
-        } catch (e) { showToast('❌ 操作失败: ' + e.message); }
+        AppApi.update('users', userId, { status: 'rejected', approved_at: new Date().toISOString() })
+            .then(function() {
+                var users = AppStore.get('allUsers') || [];
+                var user = users.find(function(u) { return u.id === userId; });
+                if (user) user.status = 'rejected';
+                AppStore.set('allUsers', users);
+                AppUtils.toast('✅ 用户已拒绝/停用', 'success');
+                window.EmployeesModule.loadData();
+            })
+            .catch(function(error) {
+                AppUtils.toast('❌ 操作失败: ' + error.message, 'error');
+            });
     }
 };
 
 console.log('[Employees] 模块已注册');
-
-
