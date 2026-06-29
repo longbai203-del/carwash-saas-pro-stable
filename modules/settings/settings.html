@@ -1,89 +1,318 @@
 <div id="settingsContainer" class="space-y-6">
-    <!-- ===== 系统设置 ===== -->
+    
+    <!-- ===== 设置标题 ===== -->
     <div class="glass-card p-6">
-        <h2 class="text-xl font-bold text-blue-600 mb-4">⚙️ 系统设置</h2>
-
-        <!-- 店铺信息 -->
-        <div class="border-b border-gray-200 pb-4 mb-4">
-            <h3 class="text-sm font-semibold text-gray-600 mb-3">🏪 店铺信息</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">店铺名称</label>
-                    <input id="shopName" placeholder="请输入店铺名称" class="w-full p-3 border rounded-xl bg-gray-50 mt-1 focus:outline-none focus:border-blue-400">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">税号</label>
-                    <input id="shopTaxId" placeholder="请输入税号" class="w-full p-3 border rounded-xl bg-gray-50 mt-1 focus:outline-none focus:border-blue-400">
-                </div>
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-blue-600">⚙️ 系统设置</h2>
+                <p class="text-sm text-gray-400">管理门店配置、税务、支付和打印选项</p>
             </div>
+            <button onclick="SettingsModule.saveAllSettings()" class="btn-success py-2 px-6 rounded-xl font-bold">
+                <i class="fas fa-save"></i> 保存所有设置
+            </button>
         </div>
+    </div>
 
-        <!-- 税务 & 提成 -->
-        <div class="border-b border-gray-200 pb-4 mb-4">
-            <h3 class="text-sm font-semibold text-gray-600 mb-3">💰 税务 & 提成</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">增值税率 (%)</label>
-                    <input id="vatRateInput" type="number" step="0.5" placeholder="15" class="w-full p-3 border rounded-xl bg-gray-50 mt-1 focus:outline-none focus:border-blue-400">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">提成比例 (%)</label>
-                    <input id="commissionRate" type="number" step="0.5" placeholder="5" class="w-full p-3 border rounded-xl bg-gray-50 mt-1 focus:outline-none focus:border-blue-400">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">低库存预警 (件)</label>
-                    <input id="lowStockAlert" type="number" placeholder="5" class="w-full p-3 border rounded-xl bg-gray-50 mt-1 focus:outline-none focus:border-blue-400">
-                </div>
-            </div>
-        </div>
-
-        <button id="saveSettingsBtn" class="btn-primary py-3 rounded-xl font-bold w-full">
-            <i class="fas fa-save"></i> 保存所有设置
+    <!-- ===== 设置标签页 ===== -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="general" onclick="SettingsModule.switchTab('general')">
+            <i class="fas fa-store"></i> 门店
+        </button>
+        <button class="tab-btn" data-tab="tax" onclick="SettingsModule.switchTab('tax')">
+            <i class="fas fa-percent"></i> 税务
+        </button>
+        <button class="tab-btn" data-tab="payment" onclick="SettingsModule.switchTab('payment')">
+            <i class="fas fa-credit-card"></i> 支付
+        </button>
+        <button class="tab-btn" data-tab="print" onclick="SettingsModule.switchTab('print')">
+            <i class="fas fa-print"></i> 打印
+        </button>
+        <button class="tab-btn" data-tab="notifications" onclick="SettingsModule.switchTab('notifications')">
+            <i class="fas fa-bell"></i> 通知
+        </button>
+        <button class="tab-btn" data-tab="backup" onclick="SettingsModule.switchTab('backup')">
+            <i class="fas fa-cloud-upload-alt"></i> 备份
+        </button>
+        <button class="tab-btn" data-tab="advanced" onclick="SettingsModule.switchTab('advanced')">
+            <i class="fas fa-code"></i> 高级
         </button>
     </div>
 
-    <!-- ===== 门店管理 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">🏪 门店管理</h2>
-            <button onclick="SettingsModule.showAddStore()" class="btn-success px-4 py-2 rounded-lg">
-                <i class="fas fa-plus"></i> 添加门店
-            </button>
-        </div>
+    <!-- ===== 面板容器 ===== -->
+    <div id="settingsPanels">
 
-        <div id="storeList" class="space-y-2 max-h-96 overflow-auto"></div>
-    </div>
-
-    <!-- ===== 添加门店模态框 ===== -->
-    <div id="addStoreModal" class="modal-glass hidden">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-blue-600">➕ 添加门店</h3>
-                <button onclick="SettingsModule.closeAddStore()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+        <!-- ===== 门店设置 ===== -->
+        <div id="panel-general" class="panel-content">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🏪 门店信息</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>门店名称</label>
+                        <input id="settingShopName" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="Car Wash Pro">
+                    </div>
+                    <div class="form-group">
+                        <label>税号 / CR号</label>
+                        <input id="settingTaxId" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="310245678900003">
+                    </div>
+                    <div class="form-group">
+                        <label>门店电话</label>
+                        <input id="settingShopPhone" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="+966 50 123 4567">
+                    </div>
+                    <div class="form-group">
+                        <label>门店邮箱</label>
+                        <input id="settingShopEmail" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="info@carwash.com">
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label>门店地址</label>
+                        <input id="settingShopAddress" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="Riyadh, Saudi Arabia">
+                    </div>
+                    <div class="form-group">
+                        <label>门店 Logo URL</label>
+                        <input id="settingLogoUrl" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="https://example.com/logo.png">
+                    </div>
+                    <div class="form-group">
+                        <label>默认语言</label>
+                        <select id="settingLanguage" class="w-full p-3 border rounded-xl bg-gray-50">
+                            <option value="zh">中文</option>
+                            <option value="en">English</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="SettingsModule.saveGeneralSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存门店设置
                 </button>
             </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">门店名称 *</label>
-                    <input id="storeName" placeholder="请输入门店名称" class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:outline-none focus:border-blue-400">
+        </div>
+
+        <!-- ===== 税务设置 ===== -->
+        <div id="panel-tax" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">💰 税务设置</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>增值税税率 (%)</label>
+                        <input type="number" id="settingVatRate" class="w-full p-3 border rounded-xl bg-gray-50" value="15" step="0.5" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>是否启用增值税</label>
+                        <select id="settingVatEnabled" class="w-full p-3 border rounded-xl bg-gray-50">
+                            <option value="true">✅ 启用</option>
+                            <option value="false">❌ 禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>提成比例 (%)</label>
+                        <input type="number" id="settingCommissionRate" class="w-full p-3 border rounded-xl bg-gray-50" value="5" step="0.5" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>服务费税率 (%)</label>
+                        <input type="number" id="settingServiceTaxRate" class="w-full p-3 border rounded-xl bg-gray-50" value="0" step="0.5" min="0">
+                    </div>
                 </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">地址</label>
-                    <input id="storeAddress" placeholder="请输入地址" class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:outline-none focus:border-blue-400">
+                <button onclick="SettingsModule.saveTaxSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存税务设置
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 支付设置 ===== -->
+        <div id="panel-payment" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">💳 支付设置</h3>
+                <div class="space-y-3">
+                    <div class="setting-row">
+                        <label>启用现金支付</label>
+                        <input type="checkbox" id="settingPaymentCash" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用银行卡支付</label>
+                        <input type="checkbox" id="settingPaymentCard" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用 mada 支付</label>
+                        <input type="checkbox" id="settingPaymentMada" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用 Apple Pay</label>
+                        <input type="checkbox" id="settingPaymentApplePay" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用 Google Pay</label>
+                        <input type="checkbox" id="settingPaymentGooglePay" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用银行转账</label>
+                        <input type="checkbox" id="settingPaymentBankTransfer" class="w-5 h-5">
+                    </div>
+                    <div class="form-group">
+                        <label>默认支付方式</label>
+                        <select id="settingDefaultPayment" class="w-full p-3 border rounded-xl bg-gray-50">
+                            <option value="cash">现金</option>
+                            <option value="card">银行卡</option>
+                            <option value="mada">mada</option>
+                            <option value="apple_pay">Apple Pay</option>
+                            <option value="google_pay">Google Pay</option>
+                            <option value="bank_transfer">银行转账</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">电话</label>
-                    <input id="storePhone" placeholder="请输入电话" class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:outline-none focus:border-blue-400">
+                <button onclick="SettingsModule.savePaymentSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存支付设置
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 打印设置 ===== -->
+        <div id="panel-print" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🖨️ 打印设置</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>小票标题</label>
+                        <input id="settingReceiptTitle" class="w-full p-3 border rounded-xl bg-gray-50" value="🧼 CarWash Pro">
+                    </div>
+                    <div class="form-group">
+                        <label>小票页脚</label>
+                        <input id="settingReceiptFooter" class="w-full p-3 border rounded-xl bg-gray-50" value="感谢光临！">
+                    </div>
+                    <div class="form-group">
+                        <label>是否显示二维码</label>
+                        <select id="settingShowQR" class="w-full p-3 border rounded-xl bg-gray-50">
+                            <option value="true">✅ 显示</option>
+                            <option value="false">❌ 不显示</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>二维码内容</label>
+                        <input id="settingQRContent" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="https://carwash.com">
+                    </div>
                 </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">店长</label>
-                    <input id="storeManager" placeholder="请输入店长姓名" class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:outline-none focus:border-blue-400">
+                <button onclick="SettingsModule.savePrintSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存打印设置
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 通知设置 ===== -->
+        <div id="panel-notifications" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🔔 通知设置</h3>
+                <div class="space-y-3">
+                    <div class="setting-row">
+                        <label>启用新订单通知</label>
+                        <input type="checkbox" id="settingNotifyNewOrder" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用低库存通知</label>
+                        <input type="checkbox" id="settingNotifyLowStock" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用员工考勤通知</label>
+                        <input type="checkbox" id="settingNotifyAttendance" checked class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用客户生日提醒</label>
+                        <input type="checkbox" id="settingNotifyBirthday" checked class="w-5 h-5">
+                    </div>
+                    <div class="form-group">
+                        <label>通知声音</label>
+                        <select id="settingNotificationSound" class="w-full p-3 border rounded-xl bg-gray-50">
+                            <option value="default">默认</option>
+                            <option value="bell">🔔 铃声</option>
+                            <option value="chime">🎵 柔和</option>
+                            <option value="none">🔇 静音</option>
+                        </select>
+                    </div>
                 </div>
-                <button onclick="SettingsModule.saveStore()" class="btn-primary py-3 rounded-xl font-bold w-full">
-                    <i class="fas fa-save"></i> 保存门店
+                <button onclick="SettingsModule.saveNotificationSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存通知设置
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 备份设置 ===== -->
+        <div id="panel-backup" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">☁️ 备份与同步</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <div>
+                            <span class="font-medium">📤 导出数据</span>
+                            <p class="text-xs text-gray-400">导出所有数据为 Excel 文件</p>
+                        </div>
+                        <button onclick="SettingsModule.exportAllData()" class="btn-primary btn-sm">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <div>
+                            <span class="font-medium">📥 导入数据</span>
+                            <p class="text-xs text-gray-400">从 Excel 文件导入数据</p>
+                        </div>
+                        <button onclick="document.getElementById('importFileInput').click()" class="btn-success btn-sm">
+                            <i class="fas fa-upload"></i> 导入
+                        </button>
+                        <input type="file" id="importFileInput" accept=".xlsx,.xls" class="hidden" onchange="SettingsModule.importData(event)">
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <div>
+                            <span class="font-medium">🔄 同步到云端</span>
+                            <p class="text-xs text-gray-400">手动触发数据同步</p>
+                        </div>
+                        <button onclick="SettingsModule.syncData()" class="bg-purple-600 text-white btn-sm">
+                            <i class="fas fa-sync"></i> 同步
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <div>
+                            <span class="font-medium">🗑️ 重置系统</span>
+                            <p class="text-xs text-gray-400 text-red-400">⚠️ 删除所有数据（不可恢复）</p>
+                        </div>
+                        <button onclick="SettingsModule.resetSystem()" class="btn-danger btn-sm">
+                            <i class="fas fa-exclamation-triangle"></i> 重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 高级设置 ===== -->
+        <div id="panel-advanced" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🔧 高级设置</h3>
+                <div class="space-y-3">
+                    <div class="form-group">
+                        <label>API 端点</label>
+                        <input id="settingApiUrl" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="https://api.carwash.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Supabase URL</label>
+                        <input id="settingSupabaseUrl" class="w-full p-3 border rounded-xl bg-gray-50 font-mono text-sm">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用调试模式</label>
+                        <input type="checkbox" id="settingDebugMode" class="w-5 h-5">
+                    </div>
+                    <div class="setting-row">
+                        <label>启用离线模式</label>
+                        <input type="checkbox" id="settingOfflineMode" class="w-5 h-5">
+                    </div>
+                    <div class="form-group">
+                        <label>日志级别</label>
+                        <select id="settingLogLevel" class="w-full p-3 border rounded-xl bg-gray-50">
+                            <option value="error">错误</option>
+                            <option value="warn">警告</option>
+                            <option value="info" selected>信息</option>
+                            <option value="debug">调试</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="SettingsModule.saveAdvancedSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存高级设置
                 </button>
             </div>
         </div>
     </div>
+
 </div>
