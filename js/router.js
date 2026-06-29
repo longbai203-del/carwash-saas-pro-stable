@@ -1,31 +1,31 @@
 /**
- * router.js - 路由管理
+ * router.js - 路由管理器
  */
 (function() {
-    'use strict';
-
     window.AppRouter = {
         currentRoute: null,
         defaultRoute: 'dashboard',
 
-        init() {
+        init: function() {
             console.log('[Router] 初始化...');
-
-            window.addEventListener('hashchange', () => {
-                this.handleRoute();
+            var self = this;
+            window.addEventListener('hashchange', function() {
+                self.handleRoute();
             });
-
             this.handleRoute();
         },
 
-        navigate(moduleName, updateHash = true) {
+        navigate: function(moduleName, updateHash) {
+            if (updateHash === undefined) updateHash = true;
             if (this.currentRoute === moduleName) return;
 
-            const user = AppStore.get('currentUser');
+            var user = AppStore.get('currentUser');
             if (user) {
-                const perms = AppConfig.permissions[user.role] || [];
-                if (!perms.includes(moduleName)) {
-                    AppUtils.toast('您没有权限访问此页面', 'warning');
+                var perms = AppConfig.permissions[user.role] || [];
+                if (perms.indexOf(moduleName) === -1) {
+                    if (window.AppUtils) {
+                        AppUtils.toast('您没有权限访问此页面', 'warning');
+                    }
                     return;
                 }
             }
@@ -37,51 +37,41 @@
                 window.location.hash = moduleName;
             }
 
-            ModuleLoader.load(moduleName);
+            if (window.ModuleLoader) {
+                ModuleLoader.load(moduleName);
+            }
 
-            // 更新导航高亮
-            document.querySelectorAll('[data-module]').forEach(el => {
-                el.classList.remove('nav-item-active');
-                if (el.dataset.module === moduleName) {
-                    el.classList.add('nav-item-active');
-                }
-            });
-
-            // 更新标题
-            const titles = {
-                dashboard: '仪表板',
-                cashier: '收银台',
-                orders: '订单管理',
-                inventory: '库存管理',
-                customers: '客户管理',
-                attendance: '考勤管理',
-                reports: '财务管理',
-                employees: '员工审核',
-                audit: '审计日志',
-                settings: '系统设置'
-            };
-            document.getElementById('currentPageTitle').textContent = titles[moduleName] || moduleName;
+            var titleEl = document.getElementById('currentPageTitle');
+            if (titleEl) {
+                var titles = {
+                    dashboard: '仪表板',
+                    cashier: '收银台',
+                    orders: '订单管理',
+                    inventory: '库存',
+                    customers: '客户',
+                    attendance: '考勤',
+                    reports: '财务',
+                    employees: '员工审核',
+                    audit: '审计日志',
+                    'vehicle-monitor': '车辆监控',
+                    settings: '设置'
+                };
+                titleEl.textContent = titles[moduleName] || moduleName;
+            }
         },
 
-        handleRoute() {
-            const hash = window.location.hash.replace('#', '') || this.defaultRoute;
+        handleRoute: function() {
+            var hash = window.location.hash.replace('#', '') || this.defaultRoute;
             this.navigate(hash, false);
         },
 
-        getCurrentRoute() {
+        getCurrentRoute: function() {
             return this.currentRoute;
         },
 
-        back() {
+        back: function() {
             window.history.back();
-        },
-
-        // 注册路由
-        register(route, moduleName) {
-            // 已通过 AppConfig.modules 配置
-            return this;
         }
     };
-
     console.log('[Router] 加载完成');
 })();
