@@ -21,6 +21,9 @@
         <button class="tab-btn" data-tab="tax" onclick="SettingsModule.switchTab('tax')">
             <i class="fas fa-percent"></i> 税务
         </button>
+        <button class="tab-btn" data-tab="tax-invoice" onclick="SettingsModule.switchTab('tax-invoice')">
+            <i class="fas fa-file-invoice"></i> 税务发票
+        </button>
         <button class="tab-btn" data-tab="payment" onclick="SettingsModule.switchTab('payment')">
             <i class="fas fa-credit-card"></i> 支付
         </button>
@@ -112,6 +115,46 @@
                 </div>
                 <button onclick="SettingsModule.saveTaxSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
                     <i class="fas fa-save"></i> 保存税务设置
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 税务发票设置 ===== -->
+        <div id="panel-tax-invoice" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">📄 税务发票设置</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>公司名称 (阿拉伯语)</label>
+                        <input id="settingCompanyNameAr" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="شركة الخدمات البترولية">
+                    </div>
+                    <div class="form-group">
+                        <label>公司名称 (英语)</label>
+                        <input id="settingCompanyNameEn" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="Petroleum Services Co.">
+                    </div>
+                    <div class="form-group">
+                        <label>商业登记号 (CR)</label>
+                        <input id="settingCrNumber" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="4030571509">
+                    </div>
+                    <div class="form-group">
+                        <label>增值税号 (VAT)</label>
+                        <input id="settingVatNumber" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="300056462300003">
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label>公司地址</label>
+                        <input id="settingCompanyAddress" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="الرياض، النيسيم الشرقى">
+                    </div>
+                    <div class="form-group">
+                        <label>统一客服电话</label>
+                        <input id="settingCompanyPhone" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="920002667">
+                    </div>
+                    <div class="form-group">
+                        <label>发票页脚</label>
+                        <input id="settingInvoiceFooter" class="w-full p-3 border rounded-xl bg-gray-50" placeholder="شكراً لتعاملكم معنا">
+                    </div>
+                </div>
+                <button onclick="SettingsModule.saveTaxInvoiceSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存发票设置
                 </button>
             </div>
         </div>
@@ -239,7 +282,7 @@
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                         <div>
                             <span class="font-medium">📤 导出数据</span>
-                            <p class="text-xs text-gray-400">导出所有数据为 Excel 文件</p>
+                            <p class="text-xs text-gray-400">导出所有数据为 JSON 文件</p>
                         </div>
                         <button onclick="SettingsModule.exportAllData()" class="btn-primary btn-sm">
                             <i class="fas fa-download"></i> 导出
@@ -248,12 +291,12 @@
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                         <div>
                             <span class="font-medium">📥 导入数据</span>
-                            <p class="text-xs text-gray-400">从 Excel 文件导入数据</p>
+                            <p class="text-xs text-gray-400">从 JSON 文件导入数据</p>
                         </div>
                         <button onclick="document.getElementById('importFileInput').click()" class="btn-success btn-sm">
                             <i class="fas fa-upload"></i> 导入
                         </button>
-                        <input type="file" id="importFileInput" accept=".xlsx,.xls" class="hidden" onchange="SettingsModule.importData(event)">
+                        <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="SettingsModule.importData(event)">
                     </div>
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                         <div>

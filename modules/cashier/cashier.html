@@ -141,7 +141,7 @@
                     <button onclick="CashierModule.saveOrder()" class="btn-primary py-3 rounded-xl font-bold">
                         <i class="fas fa-save"></i> 保存
                     </button>
-                    <button onclick="CashierModule.printReceipt()" class="bg-purple-600 hover:bg-purple-700 py-3 rounded-xl text-white font-bold">
+                    <button onclick="CashierModule.showPrintOptions()" class="bg-purple-600 hover:bg-purple-700 py-3 rounded-xl text-white font-bold">
                         <i class="fas fa-print"></i> 打印
                     </button>
                     <button onclick="CashierModule.voiceTotal()" class="bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl text-white font-bold">
@@ -170,4 +170,27 @@
         <div id="todayOrdersList" class="max-h-72 overflow-auto space-y-2"></div>
     </div>
 
+</div>
+
+<!-- ===== 打印选项弹窗 ===== -->
+<div id="printOptionsModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">🖨️ 打印选项</h3>
+            <button onclick="CashierModule.closePrintOptions()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <button onclick="CashierModule.printReceipt()" class="w-full btn-primary py-3 rounded-xl font-bold text-lg">
+                <i class="fas fa-receipt"></i> 小票打印（热敏）
+            </button>
+            <button onclick="CashierModule.printTaxInvoice()" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl text-white font-bold text-lg">
+                <i class="fas fa-file-invoice"></i> 税务发票（A4）
+            </button>
+            <button onclick="CashierModule.closePrintOptions()" class="w-full btn-outline py-3 rounded-xl font-bold text-lg">
+                取消
+            </button>
+        </div>
+    </div>
 </div>

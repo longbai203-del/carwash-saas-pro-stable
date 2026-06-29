@@ -1,6 +1,6 @@
 /**
  * settings.js - 系统设置模块 V2
- * 包含：门店、税务、支付、打印、通知、备份、高级设置
+ * 包含：门店、税务、税务发票、支付、打印、通知、备份、高级设置
  */
 (function() {
     'use strict';
@@ -25,6 +25,14 @@
             vatEnabled: this.getEl('settingVatEnabled'),
             commissionRate: this.getEl('settingCommissionRate'),
             serviceTaxRate: this.getEl('settingServiceTaxRate'),
+            // 税务发票
+            companyNameAr: this.getEl('settingCompanyNameAr'),
+            companyNameEn: this.getEl('settingCompanyNameEn'),
+            crNumber: this.getEl('settingCrNumber'),
+            vatNumber: this.getEl('settingVatNumber'),
+            companyAddress: this.getEl('settingCompanyAddress'),
+            companyPhone: this.getEl('settingCompanyPhone'),
+            invoiceFooter: this.getEl('settingInvoiceFooter'),
             // 支付
             paymentCash: this.getEl('settingPaymentCash'),
             paymentCard: this.getEl('settingPaymentCard'),
@@ -77,6 +85,15 @@
         if (this.el.commissionRate) this.el.commissionRate.value = config.commissionRate || 5;
         if (this.el.serviceTaxRate) this.el.serviceTaxRate.value = config.serviceTaxRate || 0;
 
+        // 税务发票设置
+        if (this.el.companyNameAr) this.el.companyNameAr.value = config.companyNameAr || 'شركة الخدمات البترولية';
+        if (this.el.companyNameEn) this.el.companyNameEn.value = config.companyNameEn || 'Petroleum Services Co.';
+        if (this.el.crNumber) this.el.crNumber.value = config.crNumber || '4030571509';
+        if (this.el.vatNumber) this.el.vatNumber.value = config.vatNumber || '300056462300003';
+        if (this.el.companyAddress) this.el.companyAddress.value = config.companyAddress || 'الرياض، النيسيم الشرقى';
+        if (this.el.companyPhone) this.el.companyPhone.value = config.companyPhone || '920002667';
+        if (this.el.invoiceFooter) this.el.invoiceFooter.value = config.invoiceFooter || 'شكراً لتعاملكم معنا';
+
         // 支付设置
         if (this.el.paymentCash) this.el.paymentCash.checked = config.paymentCash !== false;
         if (this.el.paymentCard) this.el.paymentCard.checked = config.paymentCard !== false;
@@ -109,14 +126,12 @@
         if (this.el.offlineMode) this.el.offlineMode.checked = config.offlineMode || false;
         if (this.el.logLevel) this.el.logLevel.value = config.logLevel || 'info';
 
-        // 加载门店列表到下拉
         this.loadStoreSelector();
     };
 
     // ===== 加载门店选择器 =====
     window.SettingsModule.loadStoreSelector = function() {
         var stores = AppStore.get('allStores') || [];
-        // 如果门店下拉存在，填充
         var sel = document.getElementById('settingStore');
         if (sel) {
             var html = '';
@@ -131,7 +146,6 @@
     window.SettingsModule.switchTab = function(tab) {
         this.currentTab = tab;
 
-        // 更新按钮状态
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
             btn.classList.remove('active');
             if (btn.dataset.tab === tab) {
@@ -139,7 +153,6 @@
             }
         });
 
-        // 更新面板
         document.querySelectorAll('.panel-content').forEach(function(panel) {
             panel.classList.add('hidden');
         });
@@ -176,6 +189,22 @@
         AppStore.set('config', config);
         localStorage.setItem('cw_config', JSON.stringify(config));
         this.toast('✅ 税务设置已保存', 'success');
+    };
+
+    // ===== 保存税务发票设置 =====
+    window.SettingsModule.saveTaxInvoiceSettings = function() {
+        var config = AppStore.get('config') || {};
+        config.companyNameAr = this.el.companyNameAr ? this.el.companyNameAr.value : 'شركة الخدمات البترولية';
+        config.companyNameEn = this.el.companyNameEn ? this.el.companyNameEn.value : 'Petroleum Services Co.';
+        config.crNumber = this.el.crNumber ? this.el.crNumber.value : '4030571509';
+        config.vatNumber = this.el.vatNumber ? this.el.vatNumber.value : '300056462300003';
+        config.companyAddress = this.el.companyAddress ? this.el.companyAddress.value : 'الرياض، النيسيم الشرقى';
+        config.companyPhone = this.el.companyPhone ? this.el.companyPhone.value : '920002667';
+        config.invoiceFooter = this.el.invoiceFooter ? this.el.invoiceFooter.value : 'شكراً لتعاملكم معنا';
+
+        AppStore.set('config', config);
+        localStorage.setItem('cw_config', JSON.stringify(config));
+        this.toast('✅ 税务发票设置已保存', 'success');
     };
 
     // ===== 保存支付设置 =====
@@ -238,6 +267,7 @@
     window.SettingsModule.saveAllSettings = function() {
         this.saveGeneralSettings();
         this.saveTaxSettings();
+        this.saveTaxInvoiceSettings();
         this.savePaymentSettings();
         this.savePrintSettings();
         this.saveNotificationSettings();
