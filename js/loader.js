@@ -10,7 +10,6 @@
         _loading: false,
         _pending: null,
 
-        // ===== 修改：_modules 添加 vehicle-monitor =====
         _modules: {
             dashboard: { obj: 'DashboardModule', label: '仪表板' },
             cashier: { obj: 'CashierModule', label: 'POS收银' },
@@ -21,7 +20,6 @@
             reports: { obj: 'ReportsModule', label: '财务管理' },
             employees: { obj: 'EmployeesModule', label: '员工审核' },
             audit: { obj: 'AuditModule', label: '审计日志' },
-            // ===== 新增：车辆监控 =====
             'vehicle-monitor': { obj: 'VehicleMonitorModule', label: '车辆监控' },
             settings: { obj: 'SettingsModule', label: '系统设置' }
         },
@@ -42,7 +40,7 @@
             var user = AppStore.get('currentUser');
             if (user) {
                 var perms = AppConfig.permissions[user.role] || [];
-                if (!perms.includes(moduleName)) {
+                if (perms.indexOf(moduleName) === -1) {
                     if (window.AppUtils && AppUtils.toast) {
                         AppUtils.toast('您没有权限访问此页面', 'warning');
                     }
