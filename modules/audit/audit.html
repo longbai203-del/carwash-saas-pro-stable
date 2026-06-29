@@ -1,25 +1,36 @@
-<!-- ===== AUDIT ===== -->
-<div id="moduleAudit" class="module-content hidden">
+<div id="auditContainer" class="space-y-6">
     <div class="glass-card p-6">
-        <h2 class="text-xl font-bold text-blue-600 mb-4">📋 审计日志</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">📋 审计日志</h2>
+            <button onclick="AuditModule.refresh()" class="btn-primary btn-sm">
+                <i class="fas fa-sync"></i> 刷新
+            </button>
+        </div>
+
         <div class="flex gap-3 mb-4 flex-wrap">
-            <select id="auditActionFilter" class="p-2 border rounded-lg text-sm">
+            <select id="auditActionFilter" class="p-3 border rounded-xl bg-gray-50">
                 <option value="all">全部操作</option>
-                <option value="INSERT">新增</option>
-                <option value="UPDATE">修改</option>
-                <option value="DELETE">删除</option>
+                <option value="INSERT">🟢 新增</option>
+                <option value="UPDATE">🟡 修改</option>
+                <option value="DELETE">🔴 删除</option>
             </select>
-            <select id="auditTableFilter" class="p-2 border rounded-lg text-sm">
+            <select id="auditTableFilter" class="p-3 border rounded-xl bg-gray-50">
                 <option value="all">全部表</option>
                 <option value="orders">订单</option>
                 <option value="customers">客户</option>
-                <option value="inventory">库存</option>
+                <option value="products">产品</option>
                 <option value="users">用户</option>
             </select>
-            <button onclick="loadAuditLog()" class="btn-primary btn-sm">查询</button>
-            <button onclick="exportAuditLog()" class="bg-green-600 text-white btn-sm">📊 导出</button>
+            <button onclick="AuditModule.loadData()" class="btn-primary px-4 py-3 rounded-xl">查询</button>
+            <button onclick="AuditModule.exportLogs()" class="bg-green-600 text-white px-4 py-3 rounded-xl">
+                <i class="fas fa-file-excel"></i> 导出
+            </button>
         </div>
-        <div id="auditLogList" class="max-h-96 overflow-auto space-y-1 text-sm"></div>
-        <div class="mt-3 text-sm text-gray-500">共 <span id="auditCount">0</span> 条记录</div>
+
+        <div id="auditLogList" class="space-y-1 max-h-[500px] overflow-auto text-sm"></div>
+
+        <div class="mt-3 text-sm text-gray-500">
+            共 <span id="auditCount">0</span> 条记录
+        </div>
     </div>
 </div>

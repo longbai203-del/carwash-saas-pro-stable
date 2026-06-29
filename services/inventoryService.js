@@ -1,4 +1,4 @@
-﻿/**
+/**
  * services/inventoryService.js - 库存服务
  */
 window.InventoryService = {

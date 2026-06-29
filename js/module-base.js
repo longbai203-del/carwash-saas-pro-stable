@@ -50,6 +50,8 @@
             });
             this.timers = [];
             this.initialized = false;
+            // 清空 el 引用
+            this.el = {};
         },
 
         // ===== 子类重写方法 =====
@@ -61,6 +63,12 @@
         // ===== 工具：安全绑定事件 =====
         bindEvent: function(id, event, handler) {
             var el = document.getElementById(id);
+            if (!el) {
+                var container = document.getElementById('moduleContent');
+                if (container) {
+                    el = container.querySelector('#' + id);
+                }
+            }
             if (el) {
                 el.addEventListener(event, handler);
                 this.events.push({ el: el, event: event, handler: handler });
@@ -73,6 +81,12 @@
         // ===== 工具：安全绑定选择器事件 =====
         bindSelector: function(selector, event, handler) {
             var el = document.querySelector(selector);
+            if (!el) {
+                var container = document.getElementById('moduleContent');
+                if (container) {
+                    el = container.querySelector(selector);
+                }
+            }
             if (el) {
                 el.addEventListener(event, handler);
                 this.events.push({ el: el, event: event, handler: handler });
@@ -82,10 +96,20 @@
             return el;
         },
 
-        // ===== 工具：安全获取元素 =====
+        // ===== 工具：安全获取元素（增强版） =====
         getEl: function(id) {
+            // 先尝试直接查找
             var el = document.getElementById(id);
-            if (!el) console.warn('[' + this.moduleName + '] 元素不存在: #' + id);
+            // 如果找不到，尝试在 moduleContent 中查找
+            if (!el) {
+                var container = document.getElementById('moduleContent');
+                if (container) {
+                    el = container.querySelector('#' + id);
+                }
+            }
+            if (!el) {
+                console.warn('[' + this.moduleName + '] 元素不存在: #' + id);
+            }
             return el;
         },
 
@@ -135,6 +159,13 @@
             if (container) {
                 container.innerHTML = '<div class="text-center text-gray-400 py-8">' + (message || '暂无数据') + '</div>';
             }
+            return this;
+        },
+
+        // ===== 工具：刷新数据 =====
+        refresh: function() {
+            this.loadData();
+            this.toast('✅ 数据已刷新', 'success');
             return this;
         }
     };

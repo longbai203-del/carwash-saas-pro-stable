@@ -1,4 +1,4 @@
-﻿/**
+/**
  * components/datatable.js - 数据表格组件
  */
 window.DataTableComponent = {

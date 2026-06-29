@@ -1,4 +1,4 @@
-﻿/**
+/**
  * dashboard.js - Owner Dashboard 老板驾驶舱
  */
 (function() {

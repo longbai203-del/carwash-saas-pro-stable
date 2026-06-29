@@ -1,4 +1,4 @@
-﻿/**
+/**
  * components/modal.js - 模态框组件
  */
 window.ModalComponent = {

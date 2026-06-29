@@ -1,4 +1,4 @@
-﻿/**
+/**
  * settings.js - 系统设置模块
  */
 (function() {

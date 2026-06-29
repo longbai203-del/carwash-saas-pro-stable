@@ -1,4 +1,4 @@
-﻿/**
+/**
  * cashier.js - POS收银模块 V5
  * 无 JSX，全部使用 AppApi，按钮统一调用 Module.method()
  */

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * components/sidebar.js - 侧边栏组件
  */
 window.SidebarComponent = {

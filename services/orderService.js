@@ -1,4 +1,4 @@
-﻿/**
+/**
  * services/orderService.js - 订单服务
  */
 window.OrderService = {

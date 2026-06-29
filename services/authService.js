@@ -1,4 +1,4 @@
-﻿/**
+/**
  * services/authService.js - 认证服务
  */
 window.AuthService = {

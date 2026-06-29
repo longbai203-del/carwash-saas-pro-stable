@@ -1,6 +1,6 @@
-﻿/**
- * loader.js - 模块加载器 V5.1
- * 修复加载状态卡住问题
+/**
+ * loader.js - 模块加载器 V5.2
+ * 修复加载状态卡住问题，增强 DOM 查找
  */
 (function() {
     'use strict';
@@ -48,6 +48,7 @@
                 }
             }
 
+            // 销毁旧模块
             if (this._active && this._loaded[this._active]) {
                 var old = this._loaded[this._active];
                 if (typeof old.destroy === 'function') {
@@ -63,11 +64,15 @@
                 var module = this._modules[moduleName];
                 if (!module) throw new Error('模块未配置: ' + moduleName);
 
+                // 加载 HTML
                 var htmlPath = 'modules/' + moduleName + '/' + moduleName + '.html';
-                container.innerHTML = await this._fetchText(htmlPath, 'HTML');
+                var htmlContent = await this._fetchText(htmlPath, 'HTML');
+                container.innerHTML = htmlContent;
 
+                // 等待 DOM 渲染
                 await this._waitForDOM(moduleName);
 
+                // 加载 JS
                 var jsPath = 'modules/' + moduleName + '/' + moduleName + '.js';
                 var oldScript = document.querySelector('script[data-module="' + moduleName + '"]');
                 if (oldScript) oldScript.remove();
@@ -97,7 +102,7 @@
                             } else if (attempts < maxAttempts) {
                                 setTimeout(check, 100);
                             } else {
-                                reject(new Error('模块 ' + module.obj + ' 未注册'));
+                                reject(new Error('模块 ' + module.obj + ' 未注册，请检查 JS 文件是否加载'));
                             }
                         };
                         check();
@@ -134,19 +139,24 @@
 
         _fetchText: async function(path, type) {
             if (window.location.protocol === 'file:') {
-                throw new Error('当前是 file:// 直接打开，浏览器会阻止加载模块文件。请用本地服务器打开，例如 http://127.0.0.1:4173/');
+                throw new Error('当前是 file:// 直接打开，请用本地服务器打开，例如 http://127.0.0.1:4173/');
             }
 
             var url = new URL(path, window.location.href);
             try {
                 var res = await fetch(url.href, { cache: 'no-store' });
                 if (!res.ok) throw new Error(type + '加载失败: HTTP ' + res.status + ' - ' + path);
-                return await res.text();
+                var text = await res.text();
+                // 检查是否为空或只有空白
+                if (!text || !text.trim()) {
+                    throw new Error(type + '文件为空: ' + path);
+                }
+                return text;
             } catch (error) {
                 if (error.message && error.message.indexOf(type + '加载失败') === 0) {
                     throw error;
                 }
-                throw new Error(type + '加载失败: 无法请求 ' + path + '。请确认页面通过 HTTP 服务器打开，且 modules 目录可访问。原始错误: ' + error.message);
+                throw new Error(type + '加载失败: ' + path + '。错误: ' + error.message);
             }
         },
 
@@ -156,7 +166,16 @@
                 var maxAttempts = 50;
                 var check = function() {
                     attempts++;
+                    // 先尝试查找 moduleName + 'Container'（如 ordersContainer）
                     var el = document.getElementById(moduleName + 'Container');
+                    // 如果找不到，在 moduleContent 中查找
+                    if (!el) {
+                        var container = document.getElementById('moduleContent');
+                        if (container) {
+                            el = container.querySelector('#' + moduleName + 'Container') ||
+                                 container.querySelector('div[id^="' + moduleName + '"]');
+                        }
+                    }
                     if (el || attempts > maxAttempts) {
                         setTimeout(resolve, 50);
                     } else {
@@ -202,5 +221,5 @@
         }
     };
 
-    console.log('[Loader] V5.1 加载完成');
+    console.log('[Loader] V5.2 加载完成');
 })();

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * config.js - 全局配置
  */
 window.AppConfig = {

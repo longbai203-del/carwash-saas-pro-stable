@@ -1,4 +1,4 @@
-﻿/**
+/**
  * services/supabase.js - Supabase 客户端封装
  */
 (function() {

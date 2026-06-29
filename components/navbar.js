@@ -1,4 +1,4 @@
-﻿/**
+/**
  * components/navbar.js - 导航栏组件
  */
 window.NavbarComponent = {

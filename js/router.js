@@ -1,4 +1,4 @@
-﻿/**
+/**
  * router.js - 路由管理
  */
 (function() {

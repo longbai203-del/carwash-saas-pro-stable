@@ -1,4 +1,4 @@
-﻿/**
+/**
  * auth.js - 认证模块
  */
 window.AppAuth = {
