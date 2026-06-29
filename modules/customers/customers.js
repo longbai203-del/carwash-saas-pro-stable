@@ -647,13 +647,19 @@
     };
 
     // ============================================================
-    // 导出客户
+    // 导出客户（修复版）
     // ============================================================
 
     window.CustomersModule.exportCustomers = function() {
         var customers = AppStore.get('allCustomers') || [];
         if (customers.length === 0) {
             this.toast('暂无客户数据', 'error');
+            return;
+        }
+
+        // 检查 XLSX 是否可用
+        if (typeof window.XLSX === 'undefined') {
+            this.toast('XLSX 库未加载，请刷新页面重试', 'error');
             return;
         }
 
@@ -674,11 +680,15 @@
             ]);
         });
 
-        var ws = XLSX.utils.aoa_to_sheet(data);
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, '客户数据');
-        XLSX.writeFile(wb, '客户数据_' + new Date().toISOString().split('T')[0] + '.xlsx');
-        this.toast('✅ 客户数据已导出', 'success');
+        try {
+            var ws = window.XLSX.utils.aoa_to_sheet(data);
+            var wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, '客户数据');
+            window.XLSX.writeFile(wb, '客户数据_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            this.toast('✅ 客户数据已导出', 'success');
+        } catch(e) {
+            this.toast('❌ 导出失败: ' + e.message, 'error');
+        }
     };
 
     // ============================================================
