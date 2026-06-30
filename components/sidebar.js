@@ -1,6 +1,6 @@
 /**
  * components/sidebar.js - 侧边栏组件
- * 支持移动端滑动菜单和桌面端折叠（新增功能）
+ * 支持移动端滑动菜单和桌面端折叠
  */
 window.SidebarComponent = {
     _menuItems: [
@@ -22,6 +22,10 @@ window.SidebarComponent = {
     render: function(container) {
         var user = AppStore.get('currentUser');
         var perms = user ? AppConfig.permissions[user.role] || [] : [];
+        
+        // 检查是否为移动端
+        var isMobile = window.innerWidth <= 768;
+        
         var html = '<aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100 h-full">' +
             '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
             '<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-md">' +
@@ -45,8 +49,12 @@ window.SidebarComponent = {
             var show = perms.indexOf(item.module) !== -1 || perms.length === 0;
             if (show) {
                 var activeClass = (item.module === 'dashboard') ? ' nav-item-active' : '';
-                // ===== 新增：点击后关闭侧边栏（移动端） =====
-                html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '" onclick="if(window.innerWidth<=768){setTimeout(function(){window.closeSidebar();},300);}">' +
+                // 点击菜单项后，移动端自动关闭侧边栏
+                var onClickAttr = '';
+                if (isMobile) {
+                    onClickAttr = ' onclick="setTimeout(function(){ if(window.closeSidebar) window.closeSidebar(); }, 300);"';
+                }
+                html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '"' + onClickAttr + '>' +
                     '<i class="fas ' + item.icon + ' w-5"></i>' +
                     '<span class="menu-label">' + item.label + '</span>' +
                     '</a>';
@@ -76,13 +84,20 @@ window.SidebarComponent = {
         if (container) {
             container.innerHTML = html;
             this.bindEvents(container);
-            // ===== 新增：恢复桌面端折叠状态 =====
+            
+            // 恢复桌面端折叠状态
             if (window.innerWidth > 768) {
                 var saved = localStorage.getItem('sidebar_expanded');
                 if (saved === 'true') {
                     container.classList.add('expanded');
                 } else {
                     container.classList.remove('expanded');
+                }
+                // 调整主内容区宽度
+                var mainContent = document.getElementById('mainContentArea');
+                if (mainContent) {
+                    var isExpanded = container.classList.contains('expanded');
+                    mainContent.style.width = isExpanded ? 'calc(100% - 280px)' : 'calc(100% - 64px)';
                 }
             }
         }
@@ -105,10 +120,11 @@ window.SidebarComponent = {
                     allLinks[j].classList.remove('nav-item-active');
                 }
                 this.classList.add('nav-item-active');
-                // ===== 新增：移动端点击后关闭侧边栏 =====
-                if (window.innerWidth <= 768) {
+                
+                // 移动端点击后关闭侧边栏
+                if (window.innerWidth <= 768 && window.closeSidebar) {
                     setTimeout(function() {
-                        if (window.closeSidebar) window.closeSidebar();
+                        window.closeSidebar();
                     }, 300);
                 }
             });

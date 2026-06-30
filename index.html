@@ -14,9 +14,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- ===== 移动端侧边栏样式 ===== -->
+    <!-- ===== 移动端适配样式 ===== -->
     <style>
-        /* 侧边栏移动端控制 - 只新增不修改原有样式 */
+        /* 侧边栏移动端控制 */
         .sidebar-mobile-overlay {
             display: none;
             position: fixed;
@@ -40,6 +40,7 @@
                 transform: translateX(-100%);
                 z-index: 50;
                 box-shadow: 0 0 30px rgba(0,0,0,0.2);
+                height: 100vh !important;
             }
             #sidebarContainer.open {
                 transform: translateX(0);
@@ -51,6 +52,9 @@
             .sidebar-toggle-btn {
                 display: flex !important;
             }
+            .sidebar-collapse-btn {
+                display: none !important;
+            }
         }
         @media (min-width: 769px) {
             .sidebar-toggle-btn {
@@ -60,9 +64,20 @@
                 transform: none !important;
                 position: relative !important;
                 width: 64px !important;
+                height: 100vh !important;
+                flex-shrink: 0;
             }
             #sidebarContainer.expanded {
                 width: 280px !important;
+            }
+            #mainContentArea {
+                width: calc(100% - 64px) !important;
+            }
+            #sidebarContainer.expanded + #mainContentArea {
+                width: calc(100% - 280px) !important;
+            }
+            .sidebar-collapse-btn {
+                display: flex !important;
             }
         }
         .sidebar-toggle-btn {
@@ -74,30 +89,51 @@
             color: #333;
             padding: 8px 12px;
             border-radius: 8px;
+            align-items: center;
+            justify-content: center;
         }
         .sidebar-toggle-btn:hover {
             background: #f0f0f0;
         }
-        /* 桌面端侧边栏默认折叠为图标模式 */
-        #sidebarContainer .sidebar-link span,
+        .sidebar-collapse-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .sidebar-collapse-btn:hover {
+            background: #f0f0f0;
+            color: #0091D5;
+        }
+        /* 桌面端侧边栏图标模式 */
         #sidebarContainer .sidebar-link .menu-label,
-        #sidebarContainer .real-time-badge,
-        #sidebarContainer #branchSelector,
         #sidebarContainer .sidebar-text,
         #sidebarContainer .p-5 .text-xs,
-        #sidebarContainer .p-5 h1 {
-            transition: opacity 0.2s ease;
+        #sidebarContainer .p-5 h1,
+        #sidebarContainer .real-time-badge,
+        #sidebarContainer #branchSelector,
+        #sidebarContainer .sidebar-link span {
+            transition: opacity 0.2s ease, display 0.2s ease;
         }
-        #sidebarContainer:not(.expanded) .sidebar-link span,
         #sidebarContainer:not(.expanded) .sidebar-link .menu-label,
-        #sidebarContainer:not(.expanded) .real-time-badge,
-        #sidebarContainer:not(.expanded) #branchSelector,
         #sidebarContainer:not(.expanded) .sidebar-text,
         #sidebarContainer:not(.expanded) .p-5 .text-xs,
-        #sidebarContainer:not(.expanded) .p-5 h1 {
+        #sidebarContainer:not(.expanded) .p-5 h1,
+        #sidebarContainer:not(.expanded) .real-time-badge,
+        #sidebarContainer:not(.expanded) #branchSelector,
+        #sidebarContainer:not(.expanded) .sidebar-link span {
             display: none;
         }
         #sidebarContainer:not(.expanded) .p-5 {
+            justify-content: center;
+        }
+        #sidebarContainer:not(.expanded) .p-5 .flex.items-center.gap-3 {
             justify-content: center;
         }
         #sidebarContainer:not(.expanded) .sidebar-link {
@@ -113,13 +149,13 @@
             min-width: 24px;
             text-align: center;
         }
-        #sidebarContainer.expanded .sidebar-link span,
         #sidebarContainer.expanded .sidebar-link .menu-label,
-        #sidebarContainer.expanded .real-time-badge,
-        #sidebarContainer.expanded #branchSelector,
         #sidebarContainer.expanded .sidebar-text,
         #sidebarContainer.expanded .p-5 .text-xs,
-        #sidebarContainer.expanded .p-5 h1 {
+        #sidebarContainer.expanded .p-5 h1,
+        #sidebarContainer.expanded .real-time-badge,
+        #sidebarContainer.expanded #branchSelector,
+        #sidebarContainer.expanded .sidebar-link span {
             display: inline-block;
         }
         #sidebarContainer.expanded .sidebar-link {
@@ -129,22 +165,18 @@
         #sidebarContainer.expanded .p-5 {
             justify-content: flex-start;
         }
-        .sidebar-collapse-btn {
-            display: none;
-            background: none;
-            border: none;
+        #sidebarContainer.expanded .p-5 .flex.items-center.gap-3 {
+            justify-content: flex-start;
+        }
+        /* 菜单项点击反馈 */
+        .sidebar-link {
             cursor: pointer;
-            color: #64748b;
-            padding: 4px 8px;
-            border-radius: 4px;
+            user-select: none;
         }
-        .sidebar-collapse-btn:hover {
-            background: #f0f0f0;
-        }
-        @media (min-width: 769px) {
-            .sidebar-collapse-btn {
-                display: block;
-            }
+        /* 确保侧边栏高度正确 */
+        #sidebarContainer .flex-1 {
+            flex: 1 1 auto;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -226,7 +258,7 @@
 <div id="appContainer" class="hidden flex h-screen overflow-hidden">
     
     <!-- ===== 侧边栏遮罩（移动端） ===== -->
-    <div id="sidebarOverlay" class="sidebar-mobile-overlay" onclick="window.closeSidebar()"></div>
+    <div id="sidebarOverlay" class="sidebar-mobile-overlay" onclick="window.toggleSidebar()"></div>
     
     <!-- ===== 侧边栏 ===== -->
     <aside id="sidebarContainer" class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100">
@@ -275,7 +307,7 @@
 <!-- ===== 启动应用 ===== -->
 <script>
 // ============================================================
-// 侧边栏控制函数（新增，不修改原有逻辑）
+// 侧边栏控制函数
 // ============================================================
 window.toggleSidebar = function() {
     var sidebar = document.getElementById('sidebarContainer');
@@ -299,43 +331,73 @@ window.closeSidebar = function() {
     }
 };
 
-// 桌面端侧边栏折叠
-window.toggleDesktopSidebar = function() {
+// 窗口大小变化时重置侧边栏状态
+window.addEventListener('resize', function() {
     var sidebar = document.getElementById('sidebarContainer');
-    if (sidebar && window.innerWidth > 768) {
-        sidebar.classList.toggle('expanded');
-        var isExpanded = sidebar.classList.contains('expanded');
-        localStorage.setItem('sidebar_expanded', isExpanded ? 'true' : 'false');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth > 768) {
+        if (sidebar) sidebar.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
     }
-};
+});
 
 // 点击主内容区域时关闭侧边栏（移动端）
 document.addEventListener('click', function(e) {
     var sidebar = document.getElementById('sidebarContainer');
     var overlay = document.getElementById('sidebarOverlay');
-    if (window.innerWidth <= 768 && sidebar && overlay) {
+    var isMobile = window.innerWidth <= 768;
+    if (isMobile && sidebar && overlay) {
         if (sidebar.classList.contains('open') && 
             !sidebar.contains(e.target) && 
             !e.target.closest('.sidebar-toggle-btn') &&
-            !e.target.closest('.sidebar-link')) {
+            !e.target.closest('.sidebar-link') &&
+            !e.target.closest('#sidebarOverlay')) {
             sidebar.classList.remove('open');
             overlay.classList.remove('active');
         }
     }
 });
 
-// 恢复桌面端侧边栏状态
-document.addEventListener('DOMContentLoaded', function() {
+// ============================================================
+// 桌面端侧边栏折叠控制
+// ============================================================
+window.toggleDesktopSidebar = function() {
     var sidebar = document.getElementById('sidebarContainer');
+    if (sidebar && window.innerWidth > 768) {
+        sidebar.classList.toggle('expanded');
+        var isExpanded = sidebar.classList.contains('expanded');
+        localStorage.setItem('sidebar_expanded', isExpanded ? 'true' : 'false');
+        // 调整主内容区宽度
+        var mainContent = document.getElementById('mainContentArea');
+        if (mainContent) {
+            if (isExpanded) {
+                mainContent.style.width = 'calc(100% - 280px)';
+            } else {
+                mainContent.style.width = 'calc(100% - 64px)';
+            }
+        }
+    }
+};
+
+// 恢复桌面端侧边栏状态
+(function restoreSidebarState() {
+    var sidebar = document.getElementById('sidebarContainer');
+    var mainContent = document.getElementById('mainContentArea');
     if (sidebar && window.innerWidth > 768) {
         var saved = localStorage.getItem('sidebar_expanded');
         if (saved === 'true') {
             sidebar.classList.add('expanded');
+            if (mainContent) {
+                mainContent.style.width = 'calc(100% - 280px)';
+            }
         } else {
             sidebar.classList.remove('expanded');
+            if (mainContent) {
+                mainContent.style.width = 'calc(100% - 64px)';
+            }
         }
     }
-});
+})();
 
 // ============================================================
 // 启动应用

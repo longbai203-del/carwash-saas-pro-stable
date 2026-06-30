@@ -7,13 +7,13 @@ window.NavbarComponent = {
         var user = AppStore.get('currentUser');
         var roleLabels = { owner: '老板', manager: '店长', cashier: '收银员', employee: '员工' };
         
-        // ===== 新增：汉堡菜单按钮（移动端显示） =====
-        var menuBtn = '<button onclick="event.stopPropagation(); window.toggleSidebar()" class="sidebar-toggle-btn text-xl text-gray-600 hover:text-blue-600">' +
+        // ===== 汉堡菜单按钮（移动端显示） =====
+        var menuBtn = '<button onclick="event.stopPropagation(); window.toggleSidebar()" class="sidebar-toggle-btn text-xl text-gray-600 hover:text-blue-600" aria-label="切换侧边栏">' +
             '<i class="fas fa-bars"></i>' +
             '</button>';
         
-        // ===== 新增：桌面端侧边栏折叠按钮 =====
-        var collapseBtn = '<button onclick="window.toggleDesktopSidebar()" class="sidebar-collapse-btn text-gray-400 hover:text-gray-600" title="折叠侧边栏">' +
+        // ===== 桌面端侧边栏折叠按钮 =====
+        var collapseBtn = '<button onclick="event.stopPropagation(); window.toggleDesktopSidebar()" class="sidebar-collapse-btn text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded" title="折叠侧边栏">' +
             '<i class="fas fa-chevron-left"></i>' +
             '</button>';
         
