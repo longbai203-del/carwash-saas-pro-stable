@@ -16,72 +16,9 @@
     
     <!-- ===== 移动端适配样式 ===== -->
     <style>
-        /* 侧边栏移动端控制 */
-        .sidebar-mobile-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 40;
-        }
-        .sidebar-mobile-overlay.active {
-            display: block;
-        }
-        #sidebarContainer {
-            transition: transform 0.3s ease;
-        }
-        @media (max-width: 768px) {
-            #sidebarContainer {
-                position: fixed;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 280px;
-                transform: translateX(-100%);
-                z-index: 50;
-                box-shadow: 0 0 30px rgba(0,0,0,0.2);
-                height: 100vh !important;
-            }
-            #sidebarContainer.open {
-                transform: translateX(0);
-            }
-            #mainContentArea {
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-            .sidebar-toggle-btn {
-                display: flex !important;
-            }
-            .sidebar-collapse-btn {
-                display: none !important;
-            }
-        }
-        @media (min-width: 769px) {
-            .sidebar-toggle-btn {
-                display: none !important;
-            }
-            #sidebarContainer {
-                transform: none !important;
-                position: relative !important;
-                width: 64px !important;
-                height: 100vh !important;
-                flex-shrink: 0;
-            }
-            #sidebarContainer.expanded {
-                width: 280px !important;
-            }
-            #mainContentArea {
-                width: calc(100% - 64px) !important;
-            }
-            #sidebarContainer.expanded + #mainContentArea {
-                width: calc(100% - 280px) !important;
-            }
-            .sidebar-collapse-btn {
-                display: flex !important;
-            }
-        }
+        /* ===== 汉堡菜单按钮 - 默认完全隐藏 ===== */
         .sidebar-toggle-btn {
-            display: none;
+            display: none !important;
             background: none;
             border: none;
             font-size: 24px;
@@ -95,8 +32,10 @@
         .sidebar-toggle-btn:hover {
             background: #f0f0f0;
         }
+        
+        /* ===== 桌面端折叠按钮 - 默认隐藏 ===== */
         .sidebar-collapse-btn {
-            display: none;
+            display: none !important;
             background: none;
             border: none;
             cursor: pointer;
@@ -111,72 +50,143 @@
             background: #f0f0f0;
             color: #0091D5;
         }
-        /* 桌面端侧边栏图标模式 */
-        #sidebarContainer .sidebar-link .menu-label,
-        #sidebarContainer .sidebar-text,
-        #sidebarContainer .p-5 .text-xs,
-        #sidebarContainer .p-5 h1,
-        #sidebarContainer .real-time-badge,
-        #sidebarContainer #branchSelector,
-        #sidebarContainer .sidebar-link span {
-            transition: opacity 0.2s ease, display 0.2s ease;
+        
+        /* ===== 移动端（≤768px）显示汉堡菜单 ===== */
+        @media (max-width: 768px) {
+            .sidebar-toggle-btn {
+                display: flex !important;
+            }
+            .sidebar-collapse-btn {
+                display: none !important;
+            }
+            #sidebarContainer {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                width: 280px !important;
+                transform: translateX(-100%) !important;
+                z-index: 50 !important;
+                box-shadow: 0 0 30px rgba(0,0,0,0.2) !important;
+                height: 100vh !important;
+                transition: transform 0.3s ease !important;
+            }
+            #sidebarContainer.open {
+                transform: translateX(0) !important;
+            }
+            #mainContentArea {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+            .sidebar-mobile-overlay {
+                display: none !important;
+                position: fixed !important;
+                inset: 0 !important;
+                background: rgba(0,0,0,0.4) !important;
+                z-index: 40 !important;
+            }
+            .sidebar-mobile-overlay.active {
+                display: block !important;
+            }
         }
-        #sidebarContainer:not(.expanded) .sidebar-link .menu-label,
-        #sidebarContainer:not(.expanded) .sidebar-text,
-        #sidebarContainer:not(.expanded) .p-5 .text-xs,
-        #sidebarContainer:not(.expanded) .p-5 h1,
-        #sidebarContainer:not(.expanded) .real-time-badge,
-        #sidebarContainer:not(.expanded) #branchSelector,
-        #sidebarContainer:not(.expanded) .sidebar-link span {
+        
+        /* ===== 桌面端（≥769px）显示折叠按钮和正常侧边栏 ===== */
+        @media (min-width: 769px) {
+            .sidebar-toggle-btn {
+                display: none !important;
+            }
+            .sidebar-collapse-btn {
+                display: flex !important;
+            }
+            #sidebarContainer {
+                transform: none !important;
+                position: relative !important;
+                width: 64px !important;
+                height: 100vh !important;
+                flex-shrink: 0;
+                transition: width 0.3s ease !important;
+            }
+            #sidebarContainer.expanded {
+                width: 280px !important;
+            }
+            #mainContentArea {
+                width: calc(100% - 64px) !important;
+                transition: width 0.3s ease !important;
+            }
+            #sidebarContainer.expanded + #mainContentArea {
+                width: calc(100% - 280px) !important;
+            }
+            /* 侧边栏图标模式 - 隐藏文字 */
+            #sidebarContainer:not(.expanded) .sidebar-link .menu-label,
+            #sidebarContainer:not(.expanded) .sidebar-text,
+            #sidebarContainer:not(.expanded) .p-5 .text-xs,
+            #sidebarContainer:not(.expanded) .p-5 h1,
+            #sidebarContainer:not(.expanded) .real-time-badge,
+            #sidebarContainer:not(.expanded) #branchSelector,
+            #sidebarContainer:not(.expanded) .sidebar-link span {
+                display: none !important;
+            }
+            #sidebarContainer:not(.expanded) .p-5 {
+                justify-content: center !important;
+            }
+            #sidebarContainer:not(.expanded) .p-5 .flex.items-center.gap-3 {
+                justify-content: center !important;
+            }
+            #sidebarContainer:not(.expanded) .sidebar-link {
+                justify-content: center !important;
+                padding: 12px !important;
+                margin: 4px 8px !important;
+            }
+            #sidebarContainer:not(.expanded) .sidebar-link i {
+                font-size: 20px !important;
+                margin: 0 !important;
+            }
+            #sidebarContainer .sidebar-link i {
+                min-width: 24px !important;
+                text-align: center !important;
+            }
+            #sidebarContainer.expanded .sidebar-link .menu-label,
+            #sidebarContainer.expanded .sidebar-text,
+            #sidebarContainer.expanded .p-5 .text-xs,
+            #sidebarContainer.expanded .p-5 h1,
+            #sidebarContainer.expanded .real-time-badge,
+            #sidebarContainer.expanded #branchSelector,
+            #sidebarContainer.expanded .sidebar-link span {
+                display: inline-block !important;
+            }
+            #sidebarContainer.expanded .sidebar-link {
+                justify-content: flex-start !important;
+                padding: 10px 16px !important;
+            }
+            #sidebarContainer.expanded .p-5 {
+                justify-content: flex-start !important;
+            }
+            #sidebarContainer.expanded .p-5 .flex.items-center.gap-3 {
+                justify-content: flex-start !important;
+            }
+        }
+        
+        /* 侧边栏其他样式 */
+        .sidebar-mobile-overlay {
             display: none;
         }
-        #sidebarContainer:not(.expanded) .p-5 {
-            justify-content: center;
+        #sidebarContainer {
+            transition: transform 0.3s ease, width 0.3s ease;
         }
-        #sidebarContainer:not(.expanded) .p-5 .flex.items-center.gap-3 {
-            justify-content: center;
-        }
-        #sidebarContainer:not(.expanded) .sidebar-link {
-            justify-content: center;
-            padding: 12px;
-            margin: 4px 8px;
-        }
-        #sidebarContainer:not(.expanded) .sidebar-link i {
-            font-size: 20px;
-            margin: 0;
-        }
-        #sidebarContainer .sidebar-link i {
-            min-width: 24px;
-            text-align: center;
-        }
-        #sidebarContainer.expanded .sidebar-link .menu-label,
-        #sidebarContainer.expanded .sidebar-text,
-        #sidebarContainer.expanded .p-5 .text-xs,
-        #sidebarContainer.expanded .p-5 h1,
-        #sidebarContainer.expanded .real-time-badge,
-        #sidebarContainer.expanded #branchSelector,
-        #sidebarContainer.expanded .sidebar-link span {
-            display: inline-block;
-        }
-        #sidebarContainer.expanded .sidebar-link {
-            justify-content: flex-start;
-            padding: 10px 16px;
-        }
-        #sidebarContainer.expanded .p-5 {
-            justify-content: flex-start;
-        }
-        #sidebarContainer.expanded .p-5 .flex.items-center.gap-3 {
-            justify-content: flex-start;
-        }
-        /* 菜单项点击反馈 */
         .sidebar-link {
             cursor: pointer;
             user-select: none;
         }
-        /* 确保侧边栏高度正确 */
         #sidebarContainer .flex-1 {
             flex: 1 1 auto;
             overflow-y: auto;
+        }
+        /* 折叠按钮旋转 */
+        #sidebarContainer.expanded .sidebar-collapse-btn i {
+            transform: rotate(180deg);
+        }
+        .sidebar-collapse-btn i {
+            transition: transform 0.3s ease;
         }
     </style>
 </head>
