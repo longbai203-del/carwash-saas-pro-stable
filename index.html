@@ -10,10 +10,143 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-    <!-- ===== 新增：QRCode.js 用于生成二维码 ===== -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- ===== 移动端侧边栏样式 ===== -->
+    <style>
+        /* 侧边栏移动端控制 - 只新增不修改原有样式 */
+        .sidebar-mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 40;
+        }
+        .sidebar-mobile-overlay.active {
+            display: block;
+        }
+        #sidebarContainer {
+            transition: transform 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            #sidebarContainer {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 50;
+                box-shadow: 0 0 30px rgba(0,0,0,0.2);
+            }
+            #sidebarContainer.open {
+                transform: translateX(0);
+            }
+            #mainContentArea {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+            .sidebar-toggle-btn {
+                display: flex !important;
+            }
+        }
+        @media (min-width: 769px) {
+            .sidebar-toggle-btn {
+                display: none !important;
+            }
+            #sidebarContainer {
+                transform: none !important;
+                position: relative !important;
+                width: 64px !important;
+            }
+            #sidebarContainer.expanded {
+                width: 280px !important;
+            }
+        }
+        .sidebar-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        .sidebar-toggle-btn:hover {
+            background: #f0f0f0;
+        }
+        /* 桌面端侧边栏默认折叠为图标模式 */
+        #sidebarContainer .sidebar-link span,
+        #sidebarContainer .sidebar-link .menu-label,
+        #sidebarContainer .real-time-badge,
+        #sidebarContainer #branchSelector,
+        #sidebarContainer .sidebar-text,
+        #sidebarContainer .p-5 .text-xs,
+        #sidebarContainer .p-5 h1 {
+            transition: opacity 0.2s ease;
+        }
+        #sidebarContainer:not(.expanded) .sidebar-link span,
+        #sidebarContainer:not(.expanded) .sidebar-link .menu-label,
+        #sidebarContainer:not(.expanded) .real-time-badge,
+        #sidebarContainer:not(.expanded) #branchSelector,
+        #sidebarContainer:not(.expanded) .sidebar-text,
+        #sidebarContainer:not(.expanded) .p-5 .text-xs,
+        #sidebarContainer:not(.expanded) .p-5 h1 {
+            display: none;
+        }
+        #sidebarContainer:not(.expanded) .p-5 {
+            justify-content: center;
+        }
+        #sidebarContainer:not(.expanded) .sidebar-link {
+            justify-content: center;
+            padding: 12px;
+            margin: 4px 8px;
+        }
+        #sidebarContainer:not(.expanded) .sidebar-link i {
+            font-size: 20px;
+            margin: 0;
+        }
+        #sidebarContainer .sidebar-link i {
+            min-width: 24px;
+            text-align: center;
+        }
+        #sidebarContainer.expanded .sidebar-link span,
+        #sidebarContainer.expanded .sidebar-link .menu-label,
+        #sidebarContainer.expanded .real-time-badge,
+        #sidebarContainer.expanded #branchSelector,
+        #sidebarContainer.expanded .sidebar-text,
+        #sidebarContainer.expanded .p-5 .text-xs,
+        #sidebarContainer.expanded .p-5 h1 {
+            display: inline-block;
+        }
+        #sidebarContainer.expanded .sidebar-link {
+            justify-content: flex-start;
+            padding: 10px 16px;
+        }
+        #sidebarContainer.expanded .p-5 {
+            justify-content: flex-start;
+        }
+        .sidebar-collapse-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .sidebar-collapse-btn:hover {
+            background: #f0f0f0;
+        }
+        @media (min-width: 769px) {
+            .sidebar-collapse-btn {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -91,11 +224,17 @@
 
 <!-- ===== 主应用 ===== -->
 <div id="appContainer" class="hidden flex h-screen overflow-hidden">
+    
+    <!-- ===== 侧边栏遮罩（移动端） ===== -->
+    <div id="sidebarOverlay" class="sidebar-mobile-overlay" onclick="window.closeSidebar()"></div>
+    
+    <!-- ===== 侧边栏 ===== -->
     <aside id="sidebarContainer" class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100">
         <!-- 由 SidebarComponent 渲染 -->
     </aside>
 
-    <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <!-- ===== 主内容区 ===== -->
+    <div id="mainContentArea" class="flex-1 flex flex-col overflow-hidden bg-gray-50">
         <header id="navbarContainer" class="bg-white shadow-sm py-3 px-6 flex justify-between items-center border-b border-gray-100">
             <!-- 由 NavbarComponent 渲染 -->
         </header>
@@ -135,6 +274,69 @@
 
 <!-- ===== 启动应用 ===== -->
 <script>
+// ============================================================
+// 侧边栏控制函数（新增，不修改原有逻辑）
+// ============================================================
+window.toggleSidebar = function() {
+    var sidebar = document.getElementById('sidebarContainer');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+        if (overlay) {
+            overlay.classList.toggle('active');
+        }
+    }
+};
+
+window.closeSidebar = function() {
+    var sidebar = document.getElementById('sidebarContainer');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) {
+        sidebar.classList.remove('open');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+    }
+};
+
+// 桌面端侧边栏折叠
+window.toggleDesktopSidebar = function() {
+    var sidebar = document.getElementById('sidebarContainer');
+    if (sidebar && window.innerWidth > 768) {
+        sidebar.classList.toggle('expanded');
+        var isExpanded = sidebar.classList.contains('expanded');
+        localStorage.setItem('sidebar_expanded', isExpanded ? 'true' : 'false');
+    }
+};
+
+// 点击主内容区域时关闭侧边栏（移动端）
+document.addEventListener('click', function(e) {
+    var sidebar = document.getElementById('sidebarContainer');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768 && sidebar && overlay) {
+        if (sidebar.classList.contains('open') && 
+            !sidebar.contains(e.target) && 
+            !e.target.closest('.sidebar-toggle-btn') &&
+            !e.target.closest('.sidebar-link')) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+    }
+});
+
+// 恢复桌面端侧边栏状态
+document.addEventListener('DOMContentLoaded', function() {
+    var sidebar = document.getElementById('sidebarContainer');
+    if (sidebar && window.innerWidth > 768) {
+        var saved = localStorage.getItem('sidebar_expanded');
+        if (saved === 'true') {
+            sidebar.classList.add('expanded');
+        } else {
+            sidebar.classList.remove('expanded');
+        }
+    }
+});
+
 // ============================================================
 // 启动应用
 // ============================================================

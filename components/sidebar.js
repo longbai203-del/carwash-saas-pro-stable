@@ -1,5 +1,6 @@
 /**
  * components/sidebar.js - 侧边栏组件
+ * 支持移动端滑动菜单和桌面端折叠（新增功能）
  */
 window.SidebarComponent = {
     _menuItems: [
@@ -13,7 +14,7 @@ window.SidebarComponent = {
         { module: 'employees', icon: 'fa-user-tie', label: '员工审核' },
         { module: 'audit', icon: 'fa-history', label: '审计日志' },
         { module: 'vehicle-monitor', icon: 'fa-camera', label: '🚗 车辆监控' },
-        // ===== 新增：权限中心 =====
+        { module: 'plate-recognize', icon: 'fa-id-card', label: '🚗 车牌识别' },
         { module: 'permission', icon: 'fa-shield-alt', label: '🔐 权限中心' },
         { module: 'settings', icon: 'fa-cog', label: '系统设置' }
     ],
@@ -21,18 +22,18 @@ window.SidebarComponent = {
     render: function(container) {
         var user = AppStore.get('currentUser');
         var perms = user ? AppConfig.permissions[user.role] || [] : [];
-        var html = '<aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100 h-screen">' +
+        var html = '<aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100 h-full">' +
             '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
             '<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-md">' +
             '<i class="fas fa-car-wash text-white text-xl"></i>' +
             '</div>' +
             '<div>' +
             '<h1 class="text-xl font-bold text-blue-600">CarWash Pro</h1>' +
-            '<p class="text-xs text-gray-400">云端版 v2.0</p>' +
+            '<p class="text-xs text-gray-400 sidebar-text">云端版 v2.0</p>' +
             '</div>' +
             '</div>' +
             '<div class="px-4 py-3 border-b border-gray-100">' +
-            '<label class="text-xs text-gray-400 block mb-1">当前门店</label>' +
+            '<label class="text-xs text-gray-400 block mb-1 sidebar-text">当前门店</label>' +
             '<select id="branchSelector" class="w-full p-2 border rounded-lg text-sm bg-gray-50">' +
             '<option value="all">全部门店</option>' +
             '</select>' +
@@ -44,7 +45,11 @@ window.SidebarComponent = {
             var show = perms.indexOf(item.module) !== -1 || perms.length === 0;
             if (show) {
                 var activeClass = (item.module === 'dashboard') ? ' nav-item-active' : '';
-                html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '"><i class="fas ' + item.icon + ' w-5"></i><span>' + item.label + '</span></a>';
+                // ===== 新增：点击后关闭侧边栏（移动端） =====
+                html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '" onclick="if(window.innerWidth<=768){setTimeout(function(){window.closeSidebar();},300);}">' +
+                    '<i class="fas ' + item.icon + ' w-5"></i>' +
+                    '<span class="menu-label">' + item.label + '</span>' +
+                    '</a>';
             }
         }
 
@@ -54,7 +59,7 @@ window.SidebarComponent = {
             '<div class="flex items-center gap-3">' +
             '<i class="fas fa-cloud text-blue-500 text-xl"></i>' +
             '<div>' +
-            '<p class="text-xs text-gray-400">同步状态</p>' +
+            '<p class="text-xs text-gray-400 sidebar-text">同步状态</p>' +
             '<p class="text-sm font-semibold text-green-600">在线</p>' +
             '</div>' +
             '</div>' +
@@ -71,6 +76,15 @@ window.SidebarComponent = {
         if (container) {
             container.innerHTML = html;
             this.bindEvents(container);
+            // ===== 新增：恢复桌面端折叠状态 =====
+            if (window.innerWidth > 768) {
+                var saved = localStorage.getItem('sidebar_expanded');
+                if (saved === 'true') {
+                    container.classList.add('expanded');
+                } else {
+                    container.classList.remove('expanded');
+                }
+            }
         }
         return html;
     },
@@ -91,6 +105,12 @@ window.SidebarComponent = {
                     allLinks[j].classList.remove('nav-item-active');
                 }
                 this.classList.add('nav-item-active');
+                // ===== 新增：移动端点击后关闭侧边栏 =====
+                if (window.innerWidth <= 768) {
+                    setTimeout(function() {
+                        if (window.closeSidebar) window.closeSidebar();
+                    }, 300);
+                }
             });
         }
 
