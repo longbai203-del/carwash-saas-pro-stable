@@ -10,6 +10,8 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <!-- ===== 新增：QRCode.js 用于生成二维码 ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -119,7 +121,7 @@
 <!-- 认证 -->
 <script src="js/auth.js"></script>
 
-<!-- 组件（必须按顺序加载） -->
+<!-- 组件 -->
 <script src="components/navbar.js"></script>
 <script src="components/sidebar.js"></script>
 <script src="components/modal.js"></script>
@@ -137,13 +139,11 @@
 // 启动应用
 // ============================================================
 (async function initApp() {
-    // 等待 SupabaseService 初始化
     for (var i = 0; i < 30; i++) {
         if (window.SupabaseService && window.SupabaseService.isReady()) break;
         await new Promise(function(r) { setTimeout(r, 100); });
     }
 
-    // 注册路由
     if (window.AppRouter) {
         AppRouter.init();
     }
@@ -158,7 +158,6 @@
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
 
-                // 渲染侧边栏
                 if (window.SidebarComponent) {
                     var sidebarContainer = document.getElementById('sidebarContainer');
                     if (sidebarContainer) {
@@ -166,7 +165,6 @@
                     }
                 }
 
-                // 渲染导航栏
                 if (window.NavbarComponent) {
                     var navbarContainer = document.getElementById('navbarContainer');
                     if (navbarContainer) {
