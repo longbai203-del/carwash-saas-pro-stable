@@ -1,7 +1,6 @@
 /**
- * cashier.js - POS收银模块 V2.0
- * 三栏式布局：客户 | 服务 | 购物车
- * 包含：快捷搜索、最近服务、混合支付、服务状态联动、队列
+ * cashier.js - POS收银模块 V2.1
+ * 三栏式布局 + 完整功能：散客、新增客户、打印、二维码
  */
 (function() {
     'use strict';
@@ -13,18 +12,14 @@
     // 服务数据
     // ============================================================
     window.CashierModule.services = [
-        // 洗车服务
         { id: 's1', name: '基础清洗', price: 30, category: 'wash', icon: '🧽', desc: '外部冲洗+擦干', popular: true },
         { id: 's2', name: '深度清洗', price: 55, category: 'wash', icon: '🧼', desc: '内外深度清洁', popular: true },
         { id: 's3', name: '全车精洗', price: 110, category: 'wash', icon: '🚗', desc: '内外全面清洁+打蜡', popular: true },
-        // 美容服务
         { id: 's4', name: '外部抛光', price: 65, category: 'detail', icon: '✨', desc: '漆面抛光去划痕' },
         { id: 's5', name: '内部护理', price: 70, category: 'detail', icon: '🪑', desc: '内饰深度护理' },
         { id: 's6', name: '全车镀晶', price: 299, category: 'detail', icon: '💎', desc: '全车镀晶保护' },
-        // 套餐
         { id: 'p1', name: '月度洗车卡', price: 299, category: 'package', icon: '📅', desc: '30天无限次基础洗' },
         { id: 'p2', name: '季度护理套餐', price: 899, category: 'package', icon: '📦', desc: '精洗+抛光+内部护理' },
-        // 商品
         { id: 'pr1', name: '车用香薰', price: 25, category: 'product', icon: '🌺', desc: '车载香薰' },
         { id: 'pr2', name: '玻璃清洁液', price: 18, category: 'product', icon: '🧴', desc: '500ml玻璃清洁' },
         { id: 'pr3', name: '轮胎光亮剂', price: 22, category: 'product', icon: '⚫', desc: '轮胎养护' }
@@ -47,14 +42,13 @@
     // ============================================================
     window.CashierModule.cacheDom = function() {
         this.el = {
-            // 顶部
             quickSearch: this.getEl('posQuickSearch'),
             cashierName: this.getEl('posCashierName'),
             cashierStatus: this.getEl('cashierStatus'),
-            // 客户区
             plate: this.getEl('posPlate'),
             phone: this.getEl('posPhone'),
             customerCard: this.getEl('customerCard'),
+            guestHint: this.getEl('guestHint'),
             custDisplayName: this.getEl('custDisplayName'),
             custDisplayPhone: this.getEl('custDisplayPhone'),
             custDisplayPlate: this.getEl('custDisplayPlate'),
@@ -63,15 +57,9 @@
             custDisplayPoints: this.getEl('custDisplayPoints'),
             custDisplayVisits: this.getEl('custDisplayVisits'),
             custDisplayPackage: this.getEl('custDisplayPackage'),
-            custLastVisit: this.getEl('custLastVisit'),
-            lastVisitCard: this.getEl('lastVisitCard'),
-            vehiclePhotoCard: this.getEl('vehiclePhotoCard'),
-            vehiclePhotoPreview: this.getEl('vehiclePhotoPreview'),
-            // 服务区
             serviceGrid: this.getEl('serviceGrid'),
             serviceSearch: this.getEl('serviceSearch'),
             recentServices: this.getEl('recentServices'),
-            // 购物车
             cartItems: this.getEl('cartItems'),
             cartSubtotal: this.getEl('cartSubtotal'),
             cartDiscount: this.getEl('cartDiscount'),
@@ -80,13 +68,11 @@
             selectedPayment: this.getEl('selectedPayment'),
             couponInput: this.getEl('couponInput'),
             checkoutBtn: this.getEl('checkoutBtn'),
-            // 混合支付
             splitPaymentArea: this.getEl('splitPaymentArea'),
             splitCash: this.getEl('splitCash'),
             splitMada: this.getEl('splitMada'),
             splitCard: this.getEl('splitCard'),
             splitRemaining: this.getEl('splitRemaining'),
-            // 队列
             queuePending: this.getEl('queuePending'),
             queueInProgress: this.getEl('queueInProgress'),
             queueCompleted: this.getEl('queueCompleted'),
@@ -104,28 +90,21 @@
     window.CashierModule.bindEvents = function() {
         var self = this;
 
-        // 快速搜索 - 回车
         if (this.el.quickSearch) {
             this.el.quickSearch.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') self.quickSearch();
             });
         }
-
-        // 车牌 - 回车
         if (this.el.plate) {
             this.el.plate.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') self.searchPlate();
             });
         }
-
-        // 服务搜索
         if (this.el.serviceSearch) {
             this.el.serviceSearch.addEventListener('input', function() {
                 self.renderServices();
             });
         }
-
-        // 混合支付输入
         ['splitCash', 'splitMada', 'splitCard'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el) {
@@ -140,25 +119,16 @@
     // 加载数据
     // ============================================================
     window.CashierModule.loadData = function() {
-        var self = this;
-        var users = AppStore.get('allUsers') || [];
-        var customers = AppStore.get('allCustomers') || [];
-        var orders = AppStore.get('allOrders') || [];
-
-        // 设置收银员
         var user = AppStore.get('currentUser');
         if (user && this.el.cashierName) {
             this.el.cashierName.textContent = user.name || user.username;
         }
-
         this.renderServices();
         this.renderRecentServices();
         this.updateCart();
-        this.updateQueue(orders);
-        this.updateTodayStats(orders);
+        this.updateQueue();
+        this.updateTodayStats();
         this.updateStatus();
-
-        // 加载门店列表
         this.loadStores();
     };
 
@@ -202,8 +172,6 @@
             this.toast('请输入车牌或手机号', 'error');
             return;
         }
-
-        // 尝试按车牌搜索
         if (this.el.plate) {
             this.el.plate.value = query.toUpperCase();
         }
@@ -232,14 +200,13 @@
         if (customer) {
             this.selectedCustomer = customer;
             this.showCustomerInfo(customer);
-            this.loadVehiclePhotos(plate);
+            if (this.el.guestHint) this.el.guestHint.classList.add('hidden');
             this.toast('👤 找到客户: ' + (customer.name || customer.phone), 'success');
         } else {
             this.selectedCustomer = null;
             this.hideCustomerInfo();
-            this.toast('⚠️ 未找到该车牌，可快速添加', 'warning');
-            // 自动弹出添加客户
-            this.showQuickAddCustomer(plate);
+            if (this.el.guestHint) this.el.guestHint.classList.remove('hidden');
+            this.toast('⚠️ 未找到该车牌，可点击 "+" 快速添加', 'warning');
         }
     };
 
@@ -250,6 +217,7 @@
         var card = this.el.customerCard;
         if (!card) return;
         card.classList.remove('hidden');
+        if (this.el.guestHint) this.el.guestHint.classList.add('hidden');
 
         if (this.el.custDisplayName) this.el.custDisplayName.textContent = customer.name || '-';
         if (this.el.custDisplayPhone) this.el.custDisplayPhone.textContent = customer.phone || '-';
@@ -262,51 +230,48 @@
             this.el.custDisplayLevel.textContent = level;
             this.el.custDisplayLevel.className = 'customer-level customer-level-' + level.toLowerCase();
         }
-
-        // 套餐
         if (this.el.custDisplayPackage) {
             this.el.custDisplayPackage.textContent = customer.package_name || '-';
-        }
-
-        // 最近洗车
-        if (this.el.custLastVisit && this.el.lastVisitCard) {
-            var lastOrder = this.getLastOrder(customer.id);
-            if (lastOrder) {
-                this.el.custLastVisit.textContent = new Date(lastOrder.created_at).toLocaleDateString();
-                this.el.lastVisitCard.classList.remove('hidden');
-            } else {
-                this.el.lastVisitCard.classList.add('hidden');
-            }
         }
     };
 
     window.CashierModule.hideCustomerInfo = function() {
         if (this.el.customerCard) this.el.customerCard.classList.add('hidden');
-        if (this.el.lastVisitCard) this.el.lastVisitCard.classList.add('hidden');
-        if (this.el.vehiclePhotoCard) this.el.vehiclePhotoCard.classList.add('hidden');
-    };
-
-    // ============================================================
-    // 最近订单
-    // ============================================================
-    window.CashierModule.getLastOrder = function(customerId) {
-        var orders = AppStore.get('allOrders') || [];
-        var customerOrders = orders.filter(function(o) { return o.customer_id === customerId; });
-        customerOrders.sort(function(a, b) {
-            return new Date(b.created_at) - new Date(a.created_at);
-        });
-        return customerOrders[0] || null;
+        if (this.el.guestHint) this.el.guestHint.classList.remove('hidden');
     };
 
     // ============================================================
     // 快速添加客户
     // ============================================================
-    window.CashierModule.showQuickAddCustomer = function(plate) {
-        if (!confirm('未找到客户 "' + plate + '"，是否快速添加？')) return;
+    window.CashierModule.showQuickAddCustomer = function() {
+        var modal = document.getElementById('quickAddCustomerModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            var plate = this.el.plate ? this.el.plate.value.trim().toUpperCase() : '';
+            if (plate) {
+                document.getElementById('quickCustPlate').value = plate;
+            }
+            setTimeout(function() {
+                document.getElementById('quickCustName').focus();
+            }, 100);
+        }
+    };
 
-        var name = prompt('请输入客户姓名：');
-        if (!name) return;
-        var phone = prompt('请输入手机号：');
+    window.CashierModule.closeQuickAddCustomer = function() {
+        var modal = document.getElementById('quickAddCustomerModal');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    window.CashierModule.saveQuickCustomer = function() {
+        var self = this;
+        var plate = document.getElementById('quickCustPlate').value.trim().toUpperCase();
+        var name = document.getElementById('quickCustName').value.trim();
+        var phone = document.getElementById('quickCustPhone').value.trim();
+
+        if (!plate || !name) {
+            this.toast('请填写车牌和姓名', 'error');
+            return;
+        }
 
         var tenant = AppStore.get('currentTenant');
         var store = AppStore.get('currentStore');
@@ -323,7 +288,6 @@
             visit_count: 0
         };
 
-        var self = this;
         AppApi.insert('customers', customerData)
             .then(function(data) {
                 if (data && data.length > 0) {
@@ -332,6 +296,7 @@
                     AppStore.set('allCustomers', customers);
                     self.selectedCustomer = data[0];
                     self.showCustomerInfo(data[0]);
+                    self.closeQuickAddCustomer();
                     self.toast('✅ 客户已添加: ' + name, 'success');
                 }
             })
@@ -378,9 +343,6 @@
         grid.innerHTML = html;
     };
 
-    // ============================================================
-    // 分类筛选
-    // ============================================================
     window.CashierModule.filterServices = function(category) {
         if (category) {
             this.currentFilter = category;
@@ -441,7 +403,6 @@
         }
         if (!service) return;
 
-        // 检查是否已存在
         var existing = null;
         for (var j = 0; j < this.cart.length; j++) {
             if (this.cart[j].id === serviceId) {
@@ -461,7 +422,6 @@
             });
         }
 
-        // 更新最近使用
         this.recentServices = this.recentServices.filter(function(id) { return id !== serviceId; });
         this.recentServices.unshift(serviceId);
         if (this.recentServices.length > 20) this.recentServices.pop();
@@ -557,6 +517,16 @@
         return total;
     };
 
+    window.CashierModule.getTotal = function() {
+        var subtotal = 0;
+        for (var i = 0; i < this.cart.length; i++) {
+            subtotal += this.cart[i].price * this.cart[i].qty;
+        }
+        var discount = this._couponDiscount + this._pointsDiscount;
+        var vatRate = 15;
+        return subtotal - discount + (subtotal - discount) * vatRate / 100;
+    };
+
     // ============================================================
     // 支付方式
     // ============================================================
@@ -581,7 +551,6 @@
                 btns[i].classList.add('border-blue-400', 'bg-blue-50');
             }
         }
-        // 隐藏混合支付
         if (this.el.splitPaymentArea) {
             this.el.splitPaymentArea.classList.add('hidden');
         }
@@ -616,16 +585,6 @@
                 this.el.splitRemaining.className = 'text-xs text-green-600';
             }
         }
-    };
-
-    window.CashierModule.getTotal = function() {
-        var subtotal = 0;
-        for (var i = 0; i < this.cart.length; i++) {
-            subtotal += this.cart[i].price * this.cart[i].qty;
-        }
-        var discount = this._couponDiscount + this._pointsDiscount;
-        var vatRate = 15;
-        return subtotal - discount + (subtotal - discount) * vatRate / 100;
     };
 
     // ============================================================
@@ -693,7 +652,6 @@
 
         var total = this.getTotal();
 
-        // 检查混合支付
         var cash = parseFloat(document.getElementById('splitCash')?.value) || 0;
         var mada = parseFloat(document.getElementById('splitMada')?.value) || 0;
         var card = parseFloat(document.getElementById('splitCard')?.value) || 0;
@@ -704,7 +662,6 @@
                 this.toast('混合支付金额不匹配！总计: ' + total.toFixed(2) + ' SAR', 'error');
                 return;
             }
-            // 使用混合支付
             this._processPayment('混合支付', total);
         } else {
             this._processPayment(this.selectedPayment, total);
@@ -731,6 +688,9 @@
         var discount = this._couponDiscount + this._pointsDiscount;
         var vatRate = 15;
         var vat = (subtotal - discount) * vatRate / 100;
+
+        // POS交易号
+        var posTxnId = document.getElementById('posTransactionId')?.value || '';
 
         var orderData = {
             order_number: orderNumber,
@@ -765,9 +725,7 @@
                             if (customers[k].id === self.selectedCustomer.id) {
                                 customers[k].visit_count = (customers[k].visit_count || 0) + 1;
                                 customers[k].last_visit = new Date().toISOString();
-                                if (total > 0) {
-                                    customers[k].points = (customers[k].points || 0) + Math.floor(total / 10);
-                                }
+                                customers[k].points = (customers[k].points || 0) + Math.floor(total / 10);
                                 break;
                             }
                         }
@@ -779,18 +737,11 @@
                         order_id: order.id,
                         amount: total,
                         payment_method: paymentMethod,
+                        pos_transaction_id: posTxnId || null,
                         cashier_id: currentUser.id,
                         paid_at: new Date().toISOString()
                     };
                     AppApi.insert('payment_records', paymentData).catch(function() {});
-
-                    // 保存车辆照片关联
-                    if (self.selectedCustomer && self._vehiclePhotos && self._vehiclePhotos.length > 0) {
-                        self._vehiclePhotos.forEach(function(photo) {
-                            AppApi.update('vehicle_photos', photo.id, { order_id: order.id }).catch(function() {});
-                        });
-                        self._vehiclePhotos = [];
-                    }
 
                     self.toast('✅ 收款成功: ' + total.toFixed(2) + ' SAR', 'success');
 
@@ -801,15 +752,13 @@
                     self.selectedPayment = null;
                     self.updateCart();
                     self.resetPaymentUI();
-                    self.updateQueue(allOrders);
-                    self.updateTodayStats(allOrders);
+                    self.updateQueue();
+                    self.updateTodayStats();
                     self.voiceTotal(total);
 
-                    // 打印小票
+                    // 自动弹出打印选项
                     setTimeout(function() {
-                        if (confirm('是否打印小票？')) {
-                            self.printReceipt();
-                        }
+                        self.showPrintOptions();
                     }, 500);
                 }
             })
@@ -836,6 +785,7 @@
         if (this.el.couponInput) {
             this.el.couponInput.value = '';
         }
+        document.getElementById('posTransactionId').value = '';
     };
 
     // ============================================================
@@ -862,22 +812,14 @@
     // ============================================================
     // 队列
     // ============================================================
-    window.CashierModule.updateQueue = function(orders) {
-        if (!orders) orders = AppStore.get('allOrders') || [];
+    window.CashierModule.updateQueue = function() {
+        var orders = AppStore.get('allOrders') || [];
         var today = new Date().toISOString().split('T')[0];
         var todayOrders = orders.filter(function(o) { return o.date === today; });
 
-        var counts = {
-            pending: 0,
-            in_progress: 0,
-            completed: 0,
-            delivered: 0
-        };
-
+        var counts = { pending: 0, in_progress: 0, completed: 0, delivered: 0 };
         todayOrders.forEach(function(o) {
-            if (counts[o.status] !== undefined) {
-                counts[o.status]++;
-            }
+            if (counts[o.status] !== undefined) counts[o.status]++;
         });
 
         if (this.el.queuePending) this.el.queuePending.textContent = counts.pending;
@@ -889,8 +831,8 @@
     // ============================================================
     // 今日统计
     // ============================================================
-    window.CashierModule.updateTodayStats = function(orders) {
-        if (!orders) orders = AppStore.get('allOrders') || [];
+    window.CashierModule.updateTodayStats = function() {
+        var orders = AppStore.get('allOrders') || [];
         var today = new Date().toISOString().split('T')[0];
         var todayOrders = orders.filter(function(o) { return o.date === today && o.status !== 'cancelled'; });
 
@@ -910,7 +852,7 @@
     };
 
     // ============================================================
-    // 打印功能
+    // 打印功能（含二维码）
     // ============================================================
     window.CashierModule.showPrintOptions = function() {
         var modal = document.getElementById('printOptionsModal');
@@ -922,12 +864,23 @@
         if (modal) modal.classList.add('hidden');
     };
 
+    // ===== 生成二维码HTML =====
+    window.CashierModule.generateQRCode = function(content, size) {
+        if (!content) return '';
+        size = size || 120;
+        var encoded = encodeURIComponent(content);
+        return '<img src="https://chart.googleapis.com/chart?chs=' + size + 'x' + size + '&cht=qr&chl=' + encoded + '" alt="QR" style="display:inline-block;margin:5px auto;">';
+    };
+
+    // ===== 小票打印（热敏）- 含二维码 =====
     window.CashierModule.printReceipt = function() {
         this.closePrintOptions();
+
         var total = this.el.cartTotal ? this.el.cartTotal.textContent : '0 SAR';
         var plate = this.selectedCustomer ? (this.selectedCustomer.plate_number || 'GUEST') : 'GUEST';
+        var customerName = this.selectedCustomer ? (this.selectedCustomer.name || '') : '';
 
-        var win = window.open('', '_blank', 'width=400,height=600');
+        var win = window.open('', '_blank', 'width=400,height=700');
         if (!win) {
             this.toast('请允许弹窗', 'error');
             return;
@@ -935,95 +888,193 @@
 
         var config = AppStore.get('config') || {};
         var shopName = config.shopName || 'Car Wash Pro';
+        var taxId = config.shopTaxId || 'N/A';
+        var address = config.shopAddress || '';
+        var phone = config.shopPhone || '';
+
+        var now = new Date();
+        var dateStr = now.toLocaleDateString('zh-CN');
+        var timeStr = now.toLocaleTimeString('zh-CN');
+        var orderNumber = 'RCP-' + Date.now().toString().slice(-8);
+
+        // 生成二维码
+        var qrContent = 'https://carwash-saas-pro.vercel.app/order/' + orderNumber;
+        var qrHtml = this.generateQRCode(qrContent, 120);
 
         var html = '<!DOCTYPE html><html><head><title>小票</title><style>' +
-            'body { font-family: "Courier New", monospace; padding: 10px; max-width: 300px; margin: auto; text-align: center; font-size: 12px; }' +
-            '.header { font-size: 18px; font-weight: bold; }' +
-            '.line { border-top: 1px dashed #999; margin: 8px 0; }' +
-            '.total { font-size: 20px; font-weight: bold; color: #0091D5; }' +
+            'body { font-family: "Courier New", monospace; padding: 8px; max-width: 280px; margin: auto; font-size: 11px; }' +
+            '.center { text-align: center; }' +
+            '.header { font-size: 16px; font-weight: bold; }' +
+            '.line { border-top: 1px dashed #999; margin: 6px 0; }' +
+            '.double-line { border-top: 2px solid #000; margin: 6px 0; }' +
+            '.row { display: flex; justify-content: space-between; padding: 2px 0; }' +
+            '.total { font-size: 18px; font-weight: bold; }' +
+            '.footer { font-size: 9px; color: #666; margin-top: 6px; }' +
+            '.qr { text-align: center; margin: 6px 0; }' +
+            '@media print { body { padding: 4px; } }' +
             '</style></head><body>' +
+            '<div class="center">' +
             '<div class="header">🧼 ' + shopName + '</div>' +
+            '<div class="small">' + address + '</div>' +
+            '<div class="small">📞 ' + phone + '</div>' +
+            '<div class="small">VAT: ' + taxId + '</div>' +
             '<div class="line"></div>' +
-            '<p>车牌: <strong>' + plate + '</strong></p>' +
-            '<p>日期: ' + new Date().toLocaleString() + '</p>' +
+            '<div class="row"><span>日期</span><span>' + dateStr + ' ' + timeStr + '</span></div>' +
+            '<div class="row"><span>单号</span><span>' + orderNumber + '</span></div>' +
+            '<div class="row"><span>车牌</span><span><strong>' + plate + '</strong></span></div>' +
+            (customerName ? '<div class="row"><span>客户</span><span>' + customerName + '</span></div>' : '') +
             '<div class="line"></div>';
 
+        // 商品列表
         for (var i = 0; i < this.cart.length; i++) {
             var item = this.cart[i];
-            html += '<p>' + item.name + ' ×' + item.qty + ' = ' + (item.price * item.qty).toFixed(2) + ' SAR</p>';
+            var itemTotal = item.price * item.qty;
+            html += '<div class="row"><span>' + item.icon + ' ' + item.name + ' ×' + item.qty + '</span><span>' + itemTotal.toFixed(2) + '</span></div>';
         }
 
+        var discount = this._couponDiscount + this._pointsDiscount;
+        var subtotal = 0;
+        for (var j = 0; j < this.cart.length; j++) {
+            subtotal += this.cart[j].price * this.cart[j].qty;
+        }
+        var vatAmount = (subtotal - discount) * 15 / 100;
+
         html += '<div class="line"></div>' +
-            '<div class="total">' + total + '</div>' +
+            (discount > 0 ? '<div class="row"><span>折扣</span><span>- ' + discount.toFixed(2) + '</span></div>' : '') +
+            '<div class="row"><span>小计</span><span>' + (subtotal - discount).toFixed(2) + '</span></div>' +
+            '<div class="row"><span>VAT 15%</span><span>' + vatAmount.toFixed(2) + '</span></div>' +
+            '<div class="double-line"></div>' +
+            '<div class="row total"><span>总计</span><span>' + total + '</span></div>' +
+            '<div class="double-line"></div>' +
+            '<div class="row"><span>支付方式</span><span>' + (this.selectedPayment || '现金') + '</span></div>' +
+            (document.getElementById('posTransactionId')?.value ? '<div class="row"><span>POS交易号</span><span>' + document.getElementById('posTransactionId').value + '</span></div>' : '') +
             '<div class="line"></div>' +
-            '<p>✅ 感谢光临！</p>' +
-            '<script>setTimeout(function(){ window.print(); }, 500);<\/script>' +
+            '<div class="qr">' + qrHtml + '</div>' +
+            '<div class="center" style="font-size:13px;">✅ 感谢光临！</div>' +
+            '<div class="footer center">' + (config.receiptFooter || '欢迎再次光临') + '</div>' +
+            '</div>' +
+            '<script>setTimeout(function(){ window.print(); }, 600);<\/script>' +
             '</body></html>';
 
         win.document.write(html);
         win.document.close();
     };
 
+    // ===== 税务发票打印（A4）- 含二维码 =====
     window.CashierModule.printTaxInvoice = function() {
         this.closePrintOptions();
+
         var total = this.el.cartTotal ? this.el.cartTotal.textContent : '0 SAR';
         var plate = this.selectedCustomer ? (this.selectedCustomer.plate_number || 'GUEST') : 'GUEST';
+        var customerName = this.selectedCustomer ? (this.selectedCustomer.name || 'عميل عام') : 'عميل عام';
+        var customerPhone = this.selectedCustomer ? (this.selectedCustomer.phone || '') : '';
 
-        var win = window.open('', '_blank', 'width=800,height=800');
+        var win = window.open('', '_blank', 'width=900,height=1200');
         if (!win) {
             this.toast('请允许弹窗', 'error');
             return;
         }
 
         var config = AppStore.get('config') || {};
-        var shopName = config.companyNameAr || config.shopName || 'شركة الخدمات البترولية';
+        var shopNameAr = config.companyNameAr || 'شركة الخدمات البترولية';
+        var shopNameEn = config.companyNameEn || 'Petroleum Services Co.';
         var taxId = config.vatNumber || config.shopTaxId || '300056462300003';
-        var address = config.companyAddress || config.shopAddress || 'الرياض';
+        var address = config.companyAddress || config.shopAddress || 'الرياض، النيسيم الشرقى';
+        var phone = config.companyPhone || config.shopPhone || '920002667';
         var crNumber = config.crNumber || '4030571509';
 
         var now = new Date();
         var dateStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
+        var timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         var invoiceNumber = 'INV-' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + '-' + String(Date.now()).slice(-6);
 
+        var subtotal = 0;
+        for (var i = 0; i < this.cart.length; i++) {
+            subtotal += this.cart[i].price * this.cart[i].qty;
+        }
+        var discount = this._couponDiscount + this._pointsDiscount;
+        var vatAmount = (subtotal - discount) * 15 / 100;
+        var totalAmount = subtotal - discount + vatAmount;
+        var currentUser = AppStore.get('currentUser') || {};
+
+        // 生成二维码
+        var qrContent = 'https://carwash-saas-pro.vercel.app/invoice/' + invoiceNumber;
+        var qrHtml = this.generateQRCode(qrContent, 150);
+
+        // 商品列表
+        var itemsHtml = '';
+        for (var j = 0; j < this.cart.length; j++) {
+            var item = this.cart[j];
+            var itemTotal = item.price * item.qty;
+            itemsHtml += '<tr>' +
+                '<td>' + (j + 1) + '</td>' +
+                '<td>' + item.name + '</td>' +
+                '<td>' + item.qty + '</td>' +
+                '<td>' + item.price.toFixed(2) + ' SAR</td>' +
+                '<td>0.00 SAR</td>' +
+                '<td>15%</td>' +
+                '<td>' + (itemTotal * 15 / 100).toFixed(2) + ' SAR</td>' +
+                '<td>' + itemTotal.toFixed(2) + ' SAR</td>' +
+                '</tr>';
+        }
+
         var html = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><title>فاتورة ضريبية</title><style>' +
-            'body { font-family: "Times New Roman", Arial, sans-serif; padding: 40px; max-width: 800px; margin: auto; }' +
-            '.invoice { border: 1px solid #333; padding: 30px; border-radius: 8px; }' +
-            '.header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; }' +
-            '.shop-name { font-size: 24px; font-weight: bold; color: #1a3a6b; }' +
-            '.shop-details { font-size: 12px; color: #555; }' +
-            '.title { text-align: center; font-size: 20px; font-weight: bold; background: #f0f0f0; padding: 8px; margin: 10px 0; }' +
-            '.table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; }' +
-            '.table th { background: #1a3a6b; color: white; padding: 8px; text-align: center; }' +
-            '.table td { padding: 8px; text-align: center; border-bottom: 1px solid #ddd; }' +
-            '.totals { width: 60%; margin-right: auto; margin-top: 15px; }' +
-            '.totals .grand-total { font-size: 18px; font-weight: bold; border-top: 2px solid #333; padding-top: 8px; }' +
-            '.footer { margin-top: 20px; text-align: center; border-top: 1px solid #ddd; padding-top: 15px; }' +
+            'body { font-family: "Times New Roman", Arial, sans-serif; padding: 30px; max-width: 900px; margin: auto; background: #f5f5f5; }' +
+            '.invoice { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }' +
+            '.header { text-align: center; border-bottom: 3px solid #1a3a6b; padding-bottom: 15px; margin-bottom: 20px; }' +
+            '.shop-name-ar { font-size: 26px; font-weight: bold; color: #1a3a6b; }' +
+            '.shop-name-en { font-size: 16px; color: #666; }' +
+            '.shop-details { font-size: 12px; color: #555; margin-top: 3px; }' +
+            '.title { text-align: center; font-size: 22px; font-weight: bold; background: #f0f4f9; padding: 10px; margin: 10px 0; border-radius: 6px; }' +
+            '.title-en { text-align: center; font-size: 14px; color: #666; margin-bottom: 15px; }' +
+            '.info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 20px; font-size: 12px; margin: 10px 0; padding: 12px; background: #f8fafc; border-radius: 6px; }' +
+            '.info-grid .label { font-weight: bold; color: #333; }' +
+            '.table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }' +
+            '.table th { background: #1a3a6b; color: white; padding: 8px 6px; text-align: center; font-size: 11px; }' +
+            '.table td { padding: 6px; text-align: center; border-bottom: 1px solid #eee; }' +
+            '.totals { width: 55%; margin-right: auto; margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; }' +
+            '.totals .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }' +
+            '.totals .grand-total { font-size: 20px; font-weight: bold; color: #1a3a6b; border-top: 2px solid #1a3a6b; padding-top: 8px; margin-top: 4px; }' +
+            '.footer { margin-top: 20px; font-size: 11px; text-align: center; border-top: 1px solid #ddd; padding-top: 15px; color: #666; }' +
+            '.declaration { font-size: 11px; text-align: justify; margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 6px; border-right: 3px solid #1a3a6b; }' +
+            '.signature { display: flex; justify-content: space-between; margin-top: 20px; font-size: 12px; }' +
+            '.signature div { border-top: 1px solid #999; padding-top: 5px; min-width: 150px; }' +
+            '.qr-section { text-align: center; margin: 10px 0; }' +
+            '@media print { body { padding: 10px; background: white; } .invoice { box-shadow: none; } }' +
             '</style></head><body>' +
             '<div class="invoice">' +
             '<div class="header">' +
-            '<div class="shop-name">🧼 ' + shopName + '</div>' +
-            '<div class="shop-details">' + address + ' | الرقم الضريبي: ' + taxId + ' | سجل تجاري: ' + crNumber + '</div>' +
+            '<div class="shop-name-ar">🧼 ' + shopNameAr + '</div>' +
+            '<div class="shop-name-en">' + shopNameEn + '</div>' +
+            '<div class="shop-details">' + address + ' | 📞 ' + phone + '</div>' +
+            '<div class="shop-details">الرقم الضريبي: ' + taxId + ' | سجل تجاري: ' + crNumber + '</div>' +
             '</div>' +
             '<div class="title">فاتورة ضريبية مبسطة</div>' +
-            '<div class="title" style="font-size:14px;background:transparent;">Simplified Tax Invoice</div>' +
-            '<p><strong>رقم الفاتورة:</strong> ' + invoiceNumber + '</p>' +
-            '<p><strong>التاريخ:</strong> ' + dateStr + '</p>' +
-            '<p><strong>رقم اللوحة:</strong> ' + plate + '</p>' +
-            '<table class="table">' +
-            '<thead><tr><th>#</th><th>الخدمة</th><th>الكمية</th><th>السعر</th><th>الضريبة</th><th>الإجمالي</th></tr></thead><tbody>';
-
-        for (var i = 0; i < this.cart.length; i++) {
-            var item = this.cart[i];
-            var itemTotal = item.price * item.qty;
-            var itemVat = itemTotal * 15 / 100;
-            html += '<tr><td>' + (i + 1) + '</td><td>' + item.name + '</td><td>' + item.qty + '</td><td>' + item.price.toFixed(2) + '</td><td>' + itemVat.toFixed(2) + '</td><td>' + itemTotal.toFixed(2) + '</td></tr>';
-        }
-
-        html += '</tbody></table>' +
-            '<div class="totals">' +
-            '<div class="row grand-total"><span>المبلغ شامل الضريبة</span><span>' + total + '</span></div>' +
+            '<div class="title-en">Simplified Tax Invoice</div>' +
+            '<div class="info-grid">' +
+            '<div><span class="label">رقم الفاتورة:</span> ' + invoiceNumber + '</div>' +
+            '<div><span class="label">التاريخ:</span> ' + dateStr + ' ' + timeStr + '</div>' +
+            '<div><span class="label">نوع الدفع:</span> ' + (this.selectedPayment || 'نقدي') + '</div>' +
+            '<div><span class="label">رقم اللوحة:</span> ' + plate + '</div>' +
+            '<div><span class="label">المستفيد:</span> ' + customerName + (customerPhone ? ' (' + customerPhone + ')' : '') + '</div>' +
+            '<div><span class="label">الموظف:</span> ' + (currentUser.name || currentUser.username || '-') + '</div>' +
             '</div>' +
-            '<div class="footer">شكراً لتعاملكم معنا</div>' +
+            '<table class="table">' +
+            '<thead><tr><th>#</th><th>المنتج / الخدمة</th><th>الكمية</th><th>السعر</th><th>الخصم</th><th>نسبة الضريبة</th><th>الضريبة</th><th>الإجمالي</th></tr></thead>' +
+            '<tbody>' + itemsHtml + '</tbody></table>' +
+            '<div class="totals">' +
+            '<div class="row"><span>المبلغ غير شامل الضريبة</span><span>' + (subtotal - discount).toFixed(2) + ' SAR</span></div>' +
+            (discount > 0 ? '<div class="row"><span>الخصم</span><span>' + discount.toFixed(2) + ' SAR</span></div>' : '') +
+            '<div class="row"><span>ضريبة القيمة المضافة (15%)</span><span>' + vatAmount.toFixed(2) + ' SAR</span></div>' +
+            '<div class="row grand-total"><span>المبلغ شامل الضريبة</span><span>' + totalAmount.toFixed(2) + ' SAR</span></div>' +
+            '</div>' +
+            '<div class="qr-section">' + qrHtml + '</div>' +
+            '<div class="declaration">' +
+            'أقر أنا الموقع على هذه الفاتورة إنني استلمت كافة البضاعة المدونة بها بحالة سليمة وإنني سأقوم بسداد قيمتها وفي حالة عدم السداد تعتبر هذه الورقة تجارية واجبة الدفع' +
+            '<br><br>I confirm that I have received all the goods listed above in good condition and will pay the full amount.' +
+            '</div>' +
+            '<div class="signature"><div>اسم المستلم: _________________</div><div>اسم البائع: _________________</div></div>' +
+            '<div class="footer">' + (config.invoiceFooter || 'شكراً لتعاملكم معنا - Thank you for your business') + '<br>📍 ' + address + ' | 📞 ' + phone + '</div>' +
             '</div>' +
             '<script>setTimeout(function(){ window.print(); }, 800);<\/script>' +
             '</body></html>';
@@ -1103,50 +1154,13 @@
         if (this.selectedPayment) {
             this.selectPayment(this.selectedPayment);
         }
+        if (this.selectedCustomer) {
+            this.showCustomerInfo(this.selectedCustomer);
+        }
 
         orders.splice(index, 1);
         this.updateCart();
-        this.showCustomerInfo(o.customer);
         this.toast('✅ 已加载挂单', 'success');
-    };
-
-    // ============================================================
-    // 车辆照片（简版）
-    // ============================================================
-    window.CashierModule._vehiclePhotos = [];
-
-    window.CashierModule.takeVehiclePhoto = function() {
-        this.toast('📸 拍照功能开发中，请使用订单管理模块拍照', 'info');
-    };
-
-    window.CashierModule.loadVehiclePhotos = function(plate) {
-        var self = this;
-        AppApi.query('vehicle_photos', {
-            filter: { plate_number: plate },
-            order: { by: 'taken_at', ascending: false },
-            limit: 3
-        })
-        .then(function(photos) {
-            self._vehiclePhotos = photos || [];
-            var preview = document.getElementById('vehiclePhotoPreview');
-            if (!preview) return;
-
-            if (photos && photos.length > 0) {
-                var html = '';
-                photos.slice(0, 3).forEach(function(p) {
-                    html += '<div class="w-12 h-12 rounded-lg overflow-hidden border cursor-pointer" onclick="window.open(\'' + p.photo_url + '\', \'_blank\')">';
-                    html += '<img src="' + p.photo_url + '" class="w-full h-full object-cover" alt="车辆照片">';
-                    html += '</div>';
-                });
-                preview.innerHTML = html;
-                if (self.el.vehiclePhotoCard) {
-                    self.el.vehiclePhotoCard.classList.remove('hidden');
-                }
-            } else {
-                preview.innerHTML = '<span class="text-xs text-gray-400">暂无照片</span>';
-            }
-        })
-        .catch(function() {});
     };
 
     // ============================================================
@@ -1164,5 +1178,5 @@
         this.toast('📱 扫码功能开发中', 'info');
     };
 
-    console.log('[Cashier] V2.0 模块已注册');
+    console.log('[Cashier] V2.1 模块已注册');
 })();
