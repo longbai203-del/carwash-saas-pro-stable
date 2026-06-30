@@ -1,6 +1,7 @@
 /**
  * settings.js - 系统设置模块 V2
  * 包含：门店、税务、税务发票、支付、打印、通知、备份、高级设置
+ * 新增：权限管理入口
  */
 (function() {
     'use strict';
@@ -57,7 +58,11 @@
             supabaseUrl: this.getEl('settingSupabaseUrl'),
             debugMode: this.getEl('settingDebugMode'),
             offlineMode: this.getEl('settingOfflineMode'),
-            logLevel: this.getEl('settingLogLevel')
+            logLevel: this.getEl('settingLogLevel'),
+            // ===== 新增：权限管理 =====
+            enablePermission: this.getEl('settingEnablePermission'),
+            defaultRole: this.getEl('settingDefaultRole'),
+            permissionCache: this.getEl('settingPermissionCache')
         };
     };
 
@@ -126,7 +131,19 @@
         if (this.el.offlineMode) this.el.offlineMode.checked = config.offlineMode || false;
         if (this.el.logLevel) this.el.logLevel.value = config.logLevel || 'info';
 
+        // ===== 新增：权限管理设置 =====
+        if (this.el.enablePermission) {
+            this.el.enablePermission.checked = config.enablePermission !== false;
+        }
+        if (this.el.defaultRole) {
+            this.el.defaultRole.value = config.defaultRole || 'employee';
+        }
+        if (this.el.permissionCache) {
+            this.el.permissionCache.value = config.permissionCache || '3600';
+        }
+
         this.loadStoreSelector();
+        this.loadRoleSelector();
     };
 
     // ===== 加载门店选择器 =====
@@ -140,6 +157,36 @@
             });
             sel.innerHTML = html || '<option value="">暂无门店</option>';
         }
+    };
+
+    // ===== 新增：加载角色选择器 =====
+    window.SettingsModule.loadRoleSelector = function() {
+        var sel = document.getElementById('settingDefaultRole');
+        if (!sel) return;
+
+        // 从数据库加载角色列表
+        var tenant = AppStore.get('currentTenant');
+        AppApi.query('sys_role', {
+            filter: { tenant_id: tenant ? tenant.id : null, status: 'active' },
+            order: { by: 'sort_order', ascending: true }
+        }).then(function(roles) {
+            var html = '';
+            (roles || []).forEach(function(r) {
+                html += '<option value="' + r.role_code + '">' + r.role_name + '</option>';
+            });
+            // 如果没有角色，使用默认值
+            if (!html) {
+                html = '<option value="owner">老板</option><option value="admin">系统管理员</option><option value="manager">店长</option><option value="cashier">收银员</option><option value="employee">员工</option>';
+            }
+            // 保留当前选中值
+            var currentVal = sel.value;
+            sel.innerHTML = html;
+            if (currentVal) sel.value = currentVal;
+        }).catch(function() {
+            // 如果表不存在，使用默认角色列表
+            var html = '<option value="owner">老板</option><option value="admin">系统管理员</option><option value="manager">店长</option><option value="cashier">收银员</option><option value="employee">员工</option>';
+            sel.innerHTML = html;
+        });
     };
 
     // ===== 切换标签页 =====
@@ -263,6 +310,30 @@
         this.toast('✅ 高级设置已保存', 'success');
     };
 
+    // ===== 新增：保存权限管理设置 =====
+    window.SettingsModule.savePermissionSettings = function() {
+        var config = AppStore.get('config') || {};
+        config.enablePermission = this.el.enablePermission ? this.el.enablePermission.checked : true;
+        config.defaultRole = this.el.defaultRole ? this.el.defaultRole.value : 'employee';
+        config.permissionCache = this.el.permissionCache ? parseInt(this.el.permissionCache.value) || 3600 : 3600;
+
+        AppStore.set('config', config);
+        localStorage.setItem('cw_config', JSON.stringify(config));
+
+        // 如果权限启用状态变化，重新初始化权限服务
+        if (window.PermissionService) {
+            var user = AppStore.get('currentUser');
+            var tenant = AppStore.get('currentTenant');
+            var store = AppStore.get('currentStore');
+            if (config.enablePermission && user) {
+                PermissionService.clearCache(user.id);
+                PermissionService.initUserPermissions(user.id, tenant?.id, store?.id);
+            }
+        }
+
+        this.toast('✅ 权限管理设置已保存', 'success');
+    };
+
     // ===== 保存所有设置 =====
     window.SettingsModule.saveAllSettings = function() {
         this.saveGeneralSettings();
@@ -272,6 +343,7 @@
         this.savePrintSettings();
         this.saveNotificationSettings();
         this.saveAdvancedSettings();
+        this.savePermissionSettings();
         this.toast('✅ 所有设置已保存', 'success');
     };
 

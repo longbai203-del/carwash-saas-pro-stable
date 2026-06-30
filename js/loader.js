@@ -21,6 +21,8 @@
             employees: { obj: 'EmployeesModule', label: '员工审核' },
             audit: { obj: 'AuditModule', label: '审计日志' },
             'vehicle-monitor': { obj: 'VehicleMonitorModule', label: '车辆监控' },
+            // ===== 新增：权限中心 =====
+            permission: { obj: 'PermissionModule', label: '权限中心' },
             settings: { obj: 'SettingsModule', label: '系统设置' }
         },
 

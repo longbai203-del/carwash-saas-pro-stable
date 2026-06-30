@@ -26,6 +26,26 @@
             this.bindEvents();
             this.setupRealtime();
 
+            // ===== 新增：初始化权限服务 =====
+            var user = AppStore.get('currentUser');
+            var tenant = AppStore.get('currentTenant');
+            var store = AppStore.get('currentStore');
+            if (window.PermissionService && user) {
+                try {
+                    await PermissionService.initUserPermissions(user.id, tenant?.id, store?.id);
+                    console.log('[App] 权限服务初始化完成');
+                } catch(e) {
+                    console.warn('[App] 权限服务初始化失败:', e);
+                }
+            }
+            if (window.PermissionUI) {
+                try {
+                    PermissionUI.applyPermissionFilter();
+                } catch(e) {
+                    console.warn('[App] 权限UI过滤失败:', e);
+                }
+            }
+
             this._initialized = true;
             console.log('[App] 初始化完成');
         },

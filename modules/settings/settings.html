@@ -5,7 +5,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="text-2xl font-bold text-blue-600">⚙️ 系统设置</h2>
-                <p class="text-sm text-gray-400">管理门店配置、税务、支付和打印选项</p>
+                <p class="text-sm text-gray-400">管理门店配置、税务、支付、打印和权限选项</p>
             </div>
             <button onclick="SettingsModule.saveAllSettings()" class="btn-success py-2 px-6 rounded-xl font-bold">
                 <i class="fas fa-save"></i> 保存所有设置
@@ -32,6 +32,10 @@
         </button>
         <button class="tab-btn" data-tab="notifications" onclick="SettingsModule.switchTab('notifications')">
             <i class="fas fa-bell"></i> 通知
+        </button>
+        <!-- ===== 新增：权限管理标签 ===== -->
+        <button class="tab-btn" data-tab="permission" onclick="SettingsModule.switchTab('permission')">
+            <i class="fas fa-shield-alt"></i> 权限管理
         </button>
         <button class="tab-btn" data-tab="backup" onclick="SettingsModule.switchTab('backup')">
             <i class="fas fa-cloud-upload-alt"></i> 备份
@@ -270,6 +274,48 @@
                 </div>
                 <button onclick="SettingsModule.saveNotificationSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
                     <i class="fas fa-save"></i> 保存通知设置
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 新增：权限管理设置 ===== -->
+        <div id="panel-permission" class="panel-content hidden">
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🔐 权限管理</h3>
+                <div class="space-y-4">
+                    <div class="setting-row">
+                        <label>启用权限管理</label>
+                        <input type="checkbox" id="settingEnablePermission" checked class="w-5 h-5">
+                        <span class="text-xs text-gray-400 ml-2">启用后系统将根据角色控制功能访问</span>
+                    </div>
+                    <div class="setting-row">
+                        <label>默认角色</label>
+                        <select id="settingDefaultRole" class="p-2 border rounded-lg bg-gray-50">
+                            <option value="owner">老板</option>
+                            <option value="admin">系统管理员</option>
+                            <option value="manager">店长</option>
+                            <option value="cashier">收银员</option>
+                            <option value="employee">员工</option>
+                        </select>
+                        <span class="text-xs text-gray-400 ml-2">新用户注册时的默认角色</span>
+                    </div>
+                    <div class="setting-row">
+                        <label>权限缓存时间 (秒)</label>
+                        <input type="number" id="settingPermissionCache" class="p-2 border rounded-lg bg-gray-50 w-32" value="3600">
+                        <span class="text-xs text-gray-400 ml-2">权限变更后自动刷新</span>
+                    </div>
+                    <div class="mt-4 p-4 bg-blue-50 rounded-xl">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            权限管理详细配置请访问 <strong>「🔐 权限中心」</strong> 模块，进行角色、菜单和权限分配。
+                        </p>
+                        <button onclick="AppRouter.navigate('permission')" class="btn-primary mt-2 py-1 px-4 rounded-lg text-sm">
+                            <i class="fas fa-shield-alt"></i> 前往权限中心
+                        </button>
+                    </div>
+                </div>
+                <button onclick="SettingsModule.savePermissionSettings()" class="btn-primary mt-4 py-2 px-6 rounded-xl">
+                    <i class="fas fa-save"></i> 保存权限设置
                 </button>
             </div>
         </div>

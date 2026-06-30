@@ -12,7 +12,9 @@ window.SidebarComponent = {
         { module: 'reports', icon: 'fa-chart-bar', label: '财务管理' },
         { module: 'employees', icon: 'fa-user-tie', label: '员工审核' },
         { module: 'audit', icon: 'fa-history', label: '审计日志' },
-        { module: 'vehicle-monitor', icon: 'fa-camera', label: '车辆监控' },
+        { module: 'vehicle-monitor', icon: 'fa-camera', label: '🚗 车辆监控' },
+        // ===== 新增：权限中心 =====
+        { module: 'permission', icon: 'fa-shield-alt', label: '🔐 权限中心' },
         { module: 'settings', icon: 'fa-cog', label: '系统设置' }
     ],
 
