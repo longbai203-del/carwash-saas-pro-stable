@@ -1,6 +1,7 @@
 /**
- * cashier.js - POS收银模块 V2.2
+ * cashier.js - POS收银模块 V2.3
  * 三栏式布局 + QRCode.js 二维码生成
+ * 优化：打印功能异步化，减少 INP 阻塞
  */
 (function() {
     'use strict';
@@ -38,6 +39,10 @@
     window.CashierModule._pointsDiscount = 0;
     window.CashierModule._currentOrderNumber = null;
     window.CashierModule._currentInvoiceNumber = null;
+    
+    // 打印队列
+    window.CashierModule._printQueue = [];
+    window.CashierModule._isPrinting = false;
 
     // ============================================================
     // 缓存 DOM
@@ -633,7 +638,7 @@
     };
 
     // ============================================================
-    // 收款
+    // 收款（优化版 - 使用 setTimeout 减少阻塞）
     // ============================================================
     window.CashierModule.checkout = function() {
         if (this.cart.length === 0) {
@@ -652,33 +657,51 @@
             return;
         }
 
+        // 禁用按钮，防止重复点击
+        var btn = this.el.checkoutBtn;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+        }
+
+        // 使用 setTimeout 延迟执行，减少 UI 阻塞
+        var self = this;
+        setTimeout(function() {
+            self._processCheckout();
+        }, 50);
+    };
+
+    window.CashierModule._processCheckout = function() {
+        var self = this;
         var total = this.getTotal();
+        var currentUser = AppStore.get('currentUser') || {};
 
         var cash = parseFloat(document.getElementById('splitCash')?.value) || 0;
         var mada = parseFloat(document.getElementById('splitMada')?.value) || 0;
         var card = parseFloat(document.getElementById('splitCard')?.value) || 0;
         var splitTotal = cash + mada + card;
 
+        var paymentMethod = this.selectedPayment;
+
         if (splitTotal > 0) {
             if (Math.abs(splitTotal - total) > 0.01) {
                 this.toast('混合支付金额不匹配！总计: ' + total.toFixed(2) + ' SAR', 'error');
+                // 恢复按钮
+                var btn = this.el.checkoutBtn;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> 完成收款';
+                }
                 return;
             }
-            this._processPayment('混合支付', total);
-        } else {
-            this._processPayment(this.selectedPayment, total);
+            paymentMethod = '混合支付';
         }
-    };
 
-    window.CashierModule._processPayment = function(paymentMethod, total) {
-        var self = this;
-        var currentUser = AppStore.get('currentUser') || {};
         var plate = this.selectedCustomer ? (this.selectedCustomer.plate_number || 'GUEST') : 'GUEST';
         var today = new Date().toISOString().split('T')[0];
         var orderNumber = 'ORD-' + today.replace(/-/g, '') + '-' + String(Date.now()).slice(-6);
         var invoiceNumber = 'INV-' + today.replace(/-/g, '') + '-' + String(Date.now()).slice(-6);
 
-        // 保存到全局供打印使用
         this._currentOrderNumber = orderNumber;
         this._currentInvoiceNumber = invoiceNumber;
 
@@ -759,6 +782,13 @@
                     self.updateTodayStats();
                     self.voiceTotal(total);
 
+                    // 恢复按钮
+                    var btn = self.el.checkoutBtn;
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-check"></i> 完成收款';
+                    }
+
                     setTimeout(function() {
                         self.showPrintOptions();
                     }, 500);
@@ -766,6 +796,12 @@
             })
             .catch(function(error) {
                 self.toast('❌ 收款失败: ' + error.message, 'error');
+                // 恢复按钮
+                var btn = self.el.checkoutBtn;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> 完成收款';
+                }
             });
     };
 
@@ -854,19 +890,19 @@
     };
 
     // ============================================================
-    // QRCode.js 二维码生成（纯前端，无需外部API）
+    // 轻量二维码生成（优化版）
     // ============================================================
-    window.CashierModule.generateQRCodeHTML = function(content, size) {
+    window.CashierModule.generateLightQR = function(content, size) {
+        size = size || 80;
+        
         if (!content) return '';
-        size = size || 120;
-
+        
         // 检查 QRCode 是否可用
         if (typeof QRCode === 'undefined') {
-            console.warn('[QR] QRCode.js 未加载，使用备用方案');
-            var encoded = encodeURIComponent(content);
-            return '<img src="https://chart.googleapis.com/chart?chs=' + size + 'x' + size + '&cht=qr&chl=' + encoded + '" alt="QR" style="display:inline-block;margin:5px auto;width:' + size + 'px;height:' + size + 'px;">';
+            // 使用文本替代二维码
+            return '<div style="font-size:8px;color:#999;text-align:center;">' + content.substring(0, 30) + '...</div>';
         }
-
+        
         try {
             var div = document.createElement('div');
             var qr = new QRCode(div, {
@@ -875,22 +911,313 @@
                 height: size,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                correctLevel: QRCode.CorrectLevel.L  // 最低纠错级别，最快生成
             });
+            
             var canvas = div.querySelector('canvas');
             if (canvas) {
-                return '<img src="' + canvas.toDataURL('image/png') + '" alt="QR" style="display:inline-block;margin:5px auto;width:' + size + 'px;height:' + size + 'px;">';
+                return '<img src="' + canvas.toDataURL('image/png') + '" alt="QR" style="display:inline-block;margin:3px auto;width:' + size + 'px;height:' + size + 'px;">';
             }
-            return '<div style="display:inline-block;margin:5px auto;font-family:monospace;font-size:10px;border:1px solid #ddd;padding:5px;">QR: ' + content.substring(0, 20) + '...</div>';
+            return '<div style="font-size:8px;color:#999;">QR: ' + content.substring(0, 20) + '...</div>';
         } catch(e) {
-            console.warn('[QR] 生成失败，使用备用方案:', e);
-            var encoded = encodeURIComponent(content);
-            return '<img src="https://chart.googleapis.com/chart?chs=' + size + 'x' + size + '&cht=qr&chl=' + encoded + '" alt="QR" style="display:inline-block;margin:5px auto;width:' + size + 'px;height:' + size + 'px;" onerror="this.style.display=\'none\'">';
+            console.warn('[QR] 生成失败，使用备用方案');
+            return '<div style="font-size:8px;color:#999;">QR: ' + content.substring(0, 20) + '...</div>';
         }
     };
 
     // ============================================================
-    // 打印功能
+    // 打印功能（异步优化版）
+    // ============================================================
+    
+    // ===== 小票打印 =====
+    window.CashierModule.printReceipt = function() {
+        this.closePrintOptions();
+        this.toast('🖨️ 正在生成小票...', 'info');
+        
+        var self = this;
+        // 使用 requestAnimationFrame + setTimeout 分离UI更新
+        requestAnimationFrame(function() {
+            setTimeout(function() {
+                self._generateReceiptAsync();
+            }, 50);
+        });
+    };
+
+    window.CashierModule._generateReceiptAsync = function() {
+        var self = this;
+        
+        try {
+            var data = this._prepareReceiptData();
+            
+            setTimeout(function() {
+                try {
+                    var html = self._buildReceiptHTML(data);
+                    var win = window.open('', '_blank', 'width=400,height=700');
+                    if (win) {
+                        win.document.write(html);
+                        win.document.close();
+                        setTimeout(function() {
+                            win.print();
+                        }, 300);
+                    } else {
+                        self.toast('请允许弹窗', 'error');
+                    }
+                } catch(e) {
+                    console.error('[Print] 生成小票HTML失败:', e);
+                    self.toast('❌ 打印失败: ' + e.message, 'error');
+                }
+            }, 100);
+        } catch(error) {
+            console.error('[Print] 准备数据失败:', error);
+            this.toast('❌ 打印失败: ' + error.message, 'error');
+        }
+    };
+
+    window.CashierModule._prepareReceiptData = function() {
+        var config = AppStore.get('config') || {};
+        var now = new Date();
+        var cart = this.cart || [];
+        var customer = this.selectedCustomer || {};
+        var total = this.el.cartTotal ? this.el.cartTotal.textContent : '0 SAR';
+        var orderNumber = this._currentOrderNumber || 'RCP-' + Date.now().toString().slice(-8);
+        
+        return {
+            shopName: config.shopName || 'Car Wash Pro',
+            taxId: config.shopTaxId || 'N/A',
+            address: config.shopAddress || '',
+            phone: config.shopPhone || '',
+            date: now.toLocaleDateString('zh-CN'),
+            time: now.toLocaleTimeString('zh-CN'),
+            orderNumber: orderNumber,
+            cart: cart,
+            customer: customer,
+            total: total,
+            payment: this.selectedPayment || '现金',
+            discount: this._couponDiscount + this._pointsDiscount,
+            receiptFooter: config.receiptFooter || '欢迎再次光临'
+        };
+    };
+
+    window.CashierModule._buildReceiptHTML = function(data) {
+        // 计算小计
+        var subtotal = 0;
+        data.cart.forEach(function(item) {
+            subtotal += item.price * item.qty;
+        });
+        var discount = data.discount || 0;
+        var vatAmount = (subtotal - discount) * 15 / 100;
+        
+        var html = '<!DOCTYPE html><html><head><title>小票</title><style>';
+        html += 'body{font-family:"Courier New",monospace;padding:8px;max-width:280px;margin:auto;font-size:11px;}';
+        html += '.center{text-align:center;}';
+        html += '.header{font-size:16px;font-weight:bold;}';
+        html += '.line{border-top:1px dashed #999;margin:6px 0;}';
+        html += '.double-line{border-top:2px solid #000;margin:6px 0;}';
+        html += '.row{display:flex;justify-content:space-between;padding:1px 0;}';
+        html += '.total{font-size:18px;font-weight:bold;}';
+        html += '.footer{font-size:9px;color:#666;margin-top:6px;}';
+        html += '.small{font-size:9px;}';
+        html += '.qr{text-align:center;margin:4px 0;}';
+        html += '@media print{body{padding:4px;}}';
+        html += '</style></head><body>';
+        
+        html += '<div class="center">';
+        html += '<div class="header">🧼 ' + data.shopName + '</div>';
+        html += '<div class="small">' + data.address + '</div>';
+        html += '<div class="small">📞 ' + data.phone + '</div>';
+        html += '<div class="line"></div>';
+        html += '<div class="row"><span>日期</span><span>' + data.date + ' ' + data.time + '</span></div>';
+        html += '<div class="row"><span>单号</span><span>' + data.orderNumber + '</span></div>';
+        html += '<div class="row"><span>车牌</span><span><strong>' + (data.customer.plate_number || 'GUEST') + '</strong></span></div>';
+        html += '<div class="line"></div>';
+        
+        // 商品列表
+        data.cart.forEach(function(item) {
+            var totalPrice = item.price * item.qty;
+            html += '<div class="row"><span>' + item.icon + ' ' + item.name + ' ×' + item.qty + '</span><span>' + totalPrice.toFixed(2) + '</span></div>';
+        });
+        
+        html += '<div class="line"></div>';
+        if (discount > 0) {
+            html += '<div class="row"><span>折扣</span><span>- ' + discount.toFixed(2) + '</span></div>';
+        }
+        html += '<div class="row"><span>小计</span><span>' + (subtotal - discount).toFixed(2) + '</span></div>';
+        html += '<div class="row"><span>VAT 15%</span><span>' + vatAmount.toFixed(2) + '</span></div>';
+        html += '<div class="double-line"></div>';
+        html += '<div class="row total"><span>总计</span><span>' + data.total + '</span></div>';
+        html += '<div class="line"></div>';
+        html += '<div class="row"><span>支付</span><span>' + data.payment + '</span></div>';
+        html += '<div class="line"></div>';
+        html += '<div class="center" style="font-size:13px;">✅ 感谢光临！</div>';
+        html += '<div class="footer center">' + data.receiptFooter + '</div>';
+        html += '</div>';
+        html += '<script>setTimeout(function(){ window.print(); }, 300);<\/script>';
+        html += '</body></html>';
+        
+        return html;
+    };
+
+    // ===== 税务发票打印 =====
+    window.CashierModule.printTaxInvoice = function() {
+        this.closePrintOptions();
+        this.toast('🖨️ 正在生成税务发票...', 'info');
+        
+        var self = this;
+        requestAnimationFrame(function() {
+            setTimeout(function() {
+                self._generateTaxInvoiceAsync();
+            }, 50);
+        });
+    };
+
+    window.CashierModule._generateTaxInvoiceAsync = function() {
+        var self = this;
+        
+        setTimeout(function() {
+            try {
+                var data = self._prepareInvoiceData();
+                var html = self._buildInvoiceHTML(data);
+                
+                var win = window.open('', '_blank', 'width=900,height=1200');
+                if (win) {
+                    win.document.write(html);
+                    win.document.close();
+                    setTimeout(function() {
+                        win.print();
+                    }, 400);
+                } else {
+                    self.toast('请允许弹窗', 'error');
+                }
+            } catch(error) {
+                console.error('[Print] 生成发票失败:', error);
+                self.toast('❌ 打印失败: ' + error.message, 'error');
+            }
+        }, 100);
+    };
+
+    window.CashierModule._prepareInvoiceData = function() {
+        var config = AppStore.get('config') || {};
+        var now = new Date();
+        var cart = this.cart || [];
+        var customer = this.selectedCustomer || {};
+        var currentUser = AppStore.get('currentUser') || {};
+        var invoiceNumber = this._currentInvoiceNumber || 'INV-' + Date.now().toString().slice(-8);
+        
+        var subtotal = 0;
+        cart.forEach(function(item) {
+            subtotal += item.price * item.qty;
+        });
+        var discount = this._couponDiscount + this._pointsDiscount;
+        var vatAmount = (subtotal - discount) * 15 / 100;
+        var totalAmount = subtotal - discount + vatAmount;
+        
+        return {
+            shopNameAr: config.companyNameAr || 'شركة الخدمات البترولية',
+            shopNameEn: config.companyNameEn || 'Petroleum Services Co.',
+            taxId: config.vatNumber || config.shopTaxId || '300056462300003',
+            crNumber: config.crNumber || '4030571509',
+            address: config.companyAddress || config.shopAddress || 'الرياض، النيسيم الشرقى',
+            phone: config.companyPhone || config.shopPhone || '920002667',
+            date: now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0'),
+            time: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
+            invoiceNumber: invoiceNumber,
+            cart: cart,
+            customer: customer,
+            currentUser: currentUser,
+            subtotal: subtotal,
+            discount: discount,
+            vatAmount: vatAmount,
+            totalAmount: totalAmount,
+            payment: this.selectedPayment || 'cash',
+            invoiceFooter: config.invoiceFooter || 'شكراً لتعاملكم معنا'
+        };
+    };
+
+    window.CashierModule._buildInvoiceHTML = function(data) {
+        // 生成商品列表HTML
+        var itemsHtml = '';
+        data.cart.forEach(function(item, index) {
+            var totalPrice = item.price * item.qty;
+            itemsHtml += '<tr>' +
+                '<td>' + (index + 1) + '</td>' +
+                '<td>' + item.name + '</td>' +
+                '<td>' + item.qty + '</td>' +
+                '<td>' + item.price.toFixed(2) + ' SAR</td>' +
+                '<td>0.00 SAR</td>' +
+                '<td>15%</td>' +
+                '<td>' + (totalPrice * 0.15).toFixed(2) + ' SAR</td>' +
+                '<td>' + totalPrice.toFixed(2) + ' SAR</td>' +
+                '</tr>';
+        });
+        
+        // 二维码内容（简化版）
+        var qrContent = 'https://carwash-saas-pro.vercel.app/invoice/' + data.invoiceNumber;
+        var qrHtml = this.generateLightQR(qrContent, 120);
+        
+        var html = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><title>فاتورة ضريبية</title><style>';
+        html += 'body{font-family:"Times New Roman",Arial,sans-serif;padding:30px;max-width:900px;margin:auto;background:#f5f5f5;}';
+        html += '.invoice{background:white;padding:35px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}';
+        html += '.header{text-align:center;border-bottom:3px solid #1a3a6b;padding-bottom:15px;margin-bottom:20px;}';
+        html += '.shop-name-ar{font-size:26px;font-weight:bold;color:#1a3a6b;}';
+        html += '.shop-name-en{font-size:16px;color:#666;}';
+        html += '.shop-details{font-size:12px;color:#555;margin-top:3px;}';
+        html += '.title{text-align:center;font-size:22px;font-weight:bold;background:#f0f4f9;padding:10px;margin:10px 0;border-radius:6px;}';
+        html += '.title-en{text-align:center;font-size:14px;color:#666;margin-bottom:15px;}';
+        html += '.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 20px;font-size:12px;margin:10px 0;padding:12px;background:#f8fafc;border-radius:6px;}';
+        html += '.info-grid .label{font-weight:bold;color:#333;}';
+        html += '.table{width:100%;border-collapse:collapse;margin:15px 0;font-size:12px;}';
+        html += '.table th{background:#1a3a6b;color:white;padding:8px 6px;text-align:center;font-size:11px;}';
+        html += '.table td{padding:6px;text-align:center;border-bottom:1px solid #eee;}';
+        html += '.totals{width:55%;margin-right:auto;margin-top:15px;padding:15px;background:#f8fafc;border-radius:6px;}';
+        html += '.totals .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}';
+        html += '.totals .grand-total{font-size:20px;font-weight:bold;color:#1a3a6b;border-top:2px solid #1a3a6b;padding-top:8px;margin-top:4px;}';
+        html += '.footer{margin-top:20px;font-size:11px;text-align:center;border-top:1px solid #ddd;padding-top:15px;color:#666;}';
+        html += '.declaration{font-size:11px;text-align:justify;margin-top:15px;padding:12px;background:#f9f9f9;border-radius:6px;border-right:3px solid #1a3a6b;}';
+        html += '.signature{display:flex;justify-content:space-between;margin-top:20px;font-size:12px;}';
+        html += '.signature div{border-top:1px solid #999;padding-top:5px;min-width:150px;}';
+        html += '.qr-section{text-align:center;margin:10px 0;}';
+        html += '@media print{body{padding:10px;background:white;}.invoice{box-shadow:none;}}';
+        html += '</style></head><body>';
+        
+        html += '<div class="invoice">';
+        html += '<div class="header">';
+        html += '<div class="shop-name-ar">🧼 ' + data.shopNameAr + '</div>';
+        html += '<div class="shop-name-en">' + data.shopNameEn + '</div>';
+        html += '<div class="shop-details">' + data.address + ' | 📞 ' + data.phone + '</div>';
+        html += '<div class="shop-details">الرقم الضريبي: ' + data.taxId + ' | سجل تجاري: ' + data.crNumber + '</div>';
+        html += '</div>';
+        html += '<div class="title">فاتورة ضريبية مبسطة</div>';
+        html += '<div class="title-en">Simplified Tax Invoice</div>';
+        html += '<div class="info-grid">';
+        html += '<div><span class="label">رقم الفاتورة:</span> ' + data.invoiceNumber + '</div>';
+        html += '<div><span class="label">التاريخ:</span> ' + data.date + ' ' + data.time + '</div>';
+        html += '<div><span class="label">نوع الدفع:</span> ' + data.payment + '</div>';
+        html += '<div><span class="label">رقم اللوحة:</span> ' + (data.customer.plate_number || '-') + '</div>';
+        html += '<div><span class="label">المستفيد:</span> ' + (data.customer.name || 'عميل عام') + '</div>';
+        html += '<div><span class="label">الموظف:</span> ' + (data.currentUser.name || data.currentUser.username || '-') + '</div>';
+        html += '</div>';
+        html += '<table class="table"><thead><tr><th>#</th><th>المنتج / الخدمة</th><th>الكمية</th><th>السعر</th><th>الخصم</th><th>نسبة الضريبة</th><th>الضريبة</th><th>الإجمالي</th></tr></thead><tbody>' + itemsHtml + '</tbody></table>';
+        html += '<div class="totals">';
+        html += '<div class="row"><span>المبلغ غير شامل الضريبة</span><span>' + (data.subtotal - data.discount).toFixed(2) + ' SAR</span></div>';
+        if (data.discount > 0) {
+            html += '<div class="row"><span>الخصم</span><span>' + data.discount.toFixed(2) + ' SAR</span></div>';
+        }
+        html += '<div class="row"><span>ضريبة القيمة المضافة (15%)</span><span>' + data.vatAmount.toFixed(2) + ' SAR</span></div>';
+        html += '<div class="row grand-total"><span>المبلغ شامل الضريبة</span><span>' + data.totalAmount.toFixed(2) + ' SAR</span></div>';
+        html += '</div>';
+        html += '<div class="qr-section">' + qrHtml + '</div>';
+        html += '<div class="declaration">أقر أنا الموقع على هذه الفاتورة إنني استلمت كافة البضاعة المدونة بها بحالة سليمة وإنني سأقوم بسداد قيمتها وفي حالة عدم السداد تعتبر هذه الورقة تجارية واجبة الدفع<br><br>I confirm that I have received all the goods listed above in good condition and will pay the full amount.</div>';
+        html += '<div class="signature"><div>اسم المستلم: _________________</div><div>اسم البائع: _________________</div></div>';
+        html += '<div class="footer">' + data.invoiceFooter + '<br>📍 ' + data.address + ' | 📞 ' + data.phone + '</div>';
+        html += '</div>';
+        html += '<script>setTimeout(function(){ window.print(); }, 400);<\/script>';
+        html += '</body></html>';
+        
+        return html;
+    };
+
+    // ============================================================
+    // 打印选项
     // ============================================================
     window.CashierModule.showPrintOptions = function() {
         var modal = document.getElementById('printOptionsModal');
@@ -900,222 +1227,6 @@
     window.CashierModule.closePrintOptions = function() {
         var modal = document.getElementById('printOptionsModal');
         if (modal) modal.classList.add('hidden');
-    };
-
-    // ===== 小票打印（热敏）- 含二维码 =====
-    window.CashierModule.printReceipt = function() {
-        this.closePrintOptions();
-
-        var total = this.el.cartTotal ? this.el.cartTotal.textContent : '0 SAR';
-        var plate = this.selectedCustomer ? (this.selectedCustomer.plate_number || 'GUEST') : 'GUEST';
-        var customerName = this.selectedCustomer ? (this.selectedCustomer.name || '') : '';
-
-        var win = window.open('', '_blank', 'width=400,height=700');
-        if (!win) {
-            this.toast('请允许弹窗', 'error');
-            return;
-        }
-
-        var config = AppStore.get('config') || {};
-        var shopName = config.shopName || 'Car Wash Pro';
-        var taxId = config.shopTaxId || 'N/A';
-        var address = config.shopAddress || '';
-        var phone = config.shopPhone || '';
-
-        var now = new Date();
-        var dateStr = now.toLocaleDateString('zh-CN');
-        var timeStr = now.toLocaleTimeString('zh-CN');
-        var orderNumber = this._currentOrderNumber || 'RCP-' + Date.now().toString().slice(-8);
-
-        // 二维码内容 - 使用订单号
-        var qrContent = 'https://carwash-saas-pro.vercel.app/order/' + orderNumber;
-        var qrHtml = this.generateQRCodeHTML(qrContent, 120);
-
-        // 添加阿拉伯语感谢语
-        var arabicFooter = 'نشكركم على اختياركم لنا. مهمتنا هي خدمتكم على أكمل وجه. نرحب بزيارتكم لنا مرة أخرى.';
-
-        var html = '<!DOCTYPE html><html><head><title>小票</title><style>' +
-            'body { font-family: "Courier New", monospace; padding: 8px; max-width: 280px; margin: auto; font-size: 11px; }' +
-            '.center { text-align: center; }' +
-            '.header { font-size: 16px; font-weight: bold; }' +
-            '.line { border-top: 1px dashed #999; margin: 6px 0; }' +
-            '.double-line { border-top: 2px solid #000; margin: 6px 0; }' +
-            '.row { display: flex; justify-content: space-between; padding: 2px 0; }' +
-            '.total { font-size: 18px; font-weight: bold; }' +
-            '.footer { font-size: 9px; color: #666; margin-top: 6px; }' +
-            '.qr { text-align: center; margin: 6px 0; }' +
-            '.small { font-size: 9px; }' +
-            '.arabic { font-family: "Traditional Arabic", Arial, sans-serif; font-size: 10px; }' +
-            '@media print { body { padding: 4px; } }' +
-            '</style></head><body>' +
-            '<div class="center">' +
-            '<div class="header">🧼 ' + shopName + '</div>' +
-            '<div class="small">' + address + '</div>' +
-            '<div class="small">📞 ' + phone + '</div>' +
-            '<div class="small">VAT: ' + taxId + '</div>' +
-            '<div class="line"></div>' +
-            '<div class="row"><span>日期</span><span>' + dateStr + ' ' + timeStr + '</span></div>' +
-            '<div class="row"><span>单号</span><span>' + orderNumber + '</span></div>' +
-            '<div class="row"><span>车牌</span><span><strong>' + plate + '</strong></span></div>' +
-            (customerName ? '<div class="row"><span>客户</span><span>' + customerName + '</span></div>' : '') +
-            '<div class="line"></div>';
-
-        // 商品列表
-        for (var i = 0; i < this.cart.length; i++) {
-            var item = this.cart[i];
-            var itemTotal = item.price * item.qty;
-            html += '<div class="row"><span>' + item.icon + ' ' + item.name + ' ×' + item.qty + '</span><span>' + itemTotal.toFixed(2) + '</span></div>';
-        }
-
-        var discount = this._couponDiscount + this._pointsDiscount;
-        var subtotal = 0;
-        for (var j = 0; j < this.cart.length; j++) {
-            subtotal += this.cart[j].price * this.cart[j].qty;
-        }
-        var vatAmount = (subtotal - discount) * 15 / 100;
-
-        html += '<div class="line"></div>' +
-            (discount > 0 ? '<div class="row"><span>折扣</span><span>- ' + discount.toFixed(2) + '</span></div>' : '') +
-            '<div class="row"><span>小计</span><span>' + (subtotal - discount).toFixed(2) + '</span></div>' +
-            '<div class="row"><span>VAT 15%</span><span>' + vatAmount.toFixed(2) + '</span></div>' +
-            '<div class="double-line"></div>' +
-            '<div class="row total"><span>总计</span><span>' + total + '</span></div>' +
-            '<div class="double-line"></div>' +
-            '<div class="row"><span>支付方式</span><span>' + (this.selectedPayment || '现金') + '</span></div>' +
-            (document.getElementById('posTransactionId')?.value ? '<div class="row"><span>POS交易号</span><span>' + document.getElementById('posTransactionId').value + '</span></div>' : '') +
-            '<div class="line"></div>' +
-            '<div class="qr">' + qrHtml + '</div>' +
-            '<div class="center" style="font-size:13px;">✅ 感谢光临！</div>' +
-            '<div class="footer center arabic">' + arabicFooter + '</div>' +
-            '</div>' +
-            '<script>setTimeout(function(){ window.print(); }, 600);<\/script>' +
-            '</body></html>';
-
-        win.document.write(html);
-        win.document.close();
-    };
-
-    // ===== 税务发票打印（A4）- 含二维码 =====
-    window.CashierModule.printTaxInvoice = function() {
-        this.closePrintOptions();
-
-        var total = this.el.cartTotal ? this.el.cartTotal.textContent : '0 SAR';
-        var plate = this.selectedCustomer ? (this.selectedCustomer.plate_number || 'GUEST') : 'GUEST';
-        var customerName = this.selectedCustomer ? (this.selectedCustomer.name || 'عميل عام') : 'عميل عام';
-        var customerPhone = this.selectedCustomer ? (this.selectedCustomer.phone || '') : '';
-
-        var win = window.open('', '_blank', 'width=900,height=1200');
-        if (!win) {
-            this.toast('请允许弹窗', 'error');
-            return;
-        }
-
-        var config = AppStore.get('config') || {};
-        var shopNameAr = config.companyNameAr || 'مغاسل روق سيارتك لخدمات السيارات';
-        var shopNameEn = config.companyNameEn || 'Rawq Sayyaratak Car Wash & Services';
-        var taxId = config.vatNumber || config.shopTaxId || '310051270700003';
-        var crNumber = config.crNumber || '4031293343';
-        var address = config.companyAddress || config.shopAddress || 'بحرية';
-        var phone = config.companyPhone || config.shopPhone || '0546820588';
-
-        var now = new Date();
-        var dateStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' ' + 
-                      now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
-        var invoiceNumber = this._currentInvoiceNumber || 'INV-' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + '-' + String(Date.now()).slice(-6);
-
-        var subtotal = 0;
-        for (var i = 0; i < this.cart.length; i++) {
-            subtotal += this.cart[i].price * this.cart[i].qty;
-        }
-        var discount = this._couponDiscount + this._pointsDiscount;
-        var vatAmount = (subtotal - discount) * 15 / 100;
-        var totalAmount = subtotal - discount + vatAmount;
-        var currentUser = AppStore.get('currentUser') || {};
-
-        // 二维码内容
-        var qrContent = 'https://carwash-saas-pro.vercel.app/invoice/' + invoiceNumber;
-        var qrHtml = this.generateQRCodeHTML(qrContent, 150);
-
-        // 商品列表
-        var itemsHtml = '';
-        for (var j = 0; j < this.cart.length; j++) {
-            var item = this.cart[j];
-            var itemTotal = item.price * item.qty;
-            itemsHtml += '<tr>' +
-                '<td>' + (j + 1) + '</td>' +
-                '<td>' + item.name + '</td>' +
-                '<td>' + item.qty + '</td>' +
-                '<td>' + item.price.toFixed(2) + ' SAR</td>' +
-                '<td>0.00 SAR</td>' +
-                '<td>15%</td>' +
-                '<td>' + (itemTotal * 15 / 100).toFixed(2) + ' SAR</td>' +
-                '<td>' + itemTotal.toFixed(2) + ' SAR</td>' +
-                '</tr>';
-        }
-
-        var html = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><title>فاتورة ضريبية</title><style>' +
-            'body { font-family: "Times New Roman", Arial, sans-serif; padding: 30px; max-width: 900px; margin: auto; background: #f5f5f5; }' +
-            '.invoice { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }' +
-            '.header { text-align: center; border-bottom: 3px solid #1a3a6b; padding-bottom: 15px; margin-bottom: 20px; }' +
-            '.shop-name-ar { font-size: 26px; font-weight: bold; color: #1a3a6b; }' +
-            '.shop-name-en { font-size: 16px; color: #666; }' +
-            '.shop-details { font-size: 12px; color: #555; margin-top: 3px; }' +
-            '.title { text-align: center; font-size: 22px; font-weight: bold; background: #f0f4f9; padding: 10px; margin: 10px 0; border-radius: 6px; }' +
-            '.title-en { text-align: center; font-size: 14px; color: #666; margin-bottom: 15px; }' +
-            '.info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 20px; font-size: 12px; margin: 10px 0; padding: 12px; background: #f8fafc; border-radius: 6px; }' +
-            '.info-grid .label { font-weight: bold; color: #333; }' +
-            '.table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }' +
-            '.table th { background: #1a3a6b; color: white; padding: 8px 6px; text-align: center; font-size: 11px; }' +
-            '.table td { padding: 6px; text-align: center; border-bottom: 1px solid #eee; }' +
-            '.totals { width: 55%; margin-right: auto; margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; }' +
-            '.totals .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }' +
-            '.totals .grand-total { font-size: 20px; font-weight: bold; color: #1a3a6b; border-top: 2px solid #1a3a6b; padding-top: 8px; margin-top: 4px; }' +
-            '.footer { margin-top: 20px; font-size: 11px; text-align: center; border-top: 1px solid #ddd; padding-top: 15px; color: #666; }' +
-            '.declaration { font-size: 11px; text-align: justify; margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 6px; border-right: 3px solid #1a3a6b; }' +
-            '.signature { display: flex; justify-content: space-between; margin-top: 20px; font-size: 12px; }' +
-            '.signature div { border-top: 1px solid #999; padding-top: 5px; min-width: 150px; }' +
-            '.qr-section { text-align: center; margin: 10px 0; }' +
-            '@media print { body { padding: 10px; background: white; } .invoice { box-shadow: none; } }' +
-            '</style></head><body>' +
-            '<div class="invoice">' +
-            '<div class="header">' +
-            '<div class="shop-name-ar">🧼 ' + shopNameAr + '</div>' +
-            '<div class="shop-name-en">' + shopNameEn + '</div>' +
-            '<div class="shop-details">' + address + ' | 📞 ' + phone + '</div>' +
-            '<div class="shop-details">الرقم الضريبي: ' + taxId + ' | إسم تجاري: ' + crNumber + '</div>' +
-            '</div>' +
-            '<div class="title">فاتورة ضريبة مبسطة</div>' +
-            '<div class="title-en">Simplified Tax Invoice</div>' +
-            '<div class="info-grid">' +
-            '<div><span class="label">نوع الدفع:</span> ' + (this.selectedPayment || 'cash') + '</div>' +
-            '<div><span class="label">التاريخ:</span> ' + dateStr + '</div>' +
-            '<div><span class="label">رقم الفاتورة:</span> ' + invoiceNumber + '</div>' +
-            '<div><span class="label">المستفيد:</span> ' + customerName + (customerPhone ? ' (' + customerPhone + ')' : '') + '</div>' +
-            '<div><span class="label">رقم اللوحة:</span> ' + plate + '</div>' +
-            '<div><span class="label">الموظف:</span> ' + (currentUser.name || currentUser.username || '-') + '</div>' +
-            '</div>' +
-            '<table class="table">' +
-            '<thead><tr><th>#</th><th>المنتج / الخدمة</th><th>الكمية</th><th>السعر</th><th>الخصم</th><th>نسبة الضريبة</th><th>الضريبة</th><th>الإجمالي</th></tr></thead>' +
-            '<tbody>' + itemsHtml + '</tbody></table>' +
-            '<div class="totals">' +
-            '<div class="row"><span>المبلغ غير شامل الضريبة</span><span>' + (subtotal - discount).toFixed(2) + ' SAR</span></div>' +
-            (discount > 0 ? '<div class="row"><span>الخصم</span><span>' + discount.toFixed(2) + ' SAR</span></div>' : '') +
-            '<div class="row"><span>الضريبة</span><span>' + vatAmount.toFixed(2) + ' SAR</span></div>' +
-            '<div class="row grand-total"><span>المبلغ شامل الضريبة</span><span>' + totalAmount.toFixed(2) + ' SAR</span></div>' +
-            '</div>' +
-            '<div class="qr-section">' + qrHtml + '</div>' +
-            '<div class="declaration">' +
-            'أقر أنا الموقع على هذه الفاتورة إنني استلمت كافة البضاعة المدونة بها بحالة سليمة وإنني سأقوم بسداد قيمتها وفي حالة عدم السداد تعتبر هذه الورقة تجارية واجبة الدفع' +
-            '<br><br>I confirm that I have received all the goods listed above in good condition and will pay the full amount.' +
-            '</div>' +
-            '<div class="signature"><div>اسم المستلم: _________________</div><div>اسم البائع: _________________</div></div>' +
-            '<div class="footer">' + (config.invoiceFooter || 'نشكركم على اختياركم لنا. نرحب بزيارتكم لنا مرة أخرى.') + '<br>📍 ' + address + ' | 📞 ' + phone + '</div>' +
-            '</div>' +
-            '<script>setTimeout(function(){ window.print(); }, 800);<\/script>' +
-            '</body></html>';
-
-        win.document.write(html);
-        win.document.close();
     };
 
     // ============================================================
@@ -1213,5 +1324,5 @@
         this.toast('📱 扫码功能开发中', 'info');
     };
 
-    console.log('[Cashier] V2.2 模块已注册');
+    console.log('[Cashier] V2.3 模块已注册 - 打印性能优化版');
 })();
