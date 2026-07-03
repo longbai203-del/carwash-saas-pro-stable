@@ -37,8 +37,17 @@
       "dest": "/css/$1"
     },
     {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/nvr-webhook.js": {
+      "maxDuration": 10
+    }
+  }
 }

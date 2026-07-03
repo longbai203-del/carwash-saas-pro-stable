@@ -1,0 +1,15 @@
+{
+    "name": "carwash-saas-pro",
+    "version": "1.0.0",
+    "description": "智能洗车店管理系统",
+    "main": "index.html",
+    "scripts": {
+        "vercel-build": "echo 'Building...'"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.38.0"
+    },
+    "engines": {
+        "node": ">=18.x"
+    }
+}
