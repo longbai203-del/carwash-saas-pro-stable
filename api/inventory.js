@@ -6,10 +6,10 @@
  * POST   /api/inventory/stock-in
  * POST   /api/inventory/stock-out
  */
-import { supabase, getPagination, safeQuery, getUserById } from './_lib/supabase.js';
-import { authMiddleware } from './_lib/auth.js';
-import { validateInventory } from './_lib/validation.js';
-import { logger } from './_lib/logger.js';
+import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
+import { authMiddleware } from '../shared/lib/auth.js';
+import { validateInventory } from '../shared/lib/validation.js';
+import { logger } from '../shared/lib/logger.js';
 
 async function handler(req, res) {
     const { method } = req;

@@ -20,10 +20,5 @@
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
-  ],
-  "functions": {
-    "api/_lib/**/*.js": {
-      "exclude": true
-    }
-  }
+  ]
 }

@@ -3,9 +3,9 @@
  * GET /api/reports/daily
  * GET /api/reports/monthly
  */
-import { supabase, safeQuery, getUserById } from './_lib/supabase.js';
-import { authMiddleware, roleMiddleware } from './_lib/auth.js';
-import { logger } from './_lib/logger.js';
+import { supabase, safeQuery, getUserById } from '../shared/lib/supabase.js';
+import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
+import { logger } from '../shared/lib/logger.js';
 
 async function handler(req, res) {
     const { method } = req;

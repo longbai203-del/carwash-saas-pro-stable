@@ -3,10 +3,10 @@
  * GET    /api/employees
  * POST   /api/employees/approve
  */
-import { supabase, getPagination, safeQuery, getUserById } from './_lib/supabase.js';
-import { authMiddleware, roleMiddleware } from './_lib/auth.js';
-import { isRequired } from './_lib/validation.js';
-import { logger } from './_lib/logger.js';
+import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
+import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
+import { isRequired } from '../shared/lib/validation.js';
+import { logger } from '../shared/lib/logger.js';
 
 async function handler(req, res) {
     const { method } = req;

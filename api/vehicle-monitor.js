@@ -7,10 +7,10 @@
  * POST   /api/vehicle-monitor?action=recognize - 车牌识别（模拟）
  * POST   /api/vehicle-monitor?action=webhook - NVR 摄像头 Webhook
  */
-import { supabase, getPagination, safeQuery, getUserById } from './_lib/supabase.js';
-import { authMiddleware, roleMiddleware } from './_lib/auth.js';
-import { isRequired, validateVehicleRecord } from './_lib/validation.js';
-import { logger } from './_lib/logger.js';
+import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
+import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
+import { isRequired, validateVehicleRecord } from '../shared/lib/validation.js';
+import { logger } from '../shared/lib/logger.js';
 
 // ============================================================
 // 主 Handler

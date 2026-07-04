@@ -6,9 +6,9 @@
  * POST /api/auth/logout
  * POST /api/auth/reset-password
  */
-import { supabase, getUserById, safeQuery } from './_lib/supabase.js';
-import { isRequired, isValidPassword, isValidPhone } from './_lib/validation.js';
-import { logger } from './_lib/logger.js';
+import { supabase, getUserById, safeQuery } from '../shared/lib/supabase.js';
+import { isRequired, isValidPassword, isValidPhone } from '../shared/lib/validation.js';
+import { logger } from '../shared/lib/logger.js';
 
 export default async function handler(req, res) {
     const { method } = req;

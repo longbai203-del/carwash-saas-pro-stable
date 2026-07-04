@@ -5,10 +5,10 @@
  * POST   /api/customers
  * PUT    /api/customers/:id
  */
-import { supabase, getPagination, safeQuery, getUserById } from './_lib/supabase.js';
-import { authMiddleware } from './_lib/auth.js';
-import { validateCustomer } from './_lib/validation.js';
-import { logger } from './_lib/logger.js';
+import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
+import { authMiddleware } from '../shared/lib/auth.js';
+import { validateCustomer } from '../shared/lib/validation.js';
+import { logger } from '../shared/lib/logger.js';
 
 async function handler(req, res) {
     const { method } = req;

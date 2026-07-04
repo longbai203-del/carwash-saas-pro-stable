@@ -3,10 +3,10 @@
  * GET    /api/attendance
  * POST   /api/attendance/clock
  */
-import { supabase, getPagination, safeQuery, getUserById } from './_lib/supabase.js';
-import { authMiddleware } from './_lib/auth.js';
-import { isRequired } from './_lib/validation.js';
-import { logger } from './_lib/logger.js';
+import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
+import { authMiddleware } from '../shared/lib/auth.js';
+import { isRequired } from '../shared/lib/validation.js';
+import { logger } from '../shared/lib/logger.js';
 
 async function handler(req, res) {
     const { method } = req;
