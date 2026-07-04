@@ -1,15 +1,20 @@
 /**
  * api/vehicle-monitor.js - 车辆监控 API
- * GET    /api/vehicle-monitor
- * POST   /api/vehicle-monitor/entry
- * POST   /api/vehicle-monitor/exit
- * POST   /api/vehicle-monitor/recognize
+ * 
+ * GET    /api/vehicle-monitor                 - 获取车辆记录列表
+ * POST   /api/vehicle-monitor?action=entry   - 车辆进入
+ * POST   /api/vehicle-monitor?action=exit    - 车辆离开
+ * POST   /api/vehicle-monitor?action=recognize - 车牌识别（模拟）
+ * POST   /api/vehicle-monitor?action=webhook - NVR 摄像头 Webhook
  */
 import { supabase, getPagination, safeQuery, getUserById } from './_lib/supabase.js';
 import { authMiddleware, roleMiddleware } from './_lib/auth.js';
 import { isRequired, validateVehicleRecord } from './_lib/validation.js';
 import { logger } from './_lib/logger.js';
 
+// ============================================================
+// 主 Handler
+// ============================================================
 async function handler(req, res) {
     const { method } = req;
     const { action } = req.query;
@@ -19,19 +24,24 @@ async function handler(req, res) {
         return handleList(req, res);
     }
 
-    // POST /api/vehicle-monitor/entry - 进入
+    // POST /api/vehicle-monitor?action=entry - 进入
     if (method === 'POST' && action === 'entry') {
         return handleEntry(req, res);
     }
 
-    // POST /api/vehicle-monitor/exit - 离开
+    // POST /api/vehicle-monitor?action=exit - 离开
     if (method === 'POST' && action === 'exit') {
         return handleExit(req, res);
     }
 
-    // POST /api/vehicle-monitor/recognize - 识别
+    // POST /api/vehicle-monitor?action=recognize - 识别
     if (method === 'POST' && action === 'recognize') {
         return handleRecognize(req, res);
+    }
+
+    // POST /api/vehicle-monitor?action=webhook - NVR Webhook
+    if (method === 'POST' && action === 'webhook') {
+        return handleWebhook(req, res);
     }
 
     return res.status(405).json({
@@ -41,7 +51,9 @@ async function handler(req, res) {
     });
 }
 
-// ===== 车辆记录列表 =====
+// ============================================================
+// 1. 车辆记录列表
+// ============================================================
 async function handleList(req, res) {
     try {
         const userId = req.user?.id;
@@ -109,7 +121,9 @@ async function handleList(req, res) {
     }
 }
 
-// ===== 车辆进入 =====
+// ============================================================
+// 2. 车辆进入
+// ============================================================
 async function handleEntry(req, res) {
     try {
         const userId = req.user?.id;
@@ -198,7 +212,9 @@ async function handleEntry(req, res) {
     }
 }
 
-// ===== 车辆离开 =====
+// ============================================================
+// 3. 车辆离开
+// ============================================================
 async function handleExit(req, res) {
     try {
         const { plate, note } = req.body;
@@ -274,7 +290,9 @@ async function handleExit(req, res) {
     }
 }
 
-// ===== 车牌识别 =====
+// ============================================================
+// 4. 车牌识别（模拟）
+// ============================================================
 async function handleRecognize(req, res) {
     try {
         const { image } = req.body;
@@ -324,4 +342,186 @@ async function handleRecognize(req, res) {
     }
 }
 
+// ============================================================
+// 5. NVR Webhook（从 webhooks/nvr.js 合并）
+// ============================================================
+async function handleWebhook(req, res) {
+    try {
+        // 验证 Webhook 密钥
+        const secret = req.headers['x-webhook-secret'];
+        const expectedSecret = process.env.NVR_WEBHOOK_SECRET;
+
+        if (expectedSecret && secret !== expectedSecret) {
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid webhook secret',
+                code: 'UNAUTHORIZED'
+            });
+        }
+
+        const {
+            channel = 1,
+            eventType = 'vehicle_detected',
+            timestamp,
+            imageUrl,
+            imageBase64
+        } = req.body;
+
+        logger.info(`📸 [${new Date().toISOString()}] 收到 NVR 推送:`, {
+            channel,
+            eventType,
+            hasImage: !!imageUrl || !!imageBase64
+        });
+
+        // 获取图片数据并识别车牌
+        let plateResult = null;
+        let savedImageUrl = imageUrl || '';
+
+        if (imageBase64) {
+            plateResult = await recognizePlateFromBase64(imageBase64);
+        } else if (imageUrl) {
+            plateResult = await recognizePlateFromUrl(imageUrl);
+        }
+
+        // 生成记录编号
+        const recordNo = `NVR${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
+        // 准备保存的数据
+        const recordData = {
+            record_no: recordNo,
+            captured_at: timestamp || new Date().toISOString(),
+            license_plate: plateResult?.plate || '',
+            vehicle_type: plateResult?.type || '',
+            vehicle_size: plateResult?.size || '',
+            vehicle_color: plateResult?.color || '',
+            confidence: plateResult?.confidence || 0,
+            image_url: savedImageUrl,
+            source: 'camera',
+            status: 'pending'
+        };
+
+        logger.info('📝 准备保存:', {
+            record_no: recordNo,
+            plate: recordData.license_plate || '未识别',
+            confidence: recordData.confidence
+        });
+
+        // 保存到 Supabase
+        const { data, error } = await supabase
+            .from('vehicle_records')
+            .insert([recordData])
+            .select();
+
+        if (error) {
+            logger.error('❌ 数据库写入失败:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Database error',
+                detail: error.message
+            });
+        }
+
+        logger.info(`✅ 车辆记录已保存: ${recordNo}`);
+
+        return res.status(200).json({
+            success: true,
+            record: data[0],
+            plate: plateResult || { plate: '未识别', confidence: 0 }
+        });
+
+    } catch (error) {
+        logger.error('[Webhook] 处理失败:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal error',
+            detail: error.message
+        });
+    }
+}
+
+// ============================================================
+// 辅助函数：从 Base64 识别车牌
+// ============================================================
+async function recognizePlateFromBase64(imageBase64) {
+    const plateApiToken = process.env.PLATE_API_TOKEN;
+    if (!plateApiToken) {
+        logger.warn('⚠️ 未配置 PLATE_API_TOKEN，跳过车牌识别');
+        return null;
+    }
+
+    try {
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+        const formData = new FormData();
+        const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
+        formData.append('upload', blob, 'plate.jpg');
+
+        const response = await fetch('https://api.platerecognizer.com/v1/plate-reader/', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${plateApiToken}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            logger.warn(`⚠️ 车牌识别 API 返回错误: ${response.status}`);
+            return null;
+        }
+
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+            const result = data.results[0];
+            return {
+                plate: result.plate || '',
+                type: result.vehicle?.type || '',
+                size: result.vehicle?.size || '',
+                color: result.vehicle?.color || '',
+                confidence: Math.round((result.score || 0) * 100)
+            };
+        }
+        return null;
+
+    } catch (error) {
+        logger.error('[Recognize] 车牌识别失败:', error.message);
+        return null;
+    }
+}
+
+// ============================================================
+// 辅助函数：从 URL 下载图片并识别车牌
+// ============================================================
+async function recognizePlateFromUrl(imageUrl) {
+    const plateApiToken = process.env.PLATE_API_TOKEN;
+    if (!plateApiToken) {
+        logger.warn('⚠️ 未配置 PLATE_API_TOKEN，跳过车牌识别');
+        return null;
+    }
+
+    try {
+        const nvrAuth = process.env.NVR_AUTH || '';
+        const imageResponse = await fetch(imageUrl, {
+            headers: {
+                'Authorization': nvrAuth
+            }
+        });
+
+        if (!imageResponse.ok) {
+            logger.warn(`⚠️ 下载图片失败: ${imageResponse.status}`);
+            return null;
+        }
+
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const base64Image = Buffer.from(imageBuffer).toString('base64');
+        return await recognizePlateFromBase64(base64Image);
+
+    } catch (error) {
+        logger.error('[Recognize] 从 URL 识别车牌失败:', error.message);
+        return null;
+    }
+}
+
+// ============================================================
+// 导出（仅 owner 和 admin 可访问）
+// ============================================================
 export default authMiddleware(roleMiddleware(['owner', 'admin'])(handler));
