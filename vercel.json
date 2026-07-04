@@ -1,53 +1,29 @@
 {
   "version": 2,
+  "name": "carwash-saas-pro",
+  "builds": [
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
     {
-      "src": "/js/(.*)",
-      "headers": {
-        "Content-Type": "application/javascript"
-      },
-      "dest": "/js/$1"
-    },
-    {
-      "src": "/modules/(.*)/(.*)",
-      "headers": {
-        "Content-Type": "application/javascript"
-      },
-      "dest": "/modules/$1/$2"
-    },
-    {
-      "src": "/services/(.*)",
-      "headers": {
-        "Content-Type": "application/javascript"
-      },
-      "dest": "/services/$1"
-    },
-    {
-      "src": "/components/(.*)",
-      "headers": {
-        "Content-Type": "application/javascript"
-      },
-      "dest": "/components/$1"
-    },
-    {
-      "src": "/css/(.*)",
-      "headers": {
-        "Content-Type": "text/css"
-      },
-      "dest": "/css/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/frontend/$1"
     }
   ],
-  "functions": {
-    "api/nvr-webhook.js": {
-      "maxDuration": 10
-    }
+  "env": {
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key"
   }
 }
