@@ -1,6 +1,7 @@
 /**
- * api/_lib/supabase.js - 服务端 Supabase 客户端
+ * shared/lib/supabase.js - 服务端 Supabase 客户端
  * 使用 Service Role Key 获得完整数据库访问权限
+ * 供 api/ 目录下的 Vercel Serverless Functions 使用
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -19,6 +20,12 @@ export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
         persistSession: false
     }
 });
+
+console.log('[Supabase] ✅ 服务端客户端已加载');
+
+// ============================================================
+// 用户相关函数
+// ============================================================
 
 /**
  * 从请求中获取用户信息（通过 JWT）
@@ -44,7 +51,7 @@ export async function getUserFromRequest(req) {
 }
 
 /**
- * 根据用户ID获取用户信息
+ * 根据用户ID获取用户信息（从 users 表）
  */
 export async function getUserById(userId) {
     try {
@@ -120,6 +127,10 @@ export async function getUserContext(userId) {
     }
 }
 
+// ============================================================
+// 分页工具
+// ============================================================
+
 /**
  * 生成分页查询参数
  */
@@ -128,6 +139,10 @@ export function getPagination(page = 1, limit = 20) {
     const end = start + limit - 1;
     return { from: start, to: end };
 }
+
+// ============================================================
+// 安全查询包装器
+// ============================================================
 
 /**
  * 安全执行查询，统一错误处理
@@ -146,4 +161,82 @@ export async function safeQuery(queryFn) {
     }
 }
 
-console.log('[Supabase] ✅ 服务端客户端已加载');
+// ============================================================
+// 通用 CRUD 操作（可选，直接使用 supabase 对象也可以）
+// ============================================================
+
+/**
+ * 查询数据（带过滤、排序、分页）
+ */
+export async function queryTable(table, options = {}) {
+    try {
+        let query = supabase.from(table).select(options.select || '*');
+
+        if (options.filter) {
+            Object.keys(options.filter).forEach(key => {
+                query = query.eq(key, options.filter[key]);
+            });
+        }
+        if (options.order) {
+            query = query.order(options.order.by, {
+                ascending: options.order.ascending || false
+            });
+        }
+        if (options.limit) {
+            query = query.limit(options.limit);
+        }
+        if (options.page) {
+            const { from, to } = getPagination(options.page, options.limit || 20);
+            query = query.range(from, to);
+        }
+
+        const result = await query;
+        if (result.error) throw result.error;
+        return { success: true, data: result.data, error: null };
+    } catch (error) {
+        console.error('[Supabase] queryTable 错误:', error);
+        return { success: false, data: null, error: error.message };
+    }
+}
+
+/**
+ * 插入数据
+ */
+export async function insertRow(table, data) {
+    try {
+        const result = await supabase.from(table).insert(data).select();
+        if (result.error) throw result.error;
+        return { success: true, data: result.data, error: null };
+    } catch (error) {
+        console.error('[Supabase] insertRow 错误:', error);
+        return { success: false, data: null, error: error.message };
+    }
+}
+
+/**
+ * 更新数据
+ */
+export async function updateRow(table, id, data) {
+    try {
+        const result = await supabase.from(table).update(data).eq('id', id).select();
+        if (result.error) throw result.error;
+        return { success: true, data: result.data, error: null };
+    } catch (error) {
+        console.error('[Supabase] updateRow 错误:', error);
+        return { success: false, data: null, error: error.message };
+    }
+}
+
+/**
+ * 删除数据
+ */
+export async function deleteRow(table, id) {
+    try {
+        const result = await supabase.from(table).delete().eq('id', id);
+        if (result.error) throw result.error;
+        return { success: true, error: null };
+    } catch (error) {
+        console.error('[Supabase] deleteRow 错误:', error);
+        return { success: false, error: error.message };
+    }
+}
