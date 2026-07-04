@@ -1,5 +1,5 @@
 /**
- * api.js - API 服务层（增加租户/门店过滤）
+ * api.js - API 服务层
  */
 (function() {
     'use strict';
@@ -31,14 +31,12 @@
                 options = options || {};
                 var filter = options.filter || {};
 
-                // 自动添加租户过滤
                 var currentTenant = AppStore.get('currentTenant');
                 var tablesWithTenant = ['orders', 'customers', 'inventory', 'attendance', 'expenses', 'vehicles', 'appointments', 'products'];
                 if (tablesWithTenant.indexOf(table) !== -1 && currentTenant) {
                     filter.tenant_id = currentTenant.id;
                 }
 
-                // 自动添加门店过滤
                 var currentStore = AppStore.get('currentStore');
                 if (currentStore && tablesWithTenant.indexOf(table) !== -1) {
                     filter.store_id = currentStore.id;
@@ -86,7 +84,6 @@
                     return [];
                 }
 
-                // 自动添加租户/门店ID
                 var currentTenant = AppStore.get('currentTenant');
                 var currentStore = AppStore.get('currentStore');
                 var tablesWithTenant = ['orders', 'customers', 'inventory', 'attendance', 'expenses', 'vehicles', 'appointments', 'products'];
@@ -166,7 +163,6 @@
         // ============================================================
         // 租户/门店
         // ============================================================
-
         getTenants: function() {
             return this.query('tenants');
         },
@@ -186,7 +182,6 @@
         // ============================================================
         // 用户
         // ============================================================
-
         getUsers: function() {
             return this.query('users', {
                 order: { by: 'created_at', ascending: false }
@@ -202,7 +197,6 @@
         // ============================================================
         // 订单
         // ============================================================
-
         getOrders: function() {
             return this.query('orders', {
                 order: { by: 'created_at', ascending: false },
@@ -246,7 +240,6 @@
         // ============================================================
         // 客户
         // ============================================================
-
         getCustomers: function() {
             return this.query('customers', {
                 order: { by: 'created_at', ascending: false }
@@ -276,7 +269,6 @@
         // ============================================================
         // 库存
         // ============================================================
-
         getInventory: function() {
             return this.query('inventory');
         },
@@ -294,7 +286,6 @@
         // ============================================================
         // 考勤
         // ============================================================
-
         getAttendance: function() {
             return this.query('attendance', {
                 order: { by: 'time', ascending: false },
@@ -328,7 +319,6 @@
         // ============================================================
         // 费用
         // ============================================================
-
         getExpenses: function() {
             return this.query('expenses', {
                 order: { by: 'created_at', ascending: false },
@@ -356,7 +346,6 @@
         // ============================================================
         // 审计日志
         // ============================================================
-
         getAuditLogs: function() {
             return this.query('audit_logs', {
                 order: { by: 'created_at', ascending: false },
@@ -371,7 +360,6 @@
         // ============================================================
         // 通用工具
         // ============================================================
-
         getBranches: function() {
             return this.query('stores');
         },
@@ -381,7 +369,6 @@
             return data ? data.length : 0;
         },
 
-        // 获取统计信息
         getStats: async function() {
             var orders = await this.getOrders();
             var today = new Date().toISOString().split('T')[0];

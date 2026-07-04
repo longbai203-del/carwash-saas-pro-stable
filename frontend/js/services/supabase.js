@@ -13,7 +13,6 @@
         _client: null,
         _initialized: false,
 
-        // ===== 初始化 =====
         init: function() {
             if (this._initialized && this._client) {
                 return this._client;
@@ -44,12 +43,10 @@
             }
         },
 
-        // ===== 获取客户端 =====
         getClient: function() {
             if (!this._initialized || !this._client) {
                 this.init();
             }
-            // 如果还是 null，尝试重新初始化
             if (!this._client && window.supabase) {
                 try {
                     this._client = window.supabase.createClient(CONFIG.url, CONFIG.anonKey);
@@ -61,12 +58,10 @@
             return this._client;
         },
 
-        // ===== 检查是否就绪 =====
         isReady: function() {
             return this._initialized && this._client !== null;
         },
 
-        // ===== 等待就绪 =====
         waitForReady: function(timeout) {
             timeout = timeout || 5000;
             var self = this;
@@ -89,7 +84,6 @@
             });
         },
 
-        // ===== 查询数据 =====
         query: async function(table, options) {
             var client = this.getClient();
             if (!client) {
@@ -128,7 +122,6 @@
             }
         },
 
-        // ===== 插入数据 =====
         insert: async function(table, data) {
             var client = this.getClient();
             if (!client) {
@@ -150,7 +143,6 @@
             }
         },
 
-        // ===== 更新数据 =====
         update: async function(table, id, data) {
             var client = this.getClient();
             if (!client) {
@@ -172,7 +164,6 @@
             }
         },
 
-        // ===== 删除数据 =====
         delete: async function(table, id) {
             var client = this.getClient();
             if (!client) {
@@ -194,7 +185,6 @@
             }
         },
 
-        // ===== 订阅实时更新 =====
         subscribe: function(channel, callback) {
             var client = this.getClient();
             if (!client) {
@@ -218,7 +208,6 @@
         }
     };
 
-    // ===== 自动初始化 =====
     function autoInit() {
         if (window.supabase && typeof window.supabase.createClient === 'function') {
             window.SupabaseService.init();
