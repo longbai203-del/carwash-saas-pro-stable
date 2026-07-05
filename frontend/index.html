@@ -5,41 +5,182 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carwash SaaS Pro – Enterprise V2</title>
     
-    <!-- 企业级设计系统（核心样式） -->
+    <!-- 企业级设计系统 -->
     <link rel="stylesheet" href="/css/design-system.css">
     
-    <!-- 旧样式兼容（若需要保留原有模块的样式，可启用） -->
+    <!-- 旧样式兼容（保留用于旧模块兼容，默认禁用） -->
     <link rel="stylesheet" href="/css/style-legacy.css" disabled>
     
-    <!-- 字体与图标（可选） -->
+    <!-- Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- 预加载关键资源 -->
+    <!-- Google Fonts (可选) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <style>
+        /* 临时基础样式，确保页面可见 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        #app {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        #sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #d2d2d7;
+            padding: 20px 0;
+            flex-shrink: 0;
+            overflow-y: auto;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-item {
+            margin: 2px 8px;
+        }
+        
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #1d1d1f;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            gap: 12px;
+        }
+        
+        .sidebar-link:hover {
+            background: #f5f5f7;
+        }
+        
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            color: #6e6e73;
+        }
+        
+        .sidebar-link span {
+            flex: 1;
+        }
+        
+        #content {
+            flex: 1;
+            padding: 24px 32px;
+            background: #f5f5f7;
+            min-height: 100vh;
+        }
+        
+        /* 暗色模式 */
+        [data-theme="dark"] {
+            #sidebar {
+                background: #2c2c2e;
+                border-right-color: #3a3a3c;
+            }
+            .sidebar-link {
+                color: #f5f5f7;
+            }
+            .sidebar-link:hover {
+                background: #3a3a3c;
+            }
+            .sidebar-link i {
+                color: #aeaeb2;
+            }
+            #content {
+                background: #1c1c1e;
+                color: #f5f5f7;
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 200px;
+            }
+            #content {
+                padding: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="app">
-        <!-- 侧边栏将由 JavaScript 动态生成 -->
-        <nav id="sidebar" class="sidebar"></nav>
+        <!-- 侧边栏由 JavaScript 动态生成 -->
+        <nav id="sidebar" class="sidebar">
+            <!-- 加载中状态 -->
+            <div style="padding: 20px; text-align: center; color: #6e6e73;">
+                <i class="fas fa-spinner fa-spin"></i> 加载中...
+            </div>
+        </nav>
         
         <!-- 主内容区域 -->
         <main id="content" class="main-content">
-            <!-- 路由将根据当前 URL 加载对应模块的 HTML -->
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 400px; color: #6e6e73;">
+                <div style="text-align: center;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 16px;"></i>
+                    <p>正在加载页面...</p>
+                </div>
+            </div>
         </main>
     </div>
 
-    <!-- 核心 JavaScript -->
-    <!-- 1. 原有模块基础类（保留） -->
-    <script type="module" src="/js/module-base.js"></script>
-    <!-- 2. V2 模块基类（扩展） -->
-    <script type="module" src="/js/module-base-v2.js"></script>
-    <!-- 3. 增强型路由器（自动扫描模块） -->
-    <script type="module" src="/js/router-v2.js"></script>
-    <!-- 4. 新应用入口（初始化认证、侧边栏、路由） -->
+    <!-- ===== 核心 JavaScript ===== -->
+    <!-- 1. 原有模块基类（保持不变，用于兼容旧模块） -->
+    <script src="/js/module-base.js"></script>
+    
+    <!-- 2. 原有 auth（作为全局对象，不导出任何东西） -->
+    <script src="/js/auth.js"></script>
+    
+    <!-- 3. V2 应用入口（包含所有功能，不依赖任何导入） -->
     <script type="module" src="/js/app-v2.js"></script>
     
-    <!-- 若需兼容旧版非模块脚本，可在此处引入（不推荐） -->
-    <!-- <script src="/js/legacy.js" defer></script> -->
+    <!-- 4. 备用：如果 ES Module 失败，使用传统方式加载 -->
+    <script>
+        // 检测 app-v2 是否加载成功，如果 3 秒后仍未加载，显示错误信息
+        setTimeout(function() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.querySelector('.sidebar-menu')) {
+                // 已加载成功
+                return;
+            }
+            // 显示错误提示
+            const content = document.getElementById('content');
+            if (content) {
+                content.innerHTML = `
+                    <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 400px;">
+                        <div style="text-align: center; max-width: 500px; padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ff9500; margin-bottom: 16px;"></i>
+                            <h2 style="margin-bottom: 12px;">页面加载失败</h2>
+                            <p style="color: #6e6e73; margin-bottom: 16px;">请检查控制台错误信息</p>
+                            <button onclick="location.reload()" style="padding: 8px 24px; background: #007aff; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                <i class="fas fa-redo"></i> 重新加载
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }, 5000);
+    </script>
 </body>
 </html>
