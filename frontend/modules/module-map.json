@@ -1,0 +1,16 @@
+{
+    "01-dashboard": "Dashboard",
+    "02-pos": "POS",
+    "03-orders": "Orders",
+    "04-products": "Products",
+    "05-customers": "CRM",
+    "06-marketing": "Marketing",
+    "07-inventory": "Inventory",
+    "08-purchase": "Purchasing",
+    "09-finance": "Finance",
+    "10-hr": "HR",
+    "11-saas": "SaaS",
+    "12-system": "System",
+    "13-analytics": "Analytics",
+    "14-settings": "Settings"
+  }
