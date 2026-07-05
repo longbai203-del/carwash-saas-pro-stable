@@ -1,0 +1,273 @@
+<div id="inventoryContainer" class="space-y-6">
+
+    <!-- ===== 库存概览 ===== -->
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h2 class="text-xl font-bold text-blue-600">📦 库存管理</h2>
+            <div class="flex gap-2 flex-wrap">
+                <button onclick="InventoryModule.showAddProduct()" class="btn-success btn-sm">
+                    <i class="fas fa-plus"></i> 产品
+                </button>
+                <button onclick="InventoryModule.showAddSupplier()" class="btn-primary btn-sm">
+                    <i class="fas fa-truck"></i> 供应商
+                </button>
+                <button onclick="InventoryModule.showPurchaseOrder()" class="btn-warning btn-sm">
+                    <i class="fas fa-shopping-cart"></i> 采购单
+                </button>
+                <button onclick="InventoryModule.showStockAdjust()" class="btn-outline btn-sm">
+                    <i class="fas fa-edit"></i> 调库存
+                </button>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div class="bg-blue-50 p-3 rounded-xl text-center">
+                <div class="text-2xl font-bold text-blue-600" id="invTotalProducts">0</div>
+                <div class="text-xs text-gray-500">总产品</div>
+            </div>
+            <div class="bg-green-50 p-3 rounded-xl text-center">
+                <div class="text-2xl font-bold text-green-600" id="invTotalStock">0</div>
+                <div class="text-xs text-gray-500">总库存</div>
+            </div>
+            <div class="bg-red-50 p-3 rounded-xl text-center">
+                <div class="text-2xl font-bold text-red-600" id="invLowStock">0</div>
+                <div class="text-xs text-gray-500">⚠️ 低库存</div>
+            </div>
+            <div class="bg-purple-50 p-3 rounded-xl text-center">
+                <div class="text-2xl font-bold text-purple-600" id="invTotalValue">0 SAR</div>
+                <div class="text-xs text-gray-500">总价值</div>
+            </div>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="flex gap-3 mb-4 flex-wrap">
+            <input id="invSearch" placeholder="🔍 搜索产品名称..." class="flex-1 p-3 border rounded-xl bg-gray-50 focus:outline-none focus:border-blue-400">
+            <select id="invCategoryFilter" class="p-3 border rounded-xl bg-gray-50">
+                <option value="all">全部分类</option>
+            </select>
+            <select id="invStockFilter" class="p-3 border rounded-xl bg-gray-50">
+                <option value="all">全部库存</option>
+                <option value="low">⚠️ 低库存</option>
+                <option value="normal">✅ 正常</option>
+                <option value="out">🚫 缺货</option>
+            </select>
+            <button onclick="InventoryModule.filterProducts()" class="btn-primary px-4 py-3 rounded-xl">筛选</button>
+        </div>
+
+        <!-- 产品列表 -->
+        <div id="productList" class="space-y-2 max-h-96 overflow-auto"></div>
+    </div>
+
+    <!-- ===== 供应商列表 ===== -->
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">🚚 供应商</h2>
+            <button onclick="InventoryModule.showAddSupplier()" class="btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 添加供应商
+            </button>
+        </div>
+        <div id="supplierList" class="space-y-2 max-h-48 overflow-auto"></div>
+    </div>
+
+    <!-- ===== 采购订单列表 ===== -->
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">📋 采购订单</h2>
+            <button onclick="InventoryModule.showPurchaseOrder()" class="btn-warning btn-sm">
+                <i class="fas fa-plus"></i> 创建采购单
+            </button>
+        </div>
+        <div id="purchaseOrderList" class="space-y-2 max-h-48 overflow-auto"></div>
+    </div>
+</div>
+
+<!-- ===== 添加产品模态框 ===== -->
+<div id="addProductModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">➕ 添加产品</h3>
+            <button onclick="InventoryModule.closeModal('addProductModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">产品名称 *</label>
+                <input id="productName" placeholder="输入产品名称" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">分类</label>
+                    <select id="productCategory" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">单位</label>
+                    <input id="productUnit" placeholder="个/瓶/条" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">成本价 (SAR)</label>
+                    <input id="productCost" type="number" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">售价 (SAR)</label>
+                    <input id="productSellPrice" type="number" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">初始数量</label>
+                    <input id="productQty" type="number" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">最低库存预警</label>
+                    <input id="productMinQty" type="number" placeholder="5" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">描述</label>
+                <input id="productDesc" placeholder="产品描述" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <button onclick="InventoryModule.saveProduct()" class="btn-primary py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-save"></i> 保存产品
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 添加供应商模态框 ===== -->
+<div id="addSupplierModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">🚚 添加供应商</h3>
+            <button onclick="InventoryModule.closeModal('addSupplierModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">供应商名称 *</label>
+                <input id="supplierName" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">联系人</label>
+                <input id="supplierContact" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">电话</label>
+                <input id="supplierPhone" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">地址</label>
+                <input id="supplierAddress" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <button onclick="InventoryModule.saveSupplier()" class="btn-primary py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-save"></i> 保存供应商
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 创建采购单模态框 ===== -->
+<div id="purchaseOrderModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">📋 创建采购单</h3>
+            <button onclick="InventoryModule.closeModal('purchaseOrderModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">供应商</label>
+                <select id="poSupplier" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">订单日期</label>
+                    <input type="date" id="poDate" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">预计到货</label>
+                    <input type="date" id="poDelivery" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">产品</label>
+                    <select id="poProduct" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">数量</label>
+                    <input type="number" id="poQty" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">单价</label>
+                    <input type="number" step="0.01" id="poPrice" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="InventoryModule.addPurchaseItem()" class="btn-success btn-sm">➕ 添加项</button>
+            </div>
+            <div id="poItemsList" class="max-h-48 overflow-auto space-y-1 text-sm"></div>
+            <div class="border-t pt-3">
+                <div class="flex justify-between"><span>小计</span><span id="poSubtotal">0.00 SAR</span></div>
+                <div class="flex justify-between"><span>增值税 (15%)</span><span id="poVat">0.00 SAR</span></div>
+                <div class="flex justify-between text-xl font-bold text-blue-600"><span>总计</span><span id="poTotal">0.00 SAR</span></div>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">备注</label>
+                <input id="poNotes" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <button onclick="InventoryModule.submitPurchaseOrder()" class="btn-primary py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-check"></i> 提交采购单
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 库存调整模态框 ===== -->
+<div id="stockAdjustModal" class="modal-glass hidden">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-amber-600">✏️ 调整库存</h3>
+            <button onclick="InventoryModule.closeModal('stockAdjustModal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm font-medium text-gray-600">产品</label>
+                <select id="adjustProduct" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">当前库存</label>
+                    <input id="adjustCurrentQty" type="number" class="w-full p-3 border rounded-xl mt-1 bg-gray-50" readonly>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">调整后数量</label>
+                    <input id="adjustNewQty" type="number" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                </div>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">原因</label>
+                <select id="adjustReason" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+                    <option value="adjustment">盘点调整</option>
+                    <option value="waste">报废损耗</option>
+                    <option value="return">退货</option>
+                    <option value="transfer">调拨</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-600">备注</label>
+                <input id="adjustNote" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
+            </div>
+            <button onclick="InventoryModule.submitStockAdjust()" class="btn-warning py-3 rounded-xl font-bold w-full">
+                <i class="fas fa-save"></i> 确认调整
+            </button>
+        </div>
+    </div>
+</div>

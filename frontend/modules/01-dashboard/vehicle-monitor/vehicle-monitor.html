@@ -1,0 +1,275 @@
+<div id="vehicleMonitorContainer" class="space-y-6">
+    
+    <!-- ===== 顶部统计卡片 ===== -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="glass-card p-4 text-center">
+            <div class="text-3xl font-bold text-blue-600" id="vmTodayTotal">0</div>
+            <div class="text-xs text-gray-500">🚗 今日总车流</div>
+            <div class="text-xs text-gray-400">进出合计</div>
+        </div>
+        <div class="glass-card p-4 text-center border-l-4 border-green-500">
+            <div class="text-3xl font-bold text-green-600" id="vmTodayIn">0</div>
+            <div class="text-xs text-gray-500">📥 今日进入</div>
+            <div class="text-xs text-green-400" id="vmTodayInRate">-</div>
+        </div>
+        <div class="glass-card p-4 text-center border-l-4 border-red-500">
+            <div class="text-3xl font-bold text-red-600" id="vmTodayOut">0</div>
+            <div class="text-xs text-gray-500">📤 今日离开</div>
+            <div class="text-xs text-red-400" id="vmTodayOutRate">-</div>
+        </div>
+        <div class="glass-card p-4 text-center border-l-4 border-purple-500">
+            <div class="text-3xl font-bold text-purple-600" id="vmCurrentlyInside">0</div>
+            <div class="text-xs text-gray-500">📍 当前在场</div>
+            <div class="text-xs text-purple-400">实时数量</div>
+        </div>
+        <div class="glass-card p-4 text-center border-l-4 border-amber-500">
+            <div class="text-3xl font-bold text-amber-600" id="vmAvgStayTime">0</div>
+            <div class="text-xs text-gray-500">⏱️ 平均停留</div>
+            <div class="text-xs text-amber-400">分钟</div>
+        </div>
+    </div>
+
+    <!-- ===== 状态和操作栏 ===== -->
+    <div class="glass-card p-4">
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <span class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse" id="vmStatusDot"></span>
+                    <span class="text-sm font-medium" id="vmStatusText">系统运行中</span>
+                </span>
+                <span class="text-xs text-gray-400">|</span>
+                <span class="text-xs text-gray-400">今日已记录 <span id="vmRecordCount">0</span> 条</span>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <button onclick="VehicleMonitorModule.addEntry()" class="btn-success btn-sm">
+                    <i class="fas fa-sign-in-alt"></i> 车辆进入
+                </button>
+                <button onclick="VehicleMonitorModule.addExit()" class="btn-danger btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> 车辆离开
+                </button>
+                <button onclick="VehicleMonitorModule.exportData()" class="bg-green-600 text-white btn-sm">
+                    <i class="fas fa-file-excel"></i> 导出
+                </button>
+                <button onclick="VehicleMonitorModule.refresh()" class="btn-outline btn-sm">
+                    <i class="fas fa-sync"></i> 刷新
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 快捷登记 ===== -->
+    <div class="glass-card p-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+                <label class="text-xs font-medium text-gray-500">🚗 车牌号 *</label>
+                <input id="vmPlateInput" class="w-full mt-1 p-2.5 border rounded-lg text-sm uppercase bg-gray-50" placeholder="ABC123">
+            </div>
+            <div>
+                <label class="text-xs font-medium text-gray-500">📋 车辆类型</label>
+                <select id="vmVehicleType" class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50">
+                    <option value="sedan">🚗 轿车</option>
+                    <option value="suv">🚙 SUV</option>
+                    <option value="truck">🚛 货车</option>
+                    <option value="bus">🚌 客车</option>
+                    <option value="motorcycle">🏍️ 摩托车</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-medium text-gray-500">📝 备注</label>
+                <input id="vmNoteInput" class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="可选备注">
+            </div>
+            <div class="flex items-end gap-2">
+                <button onclick="VehicleMonitorModule.quickEntry()" class="btn-primary py-2.5 px-4 rounded-lg text-sm font-bold flex-1">
+                    <i class="fas fa-plus"></i> 记录进入
+                </button>
+                <button onclick="VehicleMonitorModule.quickExit()" class="btn-warning py-2.5 px-4 rounded-lg text-sm font-bold flex-1">
+                    <i class="fas fa-check"></i> 记录离开
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ========== ===== -->
+    <!-- ===== 新增：车牌智能识别 ===== -->
+    <!-- ===== ========== ===== -->
+    <div class="glass-card p-4 border-2 border-dashed border-blue-300">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <h3 class="font-bold text-gray-800 text-sm">🤖 车牌智能识别</h3>
+                <p class="text-xs text-gray-400">拍照/上传，AI自动识别车牌及车辆信息</p>
+            </div>
+            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">支持拍照/上传</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <!-- 左侧：图片上传区 -->
+            <div class="lg:col-span-2">
+                <div id="uploadPlaceholder" class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center bg-gray-50 hover:bg-gray-100 transition">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                    <p class="text-sm text-gray-500">点击上传或拖拽图片</p>
+                    <p class="text-xs text-gray-400">支持 JPG, PNG, BMP</p>
+                    
+                    <!-- ===== 修复后的按钮 ===== -->
+                    <div class="flex gap-2 justify-center mt-2">
+                        <!-- 拍照按钮 -->
+                        <button onclick="event.stopPropagation(); VehicleMonitorModule.takePhoto()" class="btn-primary text-xs px-3 py-1.5 rounded-lg">
+                            <i class="fas fa-camera"></i> 拍照
+                        </button>
+                        <!-- 上传按钮 -->
+                        <button onclick="event.stopPropagation(); VehicleMonitorModule.uploadPhoto()" class="btn-outline text-xs px-3 py-1.5 rounded-lg">
+                            <i class="fas fa-folder-open"></i> 上传
+                        </button>
+                    </div>
+                    
+                    <!-- ===== 隐藏的 input（用于拍照） ===== -->
+                    <input type="file" id="cameraInput" accept="image/*" class="hidden" onchange="VehicleMonitorModule.handleCameraCapture(event)">
+                    <!-- ===== 隐藏的 input（用于上传） ===== -->
+                    <input type="file" id="uploadInput" accept="image/*" class="hidden" onchange="VehicleMonitorModule.handleUploadSelect(event)">
+                </div>
+                
+                <div id="imagePreviewContainer" class="hidden mt-2">
+                    <div class="relative bg-gray-100 rounded-xl overflow-hidden">
+                        <img id="imagePreview" class="w-full max-h-48 object-contain" alt="车辆图片">
+                        <button onclick="VehicleMonitorModule.clearImage()" class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="recognizeLoading" class="hidden text-center py-2">
+                        <i class="fas fa-spinner fa-spin text-xl text-blue-500"></i>
+                        <p class="text-xs text-gray-500 mt-1">⏳ AI识别中...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：识别结果 -->
+            <div class="lg:col-span-3">
+                <div class="bg-gray-50 rounded-xl p-3 min-h-[140px]">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-medium text-gray-500">📋 识别结果</span>
+                        <span id="recogStatus" class="text-xs text-gray-400">等待识别...</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] font-medium text-gray-500">🚗 车牌号码 <span class="text-red-500">*</span></label>
+                            <input id="recogPlate" class="w-full p-1.5 border rounded-lg text-sm uppercase bg-white" placeholder="例如: ABC 1234" readonly>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-gray-500">🎨 车牌颜色</label>
+                            <select id="recogPlateColor" class="w-full p-1.5 border rounded-lg text-sm bg-white" disabled>
+                                <option value="">-- 请选择 --</option>
+                                <option value="白色">白色</option>
+                                <option value="黄色">黄色</option>
+                                <option value="蓝色">蓝色</option>
+                                <option value="红色">红色</option>
+                                <option value="绿色">绿色</option>
+                                <option value="黑色">黑色</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-gray-500">🏭 车辆品牌</label>
+                            <input id="recogBrand" class="w-full p-1.5 border rounded-lg text-sm bg-white" placeholder="例如: Toyota" readonly>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-gray-500">🚙 车型</label>
+                            <input id="recogModel" class="w-full p-1.5 border rounded-lg text-sm bg-white" placeholder="例如: Camry" readonly>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-gray-500">🎨 车身颜色</label>
+                            <input id="recogColor" class="w-full p-1.5 border rounded-lg text-sm bg-white" placeholder="例如: 白色" readonly>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-gray-500">📊 置信度</label>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span id="recogConfidence" class="text-xs font-bold text-blue-600 w-10">--%</span>
+                                <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="recogConfidenceBar" class="h-full bg-blue-500 rounded-full transition-all" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="VehicleMonitorModule.saveRecognizedVehicle()" class="btn-success py-1.5 px-4 rounded-lg text-xs font-bold flex-1" id="saveRecogBtn" disabled>
+                            <i class="fas fa-save"></i> 保存记录
+                        </button>
+                        <button onclick="VehicleMonitorModule.enableEdit()" class="bg-amber-500 hover:bg-amber-600 py-1.5 px-3 rounded-lg text-white text-xs font-medium">
+                            <i class="fas fa-edit"></i> 修正
+                        </button>
+                        <button onclick="VehicleMonitorModule.clearRecognition()" class="btn-outline py-1.5 px-3 rounded-lg text-xs">
+                            <i class="fas fa-undo"></i> 清空
+                        </button>
+                    </div>
+                    <p id="recogHint" class="text-[10px] text-gray-400 mt-1"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 当前在场车辆列表 ===== -->
+    <div class="glass-card p-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-gray-800">📍 当前在场车辆</h3>
+            <span class="text-xs text-gray-400">实时更新</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="p-2 text-right">#</th>
+                        <th class="p-2 text-right">车牌</th>
+                        <th class="p-2 text-right">类型</th>
+                        <th class="p-2 text-right">进入时间</th>
+                        <th class="p-2 text-right">停留时长</th>
+                        <th class="p-2 text-right">备注</th>
+                        <th class="p-2 text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="vmCurrentlyInsideList">
+                    <tr><td colspan="7" class="text-center text-gray-400 py-4">暂无车辆在场</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== 今日记录列表 ===== -->
+    <div class="glass-card p-4">
+        <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+            <h3 class="font-bold text-gray-800">📋 今日进出记录</h3>
+            <div class="flex gap-2">
+                <input type="date" id="vmDateFilter" class="p-2 border rounded-lg text-sm bg-gray-50">
+                <input type="text" id="vmSearchFilter" placeholder="🔍 搜索车牌..." class="p-2 border rounded-lg text-sm bg-gray-50">
+                <button onclick="VehicleMonitorModule.filterRecords()" class="btn-primary btn-sm">筛选</button>
+            </div>
+        </div>
+        <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+            <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-white">
+                    <tr class="border-b bg-gray-50">
+                        <th class="p-2 text-right">时间</th>
+                        <th class="p-2 text-right">车牌</th>
+                        <th class="p-2 text-right">类型</th>
+                        <th class="p-2 text-right">方向</th>
+                        <th class="p-2 text-right">停留时长</th>
+                        <th class="p-2 text-right">备注</th>
+                    </tr>
+                </thead>
+                <tbody id="vmRecordsList">
+                    <tr><td colspan="6" class="text-center text-gray-400 py-4">暂无记录</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== 车辆详情弹窗 ===== -->
+<div id="vmDetailModal" class="modal-glass hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-blue-600">🚗 车辆详情</h3>
+            <button onclick="VehicleMonitorModule.closeDetail()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="vmDetailContent" class="space-y-2 text-sm"></div>
+    </div>
+</div>

@@ -1,0 +1,22 @@
+<div id="employeesContainer" class="space-y-6">
+    <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-blue-600">👔 员工审核管理</h2>
+            <button onclick="EmployeesModule.refresh()" class="btn-primary btn-sm">
+                <i class="fas fa-sync"></i> 刷新
+            </button>
+        </div>
+
+        <div class="flex gap-3 mb-4 flex-wrap">
+            <select id="userStatusFilter" class="p-3 border rounded-xl bg-gray-50">
+                <option value="all">全部状态</option>
+                <option value="pending">⏳ 待审核</option>
+                <option value="approved">✅ 已通过</option>
+                <option value="rejected">❌ 已拒绝</option>
+            </select>
+            <button onclick="EmployeesModule.loadData()" class="btn-primary px-4 py-3 rounded-xl">查询</button>
+        </div>
+
+        <div id="usersReviewList" class="space-y-3 max-h-[500px] overflow-auto"></div>
+    </div>
+</div>
