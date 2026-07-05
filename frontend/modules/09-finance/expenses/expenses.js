@@ -1,13 +1,14 @@
-// 09-finance/expenses.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 09-finance/expenses.js
+console.log('📄 09-finance/expenses page loaded');
 
-export default new ModuleV2({
-  name: '09-finance - expenses',
-  routes: [
-    { path: '/09-finance/expenses', component: './expenses.html', meta: { title: 'expenses' } }
-  ],
-  init: () => {
-    console.log('09-finance expenses initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('09-finance/expenses initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('09-finance/expenses DOM ready');
 });

@@ -1,13 +1,14 @@
-// 08-purchase/import.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 08-purchase/import.js
+console.log('📄 08-purchase/import page loaded');
 
-export default new ModuleV2({
-  name: '08-purchase - import',
-  routes: [
-    { path: '/08-purchase/import', component: './import.html', meta: { title: 'import' } }
-  ],
-  init: () => {
-    console.log('08-purchase import initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('08-purchase/import initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('08-purchase/import DOM ready');
 });

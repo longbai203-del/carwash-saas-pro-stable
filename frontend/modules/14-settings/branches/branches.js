@@ -1,13 +1,14 @@
-// 14-settings/branches.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 14-settings/branches.js
+console.log('📄 14-settings/branches page loaded');
 
-export default new ModuleV2({
-  name: '14-settings - branches',
-  routes: [
-    { path: '/14-settings/branches', component: './branches.html', meta: { title: 'branches' } }
-  ],
-  init: () => {
-    console.log('14-settings branches initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('14-settings/branches initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('14-settings/branches DOM ready');
 });

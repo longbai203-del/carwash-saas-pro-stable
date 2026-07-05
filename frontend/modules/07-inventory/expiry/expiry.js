@@ -1,13 +1,14 @@
-// 07-inventory/expiry.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 07-inventory/expiry.js
+console.log('📄 07-inventory/expiry page loaded');
 
-export default new ModuleV2({
-  name: '07-inventory - expiry',
-  routes: [
-    { path: '/07-inventory/expiry', component: './expiry.html', meta: { title: 'expiry' } }
-  ],
-  init: () => {
-    console.log('07-inventory expiry initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('07-inventory/expiry initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('07-inventory/expiry DOM ready');
 });

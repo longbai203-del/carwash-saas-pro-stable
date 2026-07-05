@@ -1,13 +1,14 @@
-// 12-system/system-logs.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 12-system/system-logs.js
+console.log('📄 12-system/system-logs page loaded');
 
-export default new ModuleV2({
-  name: '12-system - system-logs',
-  routes: [
-    { path: '/12-system/system-logs', component: './system-logs.html', meta: { title: 'system-logs' } }
-  ],
-  init: () => {
-    console.log('12-system system-logs initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('12-system/system-logs initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('12-system/system-logs DOM ready');
 });

@@ -1,13 +1,14 @@
-// 01-dashboard/sales.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 01-dashboard/sales.js
+console.log('📄 01-dashboard/sales page loaded');
 
-export default new ModuleV2({
-  name: '01-dashboard - sales',
-  routes: [
-    { path: '/01-dashboard/sales', component: './sales.html', meta: { title: 'sales' } }
-  ],
-  init: () => {
-    console.log('01-dashboard sales initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('01-dashboard/sales initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('01-dashboard/sales DOM ready');
 });

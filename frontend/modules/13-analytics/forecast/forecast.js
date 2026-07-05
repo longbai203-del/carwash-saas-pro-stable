@@ -1,13 +1,14 @@
-// 13-analytics/forecast.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 13-analytics/forecast.js
+console.log('📄 13-analytics/forecast page loaded');
 
-export default new ModuleV2({
-  name: '13-analytics - forecast',
-  routes: [
-    { path: '/13-analytics/forecast', component: './forecast.html', meta: { title: 'forecast' } }
-  ],
-  init: () => {
-    console.log('13-analytics forecast initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('13-analytics/forecast initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('13-analytics/forecast DOM ready');
 });

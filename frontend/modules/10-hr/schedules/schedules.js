@@ -1,13 +1,14 @@
-// 10-hr/schedules.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 10-hr/schedules.js
+console.log('📄 10-hr/schedules page loaded');
 
-export default new ModuleV2({
-  name: '10-hr - schedules',
-  routes: [
-    { path: '/10-hr/schedules', component: './schedules.html', meta: { title: 'schedules' } }
-  ],
-  init: () => {
-    console.log('10-hr schedules initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('10-hr/schedules initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('10-hr/schedules DOM ready');
 });

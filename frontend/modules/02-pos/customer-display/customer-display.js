@@ -1,13 +1,14 @@
-// 02-pos/customer-display.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 02-pos/customer-display.js
+console.log('📄 02-pos/customer-display page loaded');
 
-export default new ModuleV2({
-  name: '02-pos - customer-display',
-  routes: [
-    { path: '/02-pos/customer-display', component: './customer-display.html', meta: { title: 'customer-display' } }
-  ],
-  init: () => {
-    console.log('02-pos customer-display initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('02-pos/customer-display initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('02-pos/customer-display DOM ready');
 });

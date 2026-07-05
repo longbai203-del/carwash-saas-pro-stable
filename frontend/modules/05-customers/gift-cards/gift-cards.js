@@ -1,13 +1,14 @@
-// 05-customers/gift-cards.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 05-customers/gift-cards.js
+console.log('📄 05-customers/gift-cards page loaded');
 
-export default new ModuleV2({
-  name: '05-customers - gift-cards',
-  routes: [
-    { path: '/05-customers/gift-cards', component: './gift-cards.html', meta: { title: 'gift-cards' } }
-  ],
-  init: () => {
-    console.log('05-customers gift-cards initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('05-customers/gift-cards initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('05-customers/gift-cards DOM ready');
 });

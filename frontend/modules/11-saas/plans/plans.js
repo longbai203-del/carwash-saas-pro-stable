@@ -1,13 +1,14 @@
-// 11-saas/plans.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 11-saas/plans.js
+console.log('📄 11-saas/plans page loaded');
 
-export default new ModuleV2({
-  name: '11-saas - plans',
-  routes: [
-    { path: '/11-saas/plans', component: './plans.html', meta: { title: 'plans' } }
-  ],
-  init: () => {
-    console.log('11-saas plans initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('11-saas/plans initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('11-saas/plans DOM ready');
 });

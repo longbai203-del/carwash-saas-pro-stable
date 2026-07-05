@@ -1,13 +1,14 @@
-// 12-system/permissions.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 12-system/permissions.js
+console.log('📄 12-system/permissions page loaded');
 
-export default new ModuleV2({
-  name: '12-system - permissions',
-  routes: [
-    { path: '/12-system/permissions', component: './permissions.html', meta: { title: 'permissions' } }
-  ],
-  init: () => {
-    console.log('12-system permissions initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('12-system/permissions initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('12-system/permissions DOM ready');
 });

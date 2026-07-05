@@ -1,13 +1,14 @@
-// 03-orders/list.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 03-orders/list.js
+console.log('📄 03-orders/list page loaded');
 
-export default new ModuleV2({
-  name: '03-orders - list',
-  routes: [
-    { path: '/03-orders/list', component: './list.html', meta: { title: 'list' } }
-  ],
-  init: () => {
-    console.log('03-orders list initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('03-orders/list initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('03-orders/list DOM ready');
 });

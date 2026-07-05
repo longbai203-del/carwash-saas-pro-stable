@@ -1,13 +1,14 @@
-// 10-hr/commissions.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 10-hr/commissions.js
+console.log('📄 10-hr/commissions page loaded');
 
-export default new ModuleV2({
-  name: '10-hr - commissions',
-  routes: [
-    { path: '/10-hr/commissions', component: './commissions.html', meta: { title: 'commissions' } }
-  ],
-  init: () => {
-    console.log('10-hr commissions initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('10-hr/commissions initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('10-hr/commissions DOM ready');
 });

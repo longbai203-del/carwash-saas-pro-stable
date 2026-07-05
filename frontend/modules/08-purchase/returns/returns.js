@@ -1,13 +1,14 @@
-// 08-purchase/returns.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 08-purchase/returns.js
+console.log('📄 08-purchase/returns page loaded');
 
-export default new ModuleV2({
-  name: '08-purchase - returns',
-  routes: [
-    { path: '/08-purchase/returns', component: './returns.html', meta: { title: 'returns' } }
-  ],
-  init: () => {
-    console.log('08-purchase returns initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('08-purchase/returns initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('08-purchase/returns DOM ready');
 });

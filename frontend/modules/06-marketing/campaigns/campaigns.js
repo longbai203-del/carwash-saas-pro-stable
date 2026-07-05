@@ -1,13 +1,14 @@
-// 06-marketing/campaigns.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 06-marketing/campaigns.js
+console.log('📄 06-marketing/campaigns page loaded');
 
-export default new ModuleV2({
-  name: '06-marketing - campaigns',
-  routes: [
-    { path: '/06-marketing/campaigns', component: './campaigns.html', meta: { title: 'campaigns' } }
-  ],
-  init: () => {
-    console.log('06-marketing campaigns initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('06-marketing/campaigns initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('06-marketing/campaigns DOM ready');
 });

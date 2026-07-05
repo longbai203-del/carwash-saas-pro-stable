@@ -1,13 +1,14 @@
-// 04-products/categories.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 04-products/categories.js
+console.log('📄 04-products/categories page loaded');
 
-export default new ModuleV2({
-  name: '04-products - categories',
-  routes: [
-    { path: '/04-products/categories', component: './categories.html', meta: { title: 'categories' } }
-  ],
-  init: () => {
-    console.log('04-products categories initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('04-products/categories initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('04-products/categories DOM ready');
 });

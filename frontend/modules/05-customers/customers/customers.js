@@ -1,13 +1,14 @@
-// 05-customers/customers.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 05-customers/customers.js
+console.log('📄 05-customers/customers page loaded');
 
-export default new ModuleV2({
-  name: '05-customers - customers',
-  routes: [
-    { path: '/05-customers/customers', component: './customers.html', meta: { title: 'customers' } }
-  ],
-  init: () => {
-    console.log('05-customers customers initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('05-customers/customers initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('05-customers/customers DOM ready');
 });

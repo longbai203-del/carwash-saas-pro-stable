@@ -1,13 +1,14 @@
-// 11-saas/usage.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 11-saas/usage.js
+console.log('📄 11-saas/usage page loaded');
 
-export default new ModuleV2({
-  name: '11-saas - usage',
-  routes: [
-    { path: '/11-saas/usage', component: './usage.html', meta: { title: 'usage' } }
-  ],
-  init: () => {
-    console.log('11-saas usage initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('11-saas/usage initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('11-saas/usage DOM ready');
 });

@@ -1,13 +1,14 @@
-// 06-marketing/loyalty.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 06-marketing/loyalty.js
+console.log('📄 06-marketing/loyalty page loaded');
 
-export default new ModuleV2({
-  name: '06-marketing - loyalty',
-  routes: [
-    { path: '/06-marketing/loyalty', component: './loyalty.html', meta: { title: 'loyalty' } }
-  ],
-  init: () => {
-    console.log('06-marketing loyalty initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('06-marketing/loyalty initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('06-marketing/loyalty DOM ready');
 });

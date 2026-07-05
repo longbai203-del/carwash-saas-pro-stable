@@ -1,13 +1,14 @@
-// 09-finance/cash-flow.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 09-finance/cash-flow.js
+console.log('📄 09-finance/cash-flow page loaded');
 
-export default new ModuleV2({
-  name: '09-finance - cash-flow',
-  routes: [
-    { path: '/09-finance/cash-flow', component: './cash-flow.html', meta: { title: 'cash-flow' } }
-  ],
-  init: () => {
-    console.log('09-finance cash-flow initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('09-finance/cash-flow initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('09-finance/cash-flow DOM ready');
 });

@@ -1,13 +1,14 @@
-// 08-purchase/receiving.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 08-purchase/receiving.js
+console.log('📄 08-purchase/receiving page loaded');
 
-export default new ModuleV2({
-  name: '08-purchase - receiving',
-  routes: [
-    { path: '/08-purchase/receiving', component: './receiving.html', meta: { title: 'receiving' } }
-  ],
-  init: () => {
-    console.log('08-purchase receiving initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('08-purchase/receiving initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('08-purchase/receiving DOM ready');
 });

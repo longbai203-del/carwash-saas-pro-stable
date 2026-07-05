@@ -1,13 +1,14 @@
-// 04-products/variants.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 04-products/variants.js
+console.log('📄 04-products/variants page loaded');
 
-export default new ModuleV2({
-  name: '04-products - variants',
-  routes: [
-    { path: '/04-products/variants', component: './variants.html', meta: { title: 'variants' } }
-  ],
-  init: () => {
-    console.log('04-products variants initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('04-products/variants initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('04-products/variants DOM ready');
 });

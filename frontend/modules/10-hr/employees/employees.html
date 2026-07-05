@@ -1,22 +1,54 @@
-<div id="employeesContainer" class="space-y-6">
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">👔 员工审核管理</h2>
-            <button onclick="EmployeesModule.refresh()" class="btn-primary btn-sm">
-                <i class="fas fa-sync"></i> 刷新
+﻿<!-- 10-hr/employees.html -->
+<div class="page-container" data-page="10-hr-employees">
+    <div class="page-header">
+        <h1>员工管理</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="alert('功能开发中...')">
+                <i class="fas fa-plus"></i> 新建
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
             </button>
         </div>
-
-        <div class="flex gap-3 mb-4 flex-wrap">
-            <select id="userStatusFilter" class="p-3 border rounded-xl bg-gray-50">
-                <option value="all">全部状态</option>
-                <option value="pending">⏳ 待审核</option>
-                <option value="approved">✅ 已通过</option>
-                <option value="rejected">❌ 已拒绝</option>
-            </select>
-            <button onclick="EmployeesModule.loadData()" class="btn-primary px-4 py-3 rounded-xl">查询</button>
+    </div>
+    <div class="page-content">
+        <div class="content-placeholder">
+            <div class="placeholder-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h2>员工管理</h2>
+            <p class="placeholder-text">此页面正在开发中</p>
+            <p class="placeholder-sub">模块: HR | 页面: employees</p>
+            <div class="placeholder-features">
+                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
+                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
+                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+            </div>
         </div>
-
-        <div id="usersReviewList" class="space-y-3 max-h-[500px] overflow-auto"></div>
     </div>
 </div>
+
+<style>
+    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
+    .page-actions { display: flex; gap: 8px; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
+    .btn-primary:hover { background: #0066d9; }
+    .btn-outline { background: transparent; border-color: #d2d2d7; }
+    .btn-outline:hover { background: #f5f5f7; }
+    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .content-placeholder { text-align: center; padding: 40px 20px; }
+    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
+    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
+    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
+    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
+    .feature-tag i { color: #34c759; font-size: 12px; }
+    .feature-tag i.fa-clock { color: #ff9500; }
+    [data-theme="dark"] .page-content { background: #2c2c2e; }
+    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
+    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
+    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+</style>

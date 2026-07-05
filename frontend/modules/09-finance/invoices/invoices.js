@@ -1,13 +1,14 @@
-// 09-finance/invoices.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 09-finance/invoices.js
+console.log('📄 09-finance/invoices page loaded');
 
-export default new ModuleV2({
-  name: '09-finance - invoices',
-  routes: [
-    { path: '/09-finance/invoices', component: './invoices.html', meta: { title: 'invoices' } }
-  ],
-  init: () => {
-    console.log('09-finance invoices initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('09-finance/invoices initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('09-finance/invoices DOM ready');
 });

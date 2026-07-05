@@ -1,171 +1,54 @@
-<div id="attendanceContainer" class="space-y-6">
-
-    <!-- ===== 员工考勤 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h2 class="text-xl font-bold text-blue-600">⏰ 考勤管理</h2>
-            <div class="flex gap-2 flex-wrap">
-                <button onclick="AttendanceModule.clockIn()" class="btn-success btn-sm">
-                    <i class="fas fa-sign-in-alt"></i> 上班打卡
-                </button>
-                <button onclick="AttendanceModule.clockOut()" class="btn-warning btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> 下班打卡
-                </button>
-                <button onclick="AttendanceModule.getLocation()" class="btn-primary btn-sm">
-                    <i class="fas fa-map-marker-alt"></i> 定位
-                </button>
-            </div>
-        </div>
-
-        <!-- GPS 状态 -->
-        <div id="gpsStatus" class="mb-4 p-3 bg-gray-50 rounded-xl text-sm">
-            <span id="gpsLocationText">📍 未定位</span>
-            <span id="gpsAccuracy" class="text-gray-400 ml-2"></span>
-        </div>
-
-        <!-- 今日统计 -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div class="bg-green-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-green-600" id="todayCheckIns">0</div>
-                <div class="text-xs text-gray-500">今日打卡</div>
-            </div>
-            <div class="bg-blue-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-blue-600" id="todayWorkHours">0h</div>
-                <div class="text-xs text-gray-500">今日工时</div>
-            </div>
-            <div class="bg-purple-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-purple-600" id="weekWorkHours">0h</div>
-                <div class="text-xs text-gray-500">本周工时</div>
-            </div>
-            <div class="bg-amber-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-amber-600" id="monthWorkDays">0</div>
-                <div class="text-xs text-gray-500">本月出勤</div>
-            </div>
-        </div>
-
-        <!-- 考勤记录 -->
-        <div id="attendanceList" class="space-y-1 max-h-72 overflow-auto"></div>
-    </div>
-
-    <!-- ===== 员工绩效 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">📊 员工绩效</h2>
-            <button onclick="AttendanceModule.loadPerformance()" class="btn-primary btn-sm">
-                <i class="fas fa-sync"></i> 刷新
+﻿<!-- 10-hr/attendance.html -->
+<div class="page-container" data-page="10-hr-attendance">
+    <div class="page-header">
+        <h1>考勤管理</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="alert('功能开发中...')">
+                <i class="fas fa-plus"></i> 新建
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
             </button>
         </div>
-        <div id="performanceList" class="space-y-2 max-h-64 overflow-auto"></div>
     </div>
-
-    <!-- ===== 员工提成 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">💰 员工提成</h2>
-            <div class="flex gap-2">
-                <select id="commissionPeriod" class="p-2 border rounded-lg text-sm" onchange="AttendanceModule.loadCommissions()">
-                    <option value="today">今日</option>
-                    <option value="week">本周</option>
-                    <option value="month">本月</option>
-                    <option value="all">全部</option>
-                </select>
-                <button onclick="AttendanceModule.approveCommission()" class="btn-success btn-sm">
-                    <i class="fas fa-check"></i> 审批
-                </button>
+    <div class="page-content">
+        <div class="content-placeholder">
+            <div class="placeholder-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h2>考勤管理</h2>
+            <p class="placeholder-text">此页面正在开发中</p>
+            <p class="placeholder-sub">模块: HR | 页面: attendance</p>
+            <div class="placeholder-features">
+                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
+                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
+                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
             </div>
         </div>
-        <div id="commissionList" class="space-y-1 max-h-64 overflow-auto text-sm"></div>
-        <div class="mt-3 text-right text-sm">
-            总计: <span id="commissionTotal" class="font-bold text-blue-600">0 SAR</span>
-        </div>
-    </div>
-
-    <!-- ===== 工资管理 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">💳 工资管理</h2>
-            <div class="flex gap-2">
-                <button onclick="AttendanceModule.showAddSalary()" class="btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> 添加工资
-                </button>
-                <button onclick="AttendanceModule.processPayroll()" class="btn-success btn-sm">
-                    <i class="fas fa-calculator"></i> 批量处理
-                </button>
-            </div>
-        </div>
-        <div id="salaryList" class="space-y-1 max-h-64 overflow-auto text-sm"></div>
-    </div>
-
-    <!-- ===== 门店位置设置 ===== -->
-    <div class="glass-card p-6">
-        <h2 class="text-xl font-bold text-blue-600 mb-4">📍 门店位置设置</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-                <label class="text-sm font-medium text-gray-600">纬度</label>
-                <input id="storeLat" class="w-full p-2 border rounded-lg mt-1 bg-gray-50" placeholder="24.7136">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">经度</label>
-                <input id="storeLng" class="w-full p-2 border rounded-lg mt-1 bg-gray-50" placeholder="46.6753">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">半径 (米)</label>
-                <input id="storeRadius" class="w-full p-2 border rounded-lg mt-1 bg-gray-50" placeholder="100">
-            </div>
-        </div>
-        <button onclick="AttendanceModule.saveStoreLocation()" class="btn-primary mt-3 py-2 rounded-lg w-full">
-            <i class="fas fa-save"></i> 保存位置
-        </button>
     </div>
 </div>
 
-<!-- ===== 添加工资模态框 ===== -->
-<div id="addSalaryModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-blue-600">💳 添加工资</h3>
-            <button onclick="AttendanceModule.closeModal('addSalaryModal')" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm font-medium text-gray-600">员工</label>
-                <select id="salaryEmployeeSelect" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">开始日期</label>
-                    <input type="date" id="salaryPeriodStart" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">结束日期</label>
-                    <input type="date" id="salaryPeriodEnd" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">底薪</label>
-                    <input type="number" id="salaryBaseAmount" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">提成</label>
-                    <input type="number" id="salaryCommissionAmount" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">奖金</label>
-                    <input type="number" id="salaryBonusAmount" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">扣款</label>
-                    <input type="number" id="salaryDeductionAmount" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <button onclick="AttendanceModule.saveSalaryRecord()" class="btn-primary py-3 rounded-xl font-bold w-full">
-                <i class="fas fa-save"></i> 保存工资
-            </button>
-        </div>
-    </div>
-</div>
+<style>
+    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
+    .page-actions { display: flex; gap: 8px; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
+    .btn-primary:hover { background: #0066d9; }
+    .btn-outline { background: transparent; border-color: #d2d2d7; }
+    .btn-outline:hover { background: #f5f5f7; }
+    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .content-placeholder { text-align: center; padding: 40px 20px; }
+    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
+    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
+    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
+    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
+    .feature-tag i { color: #34c759; font-size: 12px; }
+    .feature-tag i.fa-clock { color: #ff9500; }
+    [data-theme="dark"] .page-content { background: #2c2c2e; }
+    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
+    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
+    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+</style>

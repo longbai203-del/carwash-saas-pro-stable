@@ -1,13 +1,14 @@
-// 11-saas/invoices.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 11-saas/invoices.js
+console.log('📄 11-saas/invoices page loaded');
 
-export default new ModuleV2({
-  name: '11-saas - invoices',
-  routes: [
-    { path: '/11-saas/invoices', component: './invoices.html', meta: { title: 'invoices' } }
-  ],
-  init: () => {
-    console.log('11-saas invoices initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('11-saas/invoices initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('11-saas/invoices DOM ready');
 });

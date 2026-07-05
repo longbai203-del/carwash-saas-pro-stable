@@ -1,13 +1,14 @@
-// 09-finance/refunds.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 09-finance/refunds.js
+console.log('📄 09-finance/refunds page loaded');
 
-export default new ModuleV2({
-  name: '09-finance - refunds',
-  routes: [
-    { path: '/09-finance/refunds', component: './refunds.html', meta: { title: 'refunds' } }
-  ],
-  init: () => {
-    console.log('09-finance refunds initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('09-finance/refunds initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('09-finance/refunds DOM ready');
 });

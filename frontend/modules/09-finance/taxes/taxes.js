@@ -1,13 +1,14 @@
-// 09-finance/taxes.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 09-finance/taxes.js
+console.log('📄 09-finance/taxes page loaded');
 
-export default new ModuleV2({
-  name: '09-finance - taxes',
-  routes: [
-    { path: '/09-finance/taxes', component: './taxes.html', meta: { title: 'taxes' } }
-  ],
-  init: () => {
-    console.log('09-finance taxes initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('09-finance/taxes initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('09-finance/taxes DOM ready');
 });

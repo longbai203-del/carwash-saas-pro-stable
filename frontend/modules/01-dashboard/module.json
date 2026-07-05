@@ -1,5 +1,5 @@
-{
+﻿{{
   "name": "Dashboard",
-  "icon": "dashboard",
+  "icon": "chart-pie",
   "order": 1
-}
+}}

@@ -1,13 +1,14 @@
-// 01-dashboard/inventory.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 01-dashboard/inventory.js
+console.log('📄 01-dashboard/inventory page loaded');
 
-export default new ModuleV2({
-  name: '01-dashboard - inventory',
-  routes: [
-    { path: '/01-dashboard/inventory', component: './inventory.html', meta: { title: 'inventory' } }
-  ],
-  init: () => {
-    console.log('01-dashboard inventory initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('01-dashboard/inventory initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('01-dashboard/inventory DOM ready');
 });

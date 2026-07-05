@@ -1,13 +1,14 @@
-// 07-inventory/serial-numbers.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 07-inventory/serial-numbers.js
+console.log('📄 07-inventory/serial-numbers page loaded');
 
-export default new ModuleV2({
-  name: '07-inventory - serial-numbers',
-  routes: [
-    { path: '/07-inventory/serial-numbers', component: './serial-numbers.html', meta: { title: 'serial-numbers' } }
-  ],
-  init: () => {
-    console.log('07-inventory serial-numbers initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('07-inventory/serial-numbers initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('07-inventory/serial-numbers DOM ready');
 });

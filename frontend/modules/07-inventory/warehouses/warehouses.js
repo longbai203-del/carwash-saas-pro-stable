@@ -1,13 +1,14 @@
-// 07-inventory/warehouses.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 07-inventory/warehouses.js
+console.log('📄 07-inventory/warehouses page loaded');
 
-export default new ModuleV2({
-  name: '07-inventory - warehouses',
-  routes: [
-    { path: '/07-inventory/warehouses', component: './warehouses.html', meta: { title: 'warehouses' } }
-  ],
-  init: () => {
-    console.log('07-inventory warehouses initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('07-inventory/warehouses initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('07-inventory/warehouses DOM ready');
 });

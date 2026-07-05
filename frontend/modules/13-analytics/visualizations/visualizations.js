@@ -1,13 +1,14 @@
-// 13-analytics/visualizations.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 13-analytics/visualizations.js
+console.log('📄 13-analytics/visualizations page loaded');
 
-export default new ModuleV2({
-  name: '13-analytics - visualizations',
-  routes: [
-    { path: '/13-analytics/visualizations', component: './visualizations.html', meta: { title: 'visualizations' } }
-  ],
-  init: () => {
-    console.log('13-analytics visualizations initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('13-analytics/visualizations initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('13-analytics/visualizations DOM ready');
 });

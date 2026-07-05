@@ -1,13 +1,14 @@
-// 02-pos/cash-register.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 02-pos/cash-register.js
+console.log('📄 02-pos/cash-register page loaded');
 
-export default new ModuleV2({
-  name: '02-pos - cash-register',
-  routes: [
-    { path: '/02-pos/cash-register', component: './cash-register.html', meta: { title: 'cash-register' } }
-  ],
-  init: () => {
-    console.log('02-pos cash-register initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('02-pos/cash-register initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('02-pos/cash-register DOM ready');
 });

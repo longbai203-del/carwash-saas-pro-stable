@@ -1,13 +1,14 @@
-// 11-saas/billing.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 11-saas/billing.js
+console.log('📄 11-saas/billing page loaded');
 
-export default new ModuleV2({
-  name: '11-saas - billing',
-  routes: [
-    { path: '/11-saas/billing', component: './billing.html', meta: { title: 'billing' } }
-  ],
-  init: () => {
-    console.log('11-saas billing initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('11-saas/billing initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('11-saas/billing DOM ready');
 });

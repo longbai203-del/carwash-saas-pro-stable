@@ -1,13 +1,14 @@
-// 10-hr/leaves.js
-import { ModuleV2 } from '../../../js/module-base-v2.js';
+﻿// 10-hr/leaves.js
+console.log('📄 10-hr/leaves page loaded');
 
-export default new ModuleV2({
-  name: '10-hr - leaves',
-  routes: [
-    { path: '/10-hr/leaves', component: './leaves.html', meta: { title: 'leaves' } }
-  ],
-  init: () => {
-    console.log('10-hr leaves initialized');
-    // 在此处添加业务逻辑
-  }
+export function init() {
+    console.log('10-hr/leaves initialized');
+}
+
+export default {
+    init
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('10-hr/leaves DOM ready');
 });
