@@ -1,186 +1,302 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-theme="light">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carwash SaaS Pro – Enterprise V2</title>
-    
-    <!-- 企业级设计系统 -->
-    <link rel="stylesheet" href="/css/design-system.css">
-    
-    <!-- 旧样式兼容（保留用于旧模块兼容，默认禁用） -->
-    <link rel="stylesheet" href="/css/style-legacy.css" disabled>
-    
-    <!-- Font Awesome 图标库 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- Google Fonts (可选) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carwash Pro - 洗车店管理系统</title>
+
+    <!-- ====== 外部依赖 ====== -->
+    <!-- Font Awesome 6 (免费图标库) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Google Font (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+
+    <!-- ====== 项目 CSS ====== -->
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+
     <style>
-        /* 临时基础样式，确保页面可见 */
+        /* ---------- 全局重置 & 布局 ---------- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        html,
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
+            height: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
         }
-        
+
+        /* ---------- App 布局 ---------- */
         #app {
             display: flex;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
-        
+
+        /* ---------- 侧边栏 ---------- */
         #sidebar {
             width: 260px;
+            min-width: 260px;
             background: #ffffff;
-            border-right: 1px solid #d2d2d7;
-            padding: 20px 0;
-            flex-shrink: 0;
-            overflow-y: auto;
+            border-right: 1px solid #e9edf4;
+            display: flex;
+            flex-direction: column;
             height: 100vh;
+            overflow-y: auto;
             position: sticky;
             top: 0;
+            z-index: 100;
+            transition: width 0.25s ease;
         }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+
+        #sidebar::-webkit-scrollbar {
+            width: 4px;
         }
-        
-        .sidebar-item {
-            margin: 2px 8px;
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
         }
-        
-        .sidebar-link {
+
+        /* ---------- 主内容 ---------- */
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ---------- 顶部导航 ---------- */
+        #navbar {
+            flex-shrink: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e9edf4;
+            padding: 12px 28px;
             display: flex;
             align-items: center;
-            padding: 10px 16px;
-            border-radius: 8px;
-            color: #1d1d1f;
-            text-decoration: none;
-            transition: all 0.2s ease;
+            justify-content: space-between;
+            min-height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        #navbar .breadcrumb {
             font-size: 14px;
-            gap: 12px;
+            font-weight: 500;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .sidebar-link:hover {
-            background: #f5f5f7;
+
+        #navbar .breadcrumb span {
+            color: #64748b;
+            font-weight: 400;
         }
-        
-        .sidebar-link i {
-            width: 20px;
-            text-align: center;
-            color: #6e6e73;
+
+        #navbar .user-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+            color: #1e293b;
         }
-        
-        .sidebar-link span {
-            flex: 1;
+
+        #navbar .user-area .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: #4f46e5;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
         }
-        
+
+        /* ---------- 内容区 ---------- */
         #content {
             flex: 1;
-            padding: 24px 32px;
-            background: #f5f5f7;
-            min-height: 100vh;
+            padding: 24px 28px 28px 28px;
+            overflow-y: auto;
+            background: #f1f5f9;
         }
-        
-        /* 暗色模式 */
-        [data-theme="dark"] {
-            #sidebar {
-                background: #2c2c2e;
-                border-right-color: #3a3a3c;
-            }
-            .sidebar-link {
-                color: #f5f5f7;
-            }
-            .sidebar-link:hover {
-                background: #3a3a3c;
-            }
-            .sidebar-link i {
-                color: #aeaeb2;
-            }
-            #content {
-                background: #1c1c1e;
-                color: #f5f5f7;
-            }
+
+        #content::-webkit-scrollbar {
+            width: 6px;
         }
-        
-        /* 响应式 */
+        #content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+
+        /* ---------- 移动端适配 ---------- */
         @media (max-width: 768px) {
             #sidebar {
-                width: 200px;
+                width: 0;
+                min-width: 0;
+                overflow: hidden;
+                border-right: none;
             }
+
+            #sidebar.open {
+                width: 280px;
+                min-width: 280px;
+                border-right: 1px solid #e9edf4;
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.06);
+            }
+
+            #navbar {
+                padding: 10px 16px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
             #content {
                 padding: 16px;
             }
+
+            .menu-toggle {
+                display: flex !important;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none !important;
+            }
+        }
+
+        .menu-toggle {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #1e293b;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .menu-toggle:hover {
+            background: #f1f5f9;
+        }
+
+        /* ---------- 工具类 ---------- */
+        .text-muted {
+            color: #64748b;
+        }
+        .fw-600 {
+            font-weight: 600;
         }
     </style>
 </head>
+
 <body>
+    <!-- ============================================================ -->
+    <!-- 1. 先加载 Mock API（开发环境数据模拟）                          -->
+    <!-- ============================================================ -->
+    <script src="/js/mock-api.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- 2. 再加载路由系统                                              -->
+    <!-- ============================================================ -->
+    <script src="/js/app.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- 3. 应用 HTML 结构                                             -->
+    <!-- ============================================================ -->
     <div id="app">
-        <!-- 侧边栏由 JavaScript 动态生成 -->
-        <nav id="sidebar" class="sidebar">
-            <!-- 加载中状态 -->
-            <div style="padding: 20px; text-align: center; color: #6e6e73;">
-                <i class="fas fa-spinner fa-spin"></i> 加载中...
-            </div>
-        </nav>
-        
-        <!-- 主内容区域 -->
-        <main id="content" class="main-content">
-            <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 400px; color: #6e6e73;">
-                <div style="text-align: center;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 16px;"></i>
-                    <p>正在加载页面...</p>
+
+        <!-- 侧边栏 -->
+        <aside id="sidebar">
+            <!-- 由 app.js 动态渲染 -->
+        </aside>
+
+        <!-- 主区域 -->
+        <div class="main-wrap">
+
+            <!-- 顶部导航 -->
+            <header id="navbar">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="menu-toggle" id="menuToggle" aria-label="切换侧边栏">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <i class="fas fa-home" style="color: #64748b; font-size: 15px;"></i>
+                        <span id="currentPageTitle">仪表板</span>
+                    </div>
                 </div>
-            </div>
-        </main>
+                <div class="user-area">
+                    <span>管理员</span>
+                    <div class="avatar">
+                        <i class="fas fa-user" style="font-size: 15px;"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容 -->
+            <main id="content">
+                <!-- 由路由动态加载 -->
+            </main>
+
+        </div>
     </div>
 
-    <!-- ===== 核心 JavaScript ===== -->
-    <!-- 1. 原有模块基类（保持不变，用于兼容旧模块） -->
-    <script src="/js/module-base.js"></script>
-    
-    <!-- 2. 原有 auth（作为全局对象，不导出任何东西） -->
-    <script src="/js/auth.js"></script>
-    
-    <!-- 3. V2 应用入口（包含所有功能，不依赖任何导入） -->
-    <script type="module" src="/js/app-v2.js"></script>
-    
-    <!-- 4. 备用：如果 ES Module 失败，使用传统方式加载 -->
+    <!-- ============================================================ -->
+    <!-- 4. 移动端侧边栏切换逻辑                                        -->
+    <!-- ============================================================ -->
     <script>
-        // 检测 app-v2 是否加载成功，如果 3 秒后仍未加载，显示错误信息
-        setTimeout(function() {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.querySelector('.sidebar-menu')) {
-                // 已加载成功
-                return;
+        (function() {
+            'use strict';
+
+            var sidebar = document.getElementById('sidebar');
+            var toggleBtn = document.getElementById('menuToggle');
+
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                });
+
+                // 点击内容区时关闭侧边栏（移动端）
+                var content = document.getElementById('content');
+                if (content) {
+                    content.addEventListener('click', function() {
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.remove('open');
+                        }
+                    });
+                }
+
+                // 窗口大小变化时，如果变成桌面端则移除 open 状态
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768) {
+                        sidebar.classList.remove('open');
+                    }
+                });
             }
-            // 显示错误提示
-            const content = document.getElementById('content');
-            if (content) {
-                content.innerHTML = `
-                    <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 400px;">
-                        <div style="text-align: center; max-width: 500px; padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ff9500; margin-bottom: 16px;"></i>
-                            <h2 style="margin-bottom: 12px;">页面加载失败</h2>
-                            <p style="color: #6e6e73; margin-bottom: 16px;">请检查控制台错误信息</p>
-                            <button onclick="location.reload()" style="padding: 8px 24px; background: #007aff; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                <i class="fas fa-redo"></i> 重新加载
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-        }, 5000);
+
+            console.log('✅ UI 辅助脚本已加载');
+        })();
     </script>
+
+    <!-- ============================================================ -->
+    <!-- 5. 备用：如果路由加载失败，显示友好提示                        -->
+    <!-- ============================================================ -->
+    <noscript>
+        <div style="padding: 40px; text-align: center; font-family: sans-serif;">
+            <h2>⚠️ 请启用 JavaScript</h2>
+            <p style="color: #64748b;">Carwash Pro 需要 JavaScript 才能正常运行</p>
+        </div>
+    </noscript>
+
 </body>
 </html>
