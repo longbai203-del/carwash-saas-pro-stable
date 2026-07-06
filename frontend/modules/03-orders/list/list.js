@@ -1,35 +1,24 @@
 /**
  * modules/03-orders/list/list.js - 订单列表
- * 使用真实数据服务
+ * 使用 Supabase 服务
  */
 
-let orderService = null;
-let formatCurrency = null;
-let formatDateTime = null;
-let showToast = null;
+// ============================================================
+// 1. 导入服务
+// ============================================================
 
-async function loadServices() {
-    try {
-        const services = await import('../../../js/services.js');
-        orderService = services.orderService;
-        formatCurrency = services.formatCurrency;
-        formatDateTime = services.formatDateTime;
-        showToast = window.showToast || function(msg) { alert(msg); };
-        return true;
-    } catch (error) {
-        console.warn('⚠️ 服务加载失败:', error.message);
-        formatCurrency = (n) => Number(n || 0).toFixed(2);
-        formatDateTime = (s) => s ? new Date(s).toLocaleString('zh-CN') : '-';
-        showToast = (msg) => alert(msg);
-        return false;
-    }
-}
+import { orderService, formatCurrency, formatDateTime, showToast } from '../../../js/services/supabase.js';
+
+// ============================================================
+// 2. 状态管理
+// ============================================================
 
 const state = {
     orders: [],
     loading: false,
     pagination: { page: 1, limit: 10, total: 0 },
-    filters: { orderNo: '', customer: '', status: '' }
+    filters: { orderNo: '', customer: '', status: '' },
+    _initialized: false
 };
 
 const STATUS_MAP = {
@@ -39,11 +28,23 @@ const STATUS_MAP = {
     cancelled: { label: '已取消', color: 'danger' }
 };
 
+// ============================================================
+// 3. 核心功能
+// ============================================================
+
 export async function init() {
+    if (state._initialized) {
+        console.log('📋 订单管理已初始化，跳过');
+        return;
+    }
+
     console.log('📋 订单管理初始化...');
-    await loadServices();
+    state._initialized = true;
+
     await loadOrders();
     bindEvents();
+
+    console.log('✅ 订单管理初始化完成');
 }
 
 async function loadOrders() {
@@ -58,6 +59,8 @@ async function loadOrders() {
             customer: state.filters.customer,
             status: state.filters.status
         });
+
+        console.log('📊 加载订单数据:', result);
 
         state.orders = result.list || [];
         state.pagination.total = result.total || 0;
@@ -74,6 +77,10 @@ async function loadOrders() {
         hideLoading();
     }
 }
+
+// ============================================================
+// 4. 渲染函数
+// ============================================================
 
 function renderTable() {
     const tbody = document.getElementById('ordersTableBody');
@@ -150,6 +157,10 @@ function renderSummary() {
     `;
 }
 
+// ============================================================
+// 5. 全局函数
+// ============================================================
+
 window.changePage = function(page) {
     const totalPages = Math.ceil(state.pagination.total / state.pagination.limit) || 1;
     if (page < 1 || page > totalPages) return;
@@ -168,9 +179,13 @@ window.deleteOrder = async function(id) {
         showToast('删除成功', 'success');
         await loadOrders();
     } catch (error) {
-        showToast('删除失败', 'error');
+        showToast('删除失败: ' + error.message, 'error');
     }
 };
+
+// ============================================================
+// 6. 搜索/重置
+// ============================================================
 
 function handleSearch() {
     state.pagination.page = 1;
@@ -189,6 +204,10 @@ function handleReset() {
     loadOrders();
 }
 
+// ============================================================
+// 7. 事件绑定
+// ============================================================
+
 function bindEvents() {
     document.getElementById('searchBtn')?.addEventListener('click', handleSearch);
     document.getElementById('resetBtn')?.addEventListener('click', handleReset);
@@ -205,8 +224,14 @@ function hideLoading() {
     document.getElementById('loadingSpinner')?.classList.add('hidden');
 }
 
+// ============================================================
+// 8. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     setTimeout(init, 100);
 }
+
+console.log('✅ 订单管理模块加载完成');
