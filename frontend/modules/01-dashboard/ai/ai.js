@@ -1,6 +1,6 @@
 /**
  * modules/01-dashboard/ai/ai.js
- * AI 智能助手
+ * AI 智能助手 - 支持流式响应
  */
 
 // ============================================================
@@ -11,7 +11,6 @@ let aiService = null;
 
 async function loadAIService() {
     try {
-        // 尝试从业务核心加载
         const module = await import('/business-core/services/ai-service.js');
         aiService = new module.AIService();
         console.log('✅ AI 服务已加载');
@@ -27,6 +26,7 @@ async function loadAIService() {
 // ============================================================
 
 let isProcessing = false;
+let currentStreamAbort = null;
 
 // ============================================================
 // 3. 核心功能
@@ -50,7 +50,7 @@ export async function init() {
 }
 
 // ============================================================
-// 4. 提问功能
+// 4. 提问功能（支持流式）
 // ============================================================
 
 async function handleAsk() {
@@ -66,42 +66,68 @@ async function handleAsk() {
     // 显示用户消息
     addMessage('user', question);
 
-    // 显示加载状态
-    const loadingId = addLoadingMessage();
+    // 创建 AI 消息占位
+    const messageId = addStreamingMessage();
 
     try {
-        let answer;
-        if (aiService && typeof aiService.ask === 'function') {
-            answer = await aiService.ask(question);
+        // 检查是否支持流式
+        if (aiService && typeof aiService.askStream === 'function') {
+            // 流式响应
+            let fullContent = '';
+            let firstChunk = true;
+
+            for await (const chunk of aiService.askStream(question)) {
+                if (firstChunk) {
+                    // 移除加载状态
+                    removeLoadingState(messageId);
+                    firstChunk = false;
+                }
+                fullContent += chunk;
+                updateStreamingMessage(messageId, fullContent);
+            }
+
+            // 最终格式化
+            if (fullContent) {
+                updateStreamingMessage(messageId, formatContent(fullContent));
+            } else {
+                // 如果流式没返回内容，尝试普通问答
+                const answer = await aiService.ask(question);
+                updateStreamingMessage(messageId, formatContent(answer.summary));
+            }
+
+        } else if (aiService && typeof aiService.ask === 'function') {
+            // 普通问答（非流式）
+            const answer = await aiService.ask(question);
+            removeLoadingState(messageId);
+            updateStreamingMessage(messageId, formatContent(answer.summary));
+
         } else {
-            // 模拟回答
-            answer = generateMockAnswer(question);
+            // 完全降级到模拟
+            removeLoadingState(messageId);
+            const mockAnswer = generateMockAnswer(question);
+            updateStreamingMessage(messageId, formatContent(mockAnswer));
         }
-
-        // 移除加载消息
-        removeLoadingMessage(loadingId);
-
-        // 显示回答
-        const formattedAnswer = formatAnswer(answer);
-        addMessage('assistant', formattedAnswer);
 
     } catch (error) {
         console.error('❌ AI 问答失败:', error);
-        removeLoadingMessage(loadingId);
-        addMessage('assistant', '⚠️ 抱歉，我暂时无法回答这个问题，请稍后再试。');
+        removeLoadingState(messageId);
+        updateStreamingMessage(messageId, '⚠️ 抱歉，我暂时无法回答这个问题，请稍后再试。');
     }
 
     isProcessing = false;
 }
 
-// 快捷提问
+// ============================================================
+// 5. 快捷提问
+// ============================================================
+
 window.askQuick = function(question) {
     document.getElementById('aiQuestion').value = question;
     handleAsk();
 };
 
 // ============================================================
-// 5. 消息渲染
+// 6. 消息渲染（支持流式）
 // ============================================================
 
 function addMessage(role, content) {
@@ -121,73 +147,169 @@ function addMessage(role, content) {
     message.appendChild(contentDiv);
     container.appendChild(message);
 
-    // 滚动到底部
     container.scrollTop = container.scrollHeight;
-
     return message;
 }
 
-function addLoadingMessage() {
+function addStreamingMessage() {
     const container = document.getElementById('chatMessages');
-    const id = 'loading-' + Date.now();
+    const id = 'stream-' + Date.now();
     const message = document.createElement('div');
     message.id = id;
     message.className = 'chat-message assistant';
-    message.innerHTML = `
-        <div class="avatar">AI</div>
-        <div class="content">
-            <div class="ai-loading">
-                <div class="spinner"></div>
-                正在思考<span class="loading-dots"></span>
-            </div>
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'AI';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'content';
+    contentDiv.innerHTML = `
+        <div class="ai-loading">
+            <div class="spinner"></div>
+            正在思考<span class="loading-dots"></span>
         </div>
     `;
+
+    message.appendChild(avatar);
+    message.appendChild(contentDiv);
     container.appendChild(message);
     container.scrollTop = container.scrollHeight;
     return id;
 }
 
-function removeLoadingMessage(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
+function updateStreamingMessage(id, content) {
+    const message = document.getElementById(id);
+    if (!message) return;
+
+    const contentDiv = message.querySelector('.content');
+    if (contentDiv) {
+        contentDiv.innerHTML = content;
+        const container = document.getElementById('chatMessages');
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function removeLoadingState(id) {
+    const message = document.getElementById(id);
+    if (!message) return;
+
+    const contentDiv = message.querySelector('.content');
+    if (contentDiv) {
+        // 如果内容还是加载状态，清除它
+        if (contentDiv.querySelector('.ai-loading')) {
+            contentDiv.innerHTML = '';
+        }
+    }
 }
 
 // ============================================================
-// 6. 格式化和模拟回答
+// 7. 内容格式化
 // ============================================================
 
-function formatAnswer(answer) {
-    if (typeof answer === 'string') {
-        return answer.replace(/\n/g, '<br>');
-    }
-    if (typeof answer === 'object' && answer.summary) {
-        return answer.summary.replace(/\n/g, '<br>');
-    }
-    return JSON.stringify(answer, null, 2).replace(/\n/g, '<br>');
+function formatContent(content) {
+    if (!content) return '暂无内容';
+
+    // 处理 Markdown 格式
+    let formatted = content
+        // 标题
+        .replace(/^### (.*$)/gm, '<h4>$1</h4>')
+        .replace(/^## (.*$)/gm, '<h3>$1</h3>')
+        .replace(/^# (.*$)/gm, '<h2>$1</h2>')
+        // 列表
+        .replace(/^\- (.*$)/gm, '<li>$1</li>')
+        .replace(/^\* (.*$)/gm, '<li>$1</li>')
+        // 数字列表
+        .replace(/^(\d+)\. (.*$)/gm, '<li>$1. $2</li>')
+        // 加粗
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // 换行
+        .replace(/\n/g, '<br>');
+
+    // 包裹列表
+    formatted = formatted
+        .replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>')
+        .replace(/<ul><li>(\d+)\./g, '<ol><li>$1.');
+
+    return formatted;
 }
+
+// ============================================================
+// 8. 模拟回答（降级用）
+// ============================================================
 
 function generateMockAnswer(question) {
     const q = question.toLowerCase();
     if (q.includes('销售') || q.includes('订单') || q.includes('生意') || q.includes('营业额')) {
-        return `📊 今日销售报告\n\n今日销售额: ¥28,650\n今日订单数: 47 笔\n\n近7天销售额: ¥198,430\n同比增长: +12.3%\n\n💡 建议: 今天销售表现良好，建议保持目前的营销策略。`;
+        return `📊 **今日销售报告**
+
+**今日销售额:** ¥28,650
+**今日订单数:** 47 笔
+
+**近7天销售额:** ¥198,430
+**同比增长:** +12.3%
+
+💡 **建议:** 今天销售表现良好，建议保持目前的营销策略。`;
     }
-    if (q.includes('库存') || q.includes('缺货') || q.includes('商品') || q.includes('产品')) {
-        return `📦 库存报告\n\n总商品数: 156 种\n低库存预警: 8 种\n已售罄: 3 种\n\n⚠️ 需要补货的商品:\n• 泡沫洗车液 (剩余 5 桶)\n• 轮胎光亮剂 (剩余 8 瓶)\n• 内饰清洗剂 (剩余 3 瓶)`;
+    if (q.includes('库存') || q.includes('缺货') || q.includes('商品')) {
+        return `📦 **库存报告**
+
+**总商品数:** 156 种
+**低库存预警:** 8 种
+**已售罄:** 3 种
+
+⚠️ **需要补货的商品:**
+- 泡沫洗车液 (剩余 5 桶)
+- 轮胎光亮剂 (剩余 8 瓶)
+- 内饰清洗剂 (剩余 3 瓶)`;
     }
     if (q.includes('客户') || q.includes('会员') || q.includes('VIP')) {
-        return `👥 客户报告\n\n总客户数: 328 人\nVIP客户: 45 人\n黄金客户: 89 人\n\n本月新增客户: 23 人\n客户活跃度: 68%\n\n💡 VIP客户消费占比: 42%，建议重点关注。`;
+        return `👥 **客户报告**
+
+**总客户数:** 328 人
+**VIP 客户:** 45 人
+**黄金客户:** 89 人
+
+本月新增客户: 23 人
+客户活跃度: 68%
+
+💡 VIP 客户消费占比 42%，建议重点关注。`;
     }
-    if (q.includes('利润') || q.includes('财务') || q.includes('成本') || q.includes('支出')) {
-        return `💰 财务报告\n\n本月总收入: ¥245,800\n本月总支出: ¥178,200\n\n净利润: ¥67,600\n利润率: 27.5%\n\n📈 同比上月增长: +8.2%`;
+    if (q.includes('利润') || q.includes('财务') || q.includes('成本')) {
+        return `💰 **财务报告**
+
+**本月总收入:** ¥245,800
+**本月总支出:** ¥178,200
+
+**净利润:** ¥67,600
+**利润率:** 27.5%
+
+📈 同比上月增长: +8.2%`;
     }
-    if (q.includes('预测') || q.includes('未来') || q.includes('趋势')) {
-        return `📈 销售预测\n\n基于近7天数据预测:\n\n未来7天预计销售额: ¥198,430\n未来30天预计销售额: ¥850,000\n\n📊 趋势: 平稳上升\n💡 建议: 预计下周销售高峰在周五、周六。`;
+    if (q.includes('预测') || q.includes('趋势') || q.includes('未来')) {
+        return `📈 **销售预测**
+
+基于近7天数据预测:
+
+**未来7天预计销售额:** ¥198,430
+**未来30天预计销售额:** ¥850,000
+
+📊 趋势: 平稳上升
+💡 建议: 预计下周销售高峰在周五、周六。`;
     }
-    return `🤔 我理解你想了解: "${question}"\n\n这是你当前的业务概览:\n• 总订单: 1,247 笔\n• 总客户: 328 人\n• 总商品: 156 种\n• 本月营业额: ¥245,800\n\n有什么具体想了解的吗？`;
+    return `🤔 我理解你想了解: "${question}"
+
+这是你当前的业务概览:
+- 总订单: 1,247 笔
+- 总客户: 328 人
+- 总商品: 156 种
+- 本月营业额: ¥245,800
+
+有什么具体想了解的吗？`;
 }
 
 // ============================================================
-// 7. 业务洞察
+// 9. 业务洞察
 // ============================================================
 
 async function loadInsights() {
@@ -235,10 +357,14 @@ function renderInsights(container, insights) {
     let html = '';
     for (const insight of insights) {
         const type = typeMap[insight.type] || typeMap.info;
+        // 格式化描述（支持 Markdown）
+        let desc = insight.description || '';
+        desc = desc.replace(/\n/g, '<br>');
+        
         html += `
             <div class="insight-card ${type.className}">
                 <div class="title"><span class="icon">${type.icon}</span> ${insight.title}</div>
-                <div class="description">${insight.description}</div>
+                <div class="description">${desc}</div>
             </div>
         `;
     }
@@ -266,7 +392,7 @@ function getMockInsights() {
 }
 
 // ============================================================
-// 8. 自动初始化
+// 10. 自动初始化
 // ============================================================
 
 if (document.readyState === 'loading') {
@@ -275,4 +401,4 @@ if (document.readyState === 'loading') {
     setTimeout(init, 100);
 }
 
-console.log('✅ AI 模块加载完成');
+console.log('✅ AI 模块加载完成（支持流式响应）');
