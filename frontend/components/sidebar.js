@@ -7,8 +7,19 @@ window.SidebarComponent = {
         { module: 'dashboard', icon: 'fa-chart-line', label: '仪表板' },
         { module: 'cashier', icon: 'fa-cash-register', label: 'POS收银' },
         { module: 'orders', icon: 'fa-clipboard-list', label: '订单管理' },
-        { module: 'inventory', icon: 'fa-boxes', label: '库存管理' },
+        { module: 'products', icon: 'fa-box', label: '商品管理' },
         { module: 'customers', icon: 'fa-users', label: '客户管理' },
+        { module: 'promotions', icon: 'fa-bullhorn', label: '促销管理' },
+        { module: 'inventory', icon: 'fa-boxes', label: '库存管理' },
+        { module: 'purchase-orders', icon: 'fa-file-invoice', label: '采购订单' },
+        { module: 'receiving', icon: 'fa-boxes', label: '采购收货' },
+        { module: 'suppliers', icon: 'fa-truck', label: '供应商管理' },
+        { module: 'income', icon: 'fa-coins', label: '收入管理' },
+        { module: 'employees', icon: 'fa-user-tie', label: '员工管理' },
+        { module: 'tenants', icon: 'fa-building', label: '租户管理' },
+        { module: 'audit-logs', icon: 'fa-history', label: '审计日志' },
+        { module: 'reports', icon: 'fa-chart-bar', label: '报表管理' },
+        { module: 'company', icon: 'fa-building', label: '公司设置' },
         { module: 'attendance', icon: 'fa-clock', label: '考勤管理' },
         { module: 'reports', icon: 'fa-chart-bar', label: '财务管理' },
         { module: 'employees', icon: 'fa-user-tie', label: '员工审核' },
@@ -22,10 +33,10 @@ window.SidebarComponent = {
     render: function(container) {
         var user = AppStore.get('currentUser');
         var perms = user ? AppConfig.permissions[user.role] || [] : [];
-        
+
         // 检查是否为移动端
         var isMobile = window.innerWidth <= 768;
-        
+
         var html = '<aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100 h-full">' +
             '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
             '<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-md">' +
@@ -54,7 +65,7 @@ window.SidebarComponent = {
                 if (isMobile) {
                     onClickAttr = ' onclick="setTimeout(function(){ if(window.closeSidebar) window.closeSidebar(); }, 300);"';
                 }
-                html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '"' + onClickAttr + '>' +
+                html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '"' + onClickAttr + '>' +    
                     '<i class="fas ' + item.icon + ' w-5"></i>' +
                     '<span class="menu-label">' + item.label + '</span>' +
                     '</a>';
@@ -84,7 +95,7 @@ window.SidebarComponent = {
         if (container) {
             container.innerHTML = html;
             this.bindEvents(container);
-            
+
             // 恢复桌面端折叠状态
             if (window.innerWidth > 768) {
                 var saved = localStorage.getItem('sidebar_expanded');
@@ -112,15 +123,20 @@ window.SidebarComponent = {
                 e.preventDefault();
                 var module = this.dataset.module;
                 AppStore.set('currentModule', module);
+                
+                // 使用 ModuleLoader 加载模块
                 if (window.ModuleLoader) {
                     ModuleLoader.load(module);
+                } else if (window.ModuleLoader) {
+                    ModuleLoader.load(module);
                 }
+                
                 var allLinks = container.querySelectorAll('[data-module]');
                 for (var j = 0; j < allLinks.length; j++) {
                     allLinks[j].classList.remove('nav-item-active');
                 }
                 this.classList.add('nav-item-active');
-                
+
                 // 移动端点击后关闭侧边栏
                 if (window.innerWidth <= 768 && window.closeSidebar) {
                     setTimeout(function() {
@@ -145,6 +161,10 @@ window.SidebarComponent = {
         }
     },
 
+    /**
+     * 设置当前激活的菜单项
+     * @param {string} moduleName - 模块名称
+     */
     setActive: function(moduleName) {
         var allLinks = document.querySelectorAll('[data-module]');
         for (var i = 0; i < allLinks.length; i++) {
@@ -156,4 +176,5 @@ window.SidebarComponent = {
         }
     }
 };
+
 console.log('[SidebarComponent] 加载完成');
