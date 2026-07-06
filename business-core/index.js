@@ -10,18 +10,21 @@ export { TenantService } from './services/tenant-service.js';
 export { CustomerService } from './services/customer-service.js';
 export { ProductService } from './services/product-service.js';
 export { OrderService } from './services/order-service.js';
+export { AIService } from './services/ai-service.js';
 
 // 创建服务实例
 import { TenantService } from './services/tenant-service.js';
 import { CustomerService } from './services/customer-service.js';
 import { ProductService } from './services/product-service.js';
 import { OrderService } from './services/order-service.js';
+import { AIService } from './services/ai-service.js';
 
 export const services = {
     tenant: new TenantService(),
     customer: new CustomerService(),
     product: new ProductService(),
-    order: new OrderService()
+    order: new OrderService(),
+    ai: new AIService()
 };
 
 // 全局访问
@@ -32,4 +35,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ Business Core 已加载');
+console.log('✅ Business Core 已加载 (包含 AI 服务)');
