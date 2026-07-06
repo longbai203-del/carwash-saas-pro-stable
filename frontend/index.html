@@ -13,6 +13,32 @@
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/css/design-system.css" />
 
+    <!-- ============================================================ -->
+    <!-- Supabase 配置 - 新增 (不修改原有框架)                         -->
+    <!-- ============================================================ -->
+    <script>
+        // Supabase 配置 - 请替换为你的实际值
+        window.SUPABASE_CONFIG = {
+            // 从环境变量或直接配置
+            url: 'https://your-project-id.supabase.co',
+            anonKey: 'your-anon-key'
+        };
+        console.log('✅ Supabase 配置已加载');
+        console.log('📌 Supabase URL:', window.SUPABASE_CONFIG.url);
+        console.log('📌 环境: ' + (window.SUPABASE_CONFIG.url.includes('your-project-id') ? '⚠️ 请配置 Supabase' : '✅ 已配置'));
+    </script>
+
+    <!-- ============================================================ -->
+    <!-- 加载 Supabase 客户端 (CDN) - 新增                            -->
+    <!-- ============================================================ -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; }
@@ -59,10 +85,15 @@
 
 <body>
 
-    <!-- ====== 应用脚本（包含所有功能） ====== -->
+    <!-- ============================================================ -->
+    <!-- 应用脚本（包含所有功能）- 原有，不修改                       -->
+    <!-- 注意：app.js 会在加载时检测 Supabase 配置                    -->
+    <!-- ============================================================ -->
     <script src="/js/app.js"></script>
 
-    <!-- ====== HTML 结构 ====== -->
+    <!-- ============================================================ -->
+    <!-- HTML 结构 - 原有，不修改                                     -->
+    <!-- ============================================================ -->
     <div id="app">
         <aside id="sidebar"></aside>
         <div class="main-wrap">
@@ -85,7 +116,9 @@
         </div>
     </div>
 
-    <!-- ====== 移动端侧边栏切换 ====== -->
+    <!-- ============================================================ -->
+    <!-- 移动端侧边栏切换 - 原有，不修改                               -->
+    <!-- ============================================================ -->
     <script>
         (function() {
             var sidebar = document.getElementById('sidebar');
