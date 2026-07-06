@@ -1,54 +1,92 @@
-<!-- 01-dashboard/employee.html -->
-<div class="page-container" data-page="01-dashboard-employee">
-    <div class="page-header">
-        <h1>员工仪表板</h1>
-        <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
-            </button>
-            <button class="btn btn-outline" onclick="location.reload()">
-                <i class="fas fa-sync-alt"></i> 刷新
-            </button>
-        </div>
-    </div>
-    <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-chart-pie"></i>
-            </div>
-            <h2>员工仪表板</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Dashboard | 页面: employee</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- ============================================================ -->
+<!-- Employee Dashboard - 员工概览                                -->
+<!-- ============================================================ -->
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .employee-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .employee-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .employee-card .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+    .employee-card .label {
+        font-size: 14px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+    .employee-card .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+        .employee-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>
+
+<div class="container-fluid">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">👤 员工概览</h1>
+            <p class="page-subtitle">人力资源总览</p>
+        </div>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fas fa-sync"></i> 刷新
+        </button>
+    </div>
+
+    <div class="employee-grid">
+        <div class="employee-card">
+            <div class="icon">👔</div>
+            <div class="value">25</div>
+            <div class="label">总员工</div>
+        </div>
+        <div class="employee-card">
+            <div class="icon">✅</div>
+            <div class="value">23</div>
+            <div class="label">在职</div>
+        </div>
+        <div class="employee-card">
+            <div class="icon">📋</div>
+            <div class="value">92%</div>
+            <div class="label">出勤率</div>
+        </div>
+        <div class="employee-card">
+            <div class="icon">💰</div>
+            <div class="value">¥128,000</div>
+            <div class="label">本月薪资</div>
+        </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom:16px;">📋 员工列表</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>部门</th>
+                    <th>职位</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>张伟</td><td>管理部</td><td>经理</td><td><span class="badge badge-success">在职</span></td></tr>
+                <tr><td>李娜</td><td>销售部</td><td>主管</td><td><span class="badge badge-success">在职</span></td></tr>
+                <tr><td>王强</td><td>服务部</td><td>员工</td><td><span class="badge badge-success">在职</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
