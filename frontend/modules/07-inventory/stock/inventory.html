@@ -1,273 +1,178 @@
-<div id="inventoryContainer" class="space-y-6">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库存管理 - CarwashPro</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/design-system.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .search-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+        .search-row .form-group { flex: 1; min-width: 150px; }
+        .search-row .form-group label { display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px; }
+        .search-row .form-group input, .search-row .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; }
+        .search-row .form-group input:focus, .search-row .form-group select:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .search-actions { display: flex; gap: 8px; padding-top: 4px; }
+        .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
+        .table td { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+        .table tr:hover { background: #F9FAFB; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .btn-sm { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+        .btn-sm-primary { background: #4F46E5; color: white; }
+        .btn-sm-primary:hover { background: #4338CA; }
+        .btn-sm-danger { background: #EF4444; color: white; }
+        .btn-sm-danger:hover { background: #DC2626; }
+        .btn-primary { background: #4F46E5; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #4338CA; }
+        .btn-secondary { background: #F3F4F6; color: #374151; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-medium { font-weight: 500; }
+        .font-bold { font-weight: 700; }
+        .text-xs { font-size: 12px; }
+        .text-sm { font-size: 14px; }
+        .text-gray-500 { color: #6B7280; }
+        .text-gray-400 { color: #9CA3AF; }
+        .text-red-500 { color: #EF4444; }
+        .text-yellow-500 { color: #F59E0B; }
+        .flex { display: flex; }
+        .gap-1 { gap: 4px; }
+        .gap-6 { gap: 24px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .mt-2 { margin-top: 8px; }
+        .mt-4 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 16px; }
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .py-3 { padding-top: 12px; padding-bottom: 12px; }
+        .py-8 { padding-top: 32px; padding-bottom: 32px; }
+        .hidden { display: none !important; }
+        .flex-wrap { flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div class="main-content">
+        <div id="navbar"></div>
+        <div class="page-content">
+            <div class="container-fluid">
+                <!-- 页面标题 -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">库存管理</h1>
+                        <p class="page-subtitle">管理所有库存商品</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='../adjustments/adjustments.html'">
+                        <i class="fas fa-exchange-alt"></i> 库存调整
+                    </button>
+                </div>
 
-    <!-- ===== 库存概览 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h2 class="text-xl font-bold text-blue-600">📦 库存管理</h2>
-            <div class="flex gap-2 flex-wrap">
-                <button onclick="InventoryModule.showAddProduct()" class="btn-success btn-sm">
-                    <i class="fas fa-plus"></i> 产品
-                </button>
-                <button onclick="InventoryModule.showAddSupplier()" class="btn-primary btn-sm">
-                    <i class="fas fa-truck"></i> 供应商
-                </button>
-                <button onclick="InventoryModule.showPurchaseOrder()" class="btn-warning btn-sm">
-                    <i class="fas fa-shopping-cart"></i> 采购单
-                </button>
-                <button onclick="InventoryModule.showStockAdjust()" class="btn-outline btn-sm">
-                    <i class="fas fa-edit"></i> 调库存
-                </button>
+                <!-- Loading -->
+                <div id="loadingSpinner" class="hidden text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+                </div>
+
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <div class="search-row">
+                        <div class="form-group">
+                            <label>商品名称</label>
+                            <input id="searchName" type="text" placeholder="输入商品名称" />
+                        </div>
+                        <div class="form-group">
+                            <label>分类</label>
+                            <select id="searchCategory">
+                                <option value="">全部分类</option>
+                                <option value="洗车">洗车</option>
+                                <option value="美容">美容</option>
+                                <option value="保养">保养</option>
+                                <option value="配件">配件</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>库位</label>
+                            <select id="searchLocation">
+                                <option value="">全部库位</option>
+                                <option value="A区-1号">A区-1号</option>
+                                <option value="A区-2号">A区-2号</option>
+                                <option value="B区-1号">B区-1号</option>
+                                <option value="B区-2号">B区-2号</option>
+                                <option value="C区-1号">C区-1号</option>
+                            </select>
+                        </div>
+                        <div class="search-actions">
+                            <button id="searchBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <button id="resetBtn" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="left">
+                        <button class="btn btn-secondary" onclick="window.location.reload()">
+                            <i class="fas fa-sync"></i> 刷新
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.location.href='../low-stock/low-stock.html'">
+                            <i class="fas fa-exclamation-triangle"></i> 低库存预警
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 数据摘要 -->
+                <div id="summaryContainer" class="mb-4 text-sm text-gray-500"></div>
+
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>商品信息</th>
+                                <th>分类</th>
+                                <th>库位</th>
+                                <th class="text-right">库存</th>
+                                <th class="text-right">最低库存</th>
+                                <th class="text-right">最高库存</th>
+                                <th>状态</th>
+                                <th style="width:80px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl"></i>
+                                    <p class="mt-2">加载中...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div id="paginationContainer" class="mt-4"></div>
             </div>
         </div>
-
-        <!-- 统计卡片 -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div class="bg-blue-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-blue-600" id="invTotalProducts">0</div>
-                <div class="text-xs text-gray-500">总产品</div>
-            </div>
-            <div class="bg-green-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-green-600" id="invTotalStock">0</div>
-                <div class="text-xs text-gray-500">总库存</div>
-            </div>
-            <div class="bg-red-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-red-600" id="invLowStock">0</div>
-                <div class="text-xs text-gray-500">⚠️ 低库存</div>
-            </div>
-            <div class="bg-purple-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-purple-600" id="invTotalValue">0 SAR</div>
-                <div class="text-xs text-gray-500">总价值</div>
-            </div>
-        </div>
-
-        <!-- 搜索和筛选 -->
-        <div class="flex gap-3 mb-4 flex-wrap">
-            <input id="invSearch" placeholder="🔍 搜索产品名称..." class="flex-1 p-3 border rounded-xl bg-gray-50 focus:outline-none focus:border-blue-400">
-            <select id="invCategoryFilter" class="p-3 border rounded-xl bg-gray-50">
-                <option value="all">全部分类</option>
-            </select>
-            <select id="invStockFilter" class="p-3 border rounded-xl bg-gray-50">
-                <option value="all">全部库存</option>
-                <option value="low">⚠️ 低库存</option>
-                <option value="normal">✅ 正常</option>
-                <option value="out">🚫 缺货</option>
-            </select>
-            <button onclick="InventoryModule.filterProducts()" class="btn-primary px-4 py-3 rounded-xl">筛选</button>
-        </div>
-
-        <!-- 产品列表 -->
-        <div id="productList" class="space-y-2 max-h-96 overflow-auto"></div>
     </div>
 
-    <!-- ===== 供应商列表 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">🚚 供应商</h2>
-            <button onclick="InventoryModule.showAddSupplier()" class="btn-primary btn-sm">
-                <i class="fas fa-plus"></i> 添加供应商
-            </button>
-        </div>
-        <div id="supplierList" class="space-y-2 max-h-48 overflow-auto"></div>
-    </div>
-
-    <!-- ===== 采购订单列表 ===== -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-600">📋 采购订单</h2>
-            <button onclick="InventoryModule.showPurchaseOrder()" class="btn-warning btn-sm">
-                <i class="fas fa-plus"></i> 创建采购单
-            </button>
-        </div>
-        <div id="purchaseOrderList" class="space-y-2 max-h-48 overflow-auto"></div>
-    </div>
-</div>
-
-<!-- ===== 添加产品模态框 ===== -->
-<div id="addProductModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-blue-600">➕ 添加产品</h3>
-            <button onclick="InventoryModule.closeModal('addProductModal')" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm font-medium text-gray-600">产品名称 *</label>
-                <input id="productName" placeholder="输入产品名称" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">分类</label>
-                    <select id="productCategory" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">单位</label>
-                    <input id="productUnit" placeholder="个/瓶/条" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">成本价 (SAR)</label>
-                    <input id="productCost" type="number" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">售价 (SAR)</label>
-                    <input id="productSellPrice" type="number" step="0.01" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">初始数量</label>
-                    <input id="productQty" type="number" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">最低库存预警</label>
-                    <input id="productMinQty" type="number" placeholder="5" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">描述</label>
-                <input id="productDesc" placeholder="产品描述" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <button onclick="InventoryModule.saveProduct()" class="btn-primary py-3 rounded-xl font-bold w-full">
-                <i class="fas fa-save"></i> 保存产品
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ===== 添加供应商模态框 ===== -->
-<div id="addSupplierModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-blue-600">🚚 添加供应商</h3>
-            <button onclick="InventoryModule.closeModal('addSupplierModal')" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm font-medium text-gray-600">供应商名称 *</label>
-                <input id="supplierName" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">联系人</label>
-                <input id="supplierContact" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">电话</label>
-                <input id="supplierPhone" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">地址</label>
-                <input id="supplierAddress" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <button onclick="InventoryModule.saveSupplier()" class="btn-primary py-3 rounded-xl font-bold w-full">
-                <i class="fas fa-save"></i> 保存供应商
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ===== 创建采购单模态框 ===== -->
-<div id="purchaseOrderModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-blue-600">📋 创建采购单</h3>
-            <button onclick="InventoryModule.closeModal('purchaseOrderModal')" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm font-medium text-gray-600">供应商</label>
-                <select id="poSupplier" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">订单日期</label>
-                    <input type="date" id="poDate" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">预计到货</label>
-                    <input type="date" id="poDelivery" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div class="grid grid-cols-3 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">产品</label>
-                    <select id="poProduct" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">数量</label>
-                    <input type="number" id="poQty" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">单价</label>
-                    <input type="number" step="0.01" id="poPrice" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="InventoryModule.addPurchaseItem()" class="btn-success btn-sm">➕ 添加项</button>
-            </div>
-            <div id="poItemsList" class="max-h-48 overflow-auto space-y-1 text-sm"></div>
-            <div class="border-t pt-3">
-                <div class="flex justify-between"><span>小计</span><span id="poSubtotal">0.00 SAR</span></div>
-                <div class="flex justify-between"><span>增值税 (15%)</span><span id="poVat">0.00 SAR</span></div>
-                <div class="flex justify-between text-xl font-bold text-blue-600"><span>总计</span><span id="poTotal">0.00 SAR</span></div>
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">备注</label>
-                <input id="poNotes" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <button onclick="InventoryModule.submitPurchaseOrder()" class="btn-primary py-3 rounded-xl font-bold w-full">
-                <i class="fas fa-check"></i> 提交采购单
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ===== 库存调整模态框 ===== -->
-<div id="stockAdjustModal" class="modal-glass hidden">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-amber-600">✏️ 调整库存</h3>
-            <button onclick="InventoryModule.closeModal('stockAdjustModal')" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm font-medium text-gray-600">产品</label>
-                <select id="adjustProduct" class="w-full p-3 border rounded-xl mt-1 bg-gray-50"></select>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-sm font-medium text-gray-600">当前库存</label>
-                    <input id="adjustCurrentQty" type="number" class="w-full p-3 border rounded-xl mt-1 bg-gray-50" readonly>
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">调整后数量</label>
-                    <input id="adjustNewQty" type="number" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                </div>
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">原因</label>
-                <select id="adjustReason" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-                    <option value="adjustment">盘点调整</option>
-                    <option value="waste">报废损耗</option>
-                    <option value="return">退货</option>
-                    <option value="transfer">调拨</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-600">备注</label>
-                <input id="adjustNote" class="w-full p-3 border rounded-xl mt-1 bg-gray-50">
-            </div>
-            <button onclick="InventoryModule.submitStockAdjust()" class="btn-warning py-3 rounded-xl font-bold w-full">
-                <i class="fas fa-save"></i> 确认调整
-            </button>
-        </div>
-    </div>
-</div>
+    <script type="module">
+        import { init } from './inventory.js';
+        await import('../../components/sidebar.js');
+        await import('../../components/navbar.js');
+        init();
+    </script>
+</body>
+</html>

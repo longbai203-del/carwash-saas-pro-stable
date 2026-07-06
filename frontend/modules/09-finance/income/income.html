@@ -1,54 +1,135 @@
-﻿<!-- 09-finance/income.html -->
-<div class="page-container" data-page="09-finance-income">
-    <div class="page-header">
-        <h1>收入管理</h1>
-        <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
-            </button>
-            <button class="btn btn-outline" onclick="location.reload()">
-                <i class="fas fa-sync-alt"></i> 刷新
-            </button>
-        </div>
-    </div>
-    <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-coins"></i>
-            </div>
-            <h2>收入管理</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Finance | 页面: income</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
-            </div>
-        </div>
-    </div>
-</div>
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收入管理 - CarwashPro</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/design-system.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .search-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+        .search-row .form-group { flex: 1; min-width: 150px; }
+        .search-row .form-group label { display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px; }
+        .search-row .form-group input, .search-row .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; }
+        .search-actions { display: flex; gap: 8px; padding-top: 4px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-label { font-size: 14px; color: #6B7280; }
+        .stat-value { font-size: 24px; font-weight: 700; }
+        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
+        .table td { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+        .table tr:hover { background: #F9FAFB; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+        .badge-blue { background: #DBEAFE; color: #1E40AF; }
+        .badge-green { background: #D1FAE5; color: #065F46; }
+        .badge-purple { background: #EDE9FE; color: #6D28D9; }
+        .badge-secondary { background: #F3F4F6; color: #4B5563; }
+        .btn-primary { background: #4F46E5; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #4338CA; }
+        .btn-secondary { background: #F3F4F6; color: #374151; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 14px; }
+        .font-mono { font-family: monospace; }
+        .font-semibold { font-weight: 600; }
+        .text-green-600 { color: #059669; }
+        .text-blue-600 { color: #2563EB; }
+        .flex { display: flex; }
+        .gap-1 { gap: 4px; }
+        .mt-4 { margin-top: 16px; }
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .py-3 { padding-top: 12px; padding-bottom: 12px; }
+        .py-8 { padding-top: 32px; padding-bottom: 32px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div class="main-content">
+        <div id="navbar"></div>
+        <div class="page-content">
+            <div class="container-fluid">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">收入管理</h1>
+                        <p class="page-subtitle">管理所有收入记录</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='../invoices/invoices.html'">
+                        <i class="fas fa-file-invoice"></i> 发票管理
+                    </button>
+                </div>
 
-<style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
-</style>
+                <div id="loadingSpinner" class="hidden text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+                </div>
+
+                <!-- 统计 -->
+                <div id="statsContainer"></div>
+
+                <!-- 搜索 -->
+                <div class="search-bar">
+                    <div class="search-row">
+                        <div class="form-group">
+                            <label>开始日期</label>
+                            <input id="dateStart" type="date" />
+                        </div>
+                        <div class="form-group">
+                            <label>结束日期</label>
+                            <input id="dateEnd" type="date" />
+                        </div>
+                        <div class="form-group">
+                            <label>类别</label>
+                            <select id="searchCategory">
+                                <option value="">全部</option>
+                                <option value="服务收入">服务收入</option>
+                                <option value="商品销售">商品销售</option>
+                                <option value="会员费">会员费</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="search-actions">
+                            <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
+                            <button id="resetBtn" class="btn btn-secondary"><i class="fas fa-undo"></i> 重置</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>编号</th>
+                                <th>类别</th>
+                                <th>描述</th>
+                                <th class="text-right">金额</th>
+                                <th>支付方式</th>
+                                <th>客户</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incomeTableBody">
+                            <tr><td colspan="7" class="text-center py-8 text-gray-500">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="paginationContainer" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { init } from './income.js';
+        await import('../../components/sidebar.js');
+        await import('../../components/navbar.js');
+        init();
+    </script>
+</body>
+</html>

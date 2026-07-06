@@ -1,54 +1,400 @@
-﻿<!-- 08-purchase/orders.html -->
-<div class="page-container" data-page="08-purchase-orders">
-    <div class="page-header">
-        <h1>采购订单</h1>
-        <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
-            </button>
-            <button class="btn btn-outline" onclick="location.reload()">
-                <i class="fas fa-sync-alt"></i> 刷新
-            </button>
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>采购订单 - CarwashPro</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="../../css/style.css" />
+    <link rel="stylesheet" href="../../css/design-system.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <style>
+        /* ===== 页面专用样式 ===== */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 24px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .page-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 4px 0 0 0;
+        }
+        
+        .search-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .search-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .search-fields .form-group {
+            min-width: 160px;
+            flex: 1;
+        }
+        
+        .search-fields .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .search-fields .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.15s;
+        }
+        
+        .search-fields .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .table thead {
+            background: #f9fafb;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #4b5563;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+        }
+        
+        .table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .table tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+        
+        /* 徽章 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            gap: 4px;
+        }
+        
+        .badge-secondary {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-danger {
+            background: #fde8e8;
+            color: #991b1b;
+        }
+        
+        /* 按钮图标 */
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 14px;
+        }
+        
+        .btn-icon-sm {
+            width: 28px;
+            height: 28px;
+            font-size: 12px;
+        }
+        
+        .btn-icon.btn-primary {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        .btn-icon.btn-primary:hover {
+            background: #dbeafe;
+        }
+        
+        .btn-icon.btn-warning {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+        .btn-icon.btn-warning:hover {
+            background: #fef3c7;
+        }
+        
+        .btn-icon.btn-danger {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+        .btn-icon.btn-danger:hover {
+            background: #fde8e8;
+        }
+        
+        /* 分页按钮 */
+        .btn-page {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #4b5563;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .btn-page:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .btn-page:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .btn-page-active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        
+        .btn-page-active:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+        
+        .form-select-sm {
+            padding: 4px 8px;
+            font-size: 13px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            background: white;
+        }
+        
+        /* 统计栏 */
+        .stats-bar {
+            padding: 8px 20px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .search-fields .form-group {
+                min-width: 100%;
+            }
+            
+            .search-actions {
+                width: 100%;
+            }
+            
+            .search-actions .btn {
+                flex: 1;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .table {
+                min-width: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 侧边栏 ===== -->
+    <div id="sidebar"></div>
+    
+    <!-- ===== 主内容 ===== -->
+    <div class="main-content">
+        <!-- 导航栏 -->
+        <div id="navbar"></div>
+        
+        <!-- 页面内容 -->
+        <div class="page-content">
+            <div class="container-fluid">
+                <!-- 页面标题 -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fas fa-shopping-cart text-blue-500 mr-2"></i>采购订单
+                        </h1>
+                        <p class="page-subtitle">管理所有采购订单，跟踪采购进度</p>
+                    </div>
+                    <button id="createBtn" class="btn btn-primary px-5 py-2">
+                        <i class="fas fa-plus mr-2"></i>新建订单
+                    </button>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <div class="search-fields">
+                        <div class="form-group">
+                            <label><i class="fas fa-hashtag mr-1"></i>订单编号</label>
+                            <input id="searchOrderNo" type="text" class="form-control" placeholder="输入订单编号" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-building mr-1"></i>供应商</label>
+                            <input id="searchSupplier" type="text" class="form-control" placeholder="输入供应商名称" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-circle mr-1"></i>状态</label>
+                            <select id="searchStatus" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <button id="searchBtn" class="btn btn-primary">
+                            <i class="fas fa-search mr-1"></i>搜索
+                        </button>
+                        <button id="resetBtn" class="btn btn-secondary">
+                            <i class="fas fa-undo mr-1"></i>重置
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 统计 -->
+                <div id="orderStats" class="stats-bar"></div>
+                
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 150px;">订单编号</th>
+                                <th style="min-width: 140px;">供应商</th>
+                                <th style="min-width: 120px;" class="text-right">总金额</th>
+                                <th style="min-width: 110px;">状态</th>
+                                <th style="min-width: 60px;" class="text-center">商品数</th>
+                                <th style="min-width: 160px;">创建时间</th>
+                                <th style="min-width: 120px;">商品明细</th>
+                                <th style="min-width: 110px;" class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center py-8 text-gray-400">
+                                    <i class="fas fa-spinner fa-spin text-2xl"></i>
+                                    <p class="mt-2">加载中...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div id="paginationContainer" class="mt-4"></div>
+            </div>
         </div>
     </div>
-    <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-truck"></i>
-            </div>
-            <h2>采购订单</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Purchasing | 页面: orders</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
-</style>
+    
+    <!-- ===== JavaScript ===== -->
+    <script type="module">
+        import { init } from './orders.js';
+        
+        // 先加载公共组件
+        try {
+            await import('../../components/sidebar.js');
+            await import('../../components/navbar.js');
+        } catch (e) {
+            console.warn('[采购订单] 公共组件加载失败，请检查路径:', e);
+        }
+        
+        // 初始化页面
+        init();
+    </script>
+</body>
+</html>

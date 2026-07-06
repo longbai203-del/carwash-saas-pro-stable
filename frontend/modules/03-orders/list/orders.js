@@ -1,211 +1,299 @@
-/**
- * orders.js - 订单管理模块
- */
-(function() {
-    'use strict';
+// modules/03-orders/list/orders.js
+import { getOrders, updateOrderStatus, deleteOrder } from '../../../api/orders.js';
+import { formatCurrency, formatDate, formatDateTime, showToast } from '../../../js/utils.js';
 
-    // ===== 订单状态常量 =====
-    var ORDER_STATUS_LABELS = {
-        pending: '待确认',
-        confirmed: '已确认',
-        in_progress: '施工中',
-        completed: '已完成',
-        cancelled: '已取消',
-        refunded: '已退款'
-    };
+const state = {
+    orders: [],
+    loading: false,
+    pagination: { page: 1, limit: 10, total: 0 },
+    filters: { orderNo: '', customer: '', status: '', dateRange: { start: '', end: '' } },
+    selectedOrders: []
+};
 
-    var ORDER_STATUS_CLASSES = {
-        pending: 'status-pending',
-        confirmed: 'status-confirmed',
-        in_progress: 'status-in_progress',
-        completed: 'status-completed',
-        cancelled: 'status-cancelled',
-        refunded: 'status-refunded'
-    };
+const STATUS_MAP = {
+    pending: { label: '待处理', color: 'warning', icon: 'fa-clock' },
+    processing: { label: '处理中', color: 'info', icon: 'fa-spinner' },
+    completed: { label: '已完成', color: 'success', icon: 'fa-check' },
+    cancelled: { label: '已取消', color: 'danger', icon: 'fa-times' }
+};
 
-    window.OrdersModule = Object.create(ModuleBase);
-    window.OrdersModule.moduleName = 'orders';
+export async function init() {
+    console.log('订单管理已加载');
+    await loadOrders();
+    bindEvents();
+    initDatePicker();
+}
 
-    // ===== 缓存 DOM =====
-    window.OrdersModule.cacheDom = function() {
-        this.el = {
-            list: this.getEl('ordersList'),
-            statusFilter: this.getEl('orderStatusFilter'),
-            dateFilter: this.getEl('orderDateFilter'),
-            search: this.getEl('orderSearch'),
-            totalCount: this.getEl('orderTotalCount'),
-            todayCount: this.getEl('orderTodayCount'),
-            pendingCount: this.getEl('orderPendingCount'),
-            completedCount: this.getEl('orderCompletedCount'),
-            cancelledCount: this.getEl('orderCancelledCount')
-        };
-    };
+async function loadOrders() {
+    state.loading = true;
+    showLoading();
 
-    // ===== 绑定事件 =====
-    window.OrdersModule.bindEvents = function() {
-        var self = this;
-        if (this.el.statusFilter) {
-            this.el.statusFilter.addEventListener('change', function() { self.loadData(); });
-        }
-        if (this.el.dateFilter) {
-            this.el.dateFilter.addEventListener('change', function() { self.loadData(); });
-        }
-        if (this.el.search) {
-            this.el.search.addEventListener('input', function() { self.loadData(); });
-        }
-    };
+    try {
+        const data = await getMockOrders();
+        state.orders = data.list;
+        state.pagination.total = data.total;
+        renderTable();
+        renderPagination();
+        renderSummary();
+    } catch (error) {
+        console.error('加载订单失败:', error);
+        showToast('加载数据失败', 'error');
+    } finally {
+        state.loading = false;
+        hideLoading();
+    }
+}
 
-    // ===== 加载数据 =====
-    window.OrdersModule.loadData = function() {
-        var orders = this.getData('allOrders');
-        var status = this.el.statusFilter ? this.el.statusFilter.value : 'all';
-        var date = this.el.dateFilter ? this.el.dateFilter.value : '';
-        var search = this.el.search ? this.el.search.value.trim() : '';
-
-        var filtered = orders || [];
-
-        if (status !== 'all') {
-            filtered = filtered.filter(function(o) { return o.status === status; });
-        }
-        if (date) {
-            filtered = filtered.filter(function(o) { return o.date === date; });
-        }
-        if (search) {
-            var s = search.toLowerCase();
-            filtered = filtered.filter(function(o) {
-                return (o.plate_number || '').toLowerCase().includes(s) ||
-                       (o.order_number || '').toLowerCase().includes(s) ||
-                       (o.staff_name || '').toLowerCase().includes(s) ||
-                       (o.id || '').toLowerCase().includes(s);
+function getMockOrders() {
+    const customers = ['张伟', '李娜', '王强', '刘洋', '陈静', '赵明', '孙丽', '周涛'];
+    const products = ['洗车套餐A', '洗车套餐B', '汽车美容', '抛光打蜡', '内饰清洁', '空调清洗'];
+    const statuses = ['pending', 'processing', 'completed', 'cancelled'];
+    
+    const orders = [];
+    for (let i = 0; i < 35; i++) {
+        const items = [];
+        const itemCount = Math.floor(Math.random() * 4) + 1;
+        let total = 0;
+        for (let j = 0; j < itemCount; j++) {
+            const price = Math.floor(Math.random() * 500) + 100;
+            const qty = Math.floor(Math.random() * 3) + 1;
+            items.push({
+                product: products[Math.floor(Math.random() * products.length)],
+                price: price,
+                qty: qty,
+                subtotal: price * qty
             });
+            total += price * qty;
         }
-
-        this.render(filtered);
-        this.updateStats(filtered);
-    };
-
-    // ===== 更新统计 =====
-    window.OrdersModule.updateStats = function(orders) {
-        var total = orders.length;
-        var today = new Date().toISOString().split('T')[0];
-        var todayOrders = orders.filter(function(o) { return o.date === today; });
-        var pending = orders.filter(function(o) { return o.status === 'pending' || o.status === 'confirmed'; });
-        var completed = orders.filter(function(o) { return o.status === 'completed'; });
-        var cancelled = orders.filter(function(o) { return o.status === 'cancelled'; });
-
-        if (this.el.totalCount) this.el.totalCount.textContent = total;
-        if (this.el.todayCount) this.el.todayCount.textContent = todayOrders.length;
-        if (this.el.pendingCount) this.el.pendingCount.textContent = pending.length;
-        if (this.el.completedCount) this.el.completedCount.textContent = completed.length;
-        if (this.el.cancelledCount) this.el.cancelledCount.textContent = cancelled.length;
-    };
-
-    // ===== 渲染 =====
-    window.OrdersModule.render = function(orders) {
-        var list = this.el.list;
-        if (!list) return;
-
-        if (!orders || orders.length === 0) {
-            this.setEmpty(list, '暂无订单数据');
-            return;
-        }
-
-        var html = '';
-        var self = this;
-        orders.slice(0, 50).forEach(function(o) {
-            var statusLabel = ORDER_STATUS_LABELS[o.status] || o.status;
-            var statusClass = ORDER_STATUS_CLASSES[o.status] || 'status-pending';
-            var total = parseFloat(o.total) || 0;
-
-            html += '<div class="bg-white p-4 rounded-xl shadow-sm border hover:border-blue-300 cursor-pointer transition" onclick="OrdersModule.showDetail(\'' + o.id + '\')">';
-            html += '<div class="flex justify-between items-center flex-wrap gap-2">';
-            html += '<div class="flex items-center gap-2 flex-wrap">';
-            html += '<span class="font-bold text-blue-600">#' + (o.order_number || o.id.slice(0, 8)) + '</span>';
-            html += '<span class="text-sm text-gray-400">' + (o.date || '') + '</span>';
-            html += '<span class="status-badge ' + statusClass + '">' + statusLabel + '</span>';
-            if (o.plate_number) {
-                html += '<span class="text-sm font-medium text-gray-600">🚗 ' + o.plate_number + '</span>';
-            }
-            html += '</div>';
-            html += '<div class="text-right">';
-            html += '<div class="font-bold text-lg text-blue-600">' + total.toFixed(2) + ' SAR</div>';
-            html += '<div class="text-xs text-gray-400">' + (o.staff_name || '') + '</div>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
+        
+        orders.push({
+            id: `ORD-${String(i + 1).padStart(6, '0')}`,
+            customer: customers[i % customers.length],
+            phone: `138${String(Math.floor(Math.random() * 90000000) + 10000000)}`,
+            items: items,
+            total: total,
+            status: statuses[i % statuses.length],
+            createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
         });
-
-        list.innerHTML = html;
+    }
+    
+    return {
+        list: orders.slice(0, 10),
+        total: orders.length
     };
+}
 
-    // ===== 刷新 =====
-    window.OrdersModule.refresh = function() {
-        var self = this;
-        AppApi.getOrders().then(function(data) {
-            AppStore.set('allOrders', data || []);
-            self.loadData();
-            self.toast('✅ 订单数据已刷新', 'success');
-        }).catch(function(err) {
-            self.toast('❌ 刷新失败: ' + err.message, 'error');
-        });
-    };
+function renderTable() {
+    const tbody = document.getElementById('ordersTableBody');
+    if (!tbody) return;
 
-    // ===== 导出 =====
-    window.OrdersModule.exportOrders = function() {
-        var orders = this.getData('allOrders') || [];
-        if (orders.length === 0) {
-            this.toast('暂无数据可导出', 'error');
-            return;
+    if (state.orders.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-8">
+                    <i class="fas fa-inbox text-4xl text-gray-300"></i>
+                    <p class="mt-2 text-gray-500">暂无订单数据</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = state.orders.map((order, index) => `
+        <tr>
+            <td>
+                <input type="checkbox" class="order-checkbox" data-id="${order.id}" />
+            </td>
+            <td class="font-mono text-sm">${order.id}</td>
+            <td>
+                <div class="font-medium">${order.customer}</div>
+                <div class="text-xs text-gray-500">${order.phone}</div>
+            </td>
+            <td>
+                ${order.items.map(item => 
+                    `<div class="text-sm">${item.product} × ${item.qty}</div>`
+                ).join('')}
+            </td>
+            <td class="text-right font-semibold">¥${formatCurrency(order.total)}</td>
+            <td>
+                <span class="badge badge-${STATUS_MAP[order.status]?.color || 'secondary'}">
+                    <i class="fas ${STATUS_MAP[order.status]?.icon || 'fa-circle'}"></i>
+                    ${STATUS_MAP[order.status]?.label || order.status}
+                </span>
+            </td>
+            <td class="text-sm">${formatDateTime(order.createdAt)}</td>
+            <td>
+                <div class="flex gap-1">
+                    <button class="btn-sm btn-primary" onclick="viewOrder('${order.id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-sm btn-warning" onclick="editOrder('${order.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-sm btn-danger" onclick="deleteOrder('${order.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+
+    // 绑定checkbox事件
+    document.querySelectorAll('.order-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedOrders);
+    });
+}
+
+function renderPagination() {
+    const container = document.getElementById('paginationContainer');
+    if (!container) return;
+
+    const { page, limit, total } = state.pagination;
+    const totalPages = Math.ceil(total / limit);
+
+    let html = `
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="text-sm text-gray-500">
+                共 ${total} 条记录，第 ${page}/${totalPages} 页
+            </div>
+            <div class="flex gap-1">
+                <button class="px-3 py-1 border rounded ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" 
+                        onclick="changePage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+    `;
+
+    for (let i = 1; i <= Math.min(totalPages, 7); i++) {
+        if (i === page) {
+            html += `<button class="px-3 py-1 border rounded bg-blue-500 text-white">${i}</button>`;
+        } else if (i === 1 || i === totalPages || Math.abs(i - page) <= 2) {
+            html += `<button class="px-3 py-1 border rounded" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === page - 3 || i === page + 3) {
+            html += `<button class="px-3 py-1 border rounded" disabled>...</button>`;
         }
+    }
 
-        var data = [['订单号', '日期', '车牌', '员工', '服务', '金额', '增值税', '总计', '状态']];
-        orders.forEach(function(o) {
-            data.push([
-                o.order_number || o.id.slice(0, 8),
-                o.date || '',
-                o.plate_number || '',
-                o.staff_name || '',
-                o.service_name || '',
-                (parseFloat(o.amount) || 0).toFixed(2),
-                (parseFloat(o.vat) || 0).toFixed(2),
-                (parseFloat(o.total) || 0).toFixed(2),
-                ORDER_STATUS_LABELS[o.status] || o.status
-            ]);
-        });
+    html += `
+                <button class="px-3 py-1 border rounded ${page >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}" 
+                        onclick="changePage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    `;
 
-        try {
-            var ws = XLSX.utils.aoa_to_sheet(data);
-            var wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '订单数据');
-            XLSX.writeFile(wb, '订单数据_' + new Date().toISOString().split('T')[0] + '.xlsx');
-            this.toast('✅ 订单数据已导出', 'success');
-        } catch(e) {
-            this.toast('❌ 导出失败: ' + e.message, 'error');
-        }
-    };
+    container.innerHTML = html;
+}
 
-    // ===== 查看详情 =====
-    window.OrdersModule.showDetail = function(orderId) {
-        var orders = this.getData('allOrders') || [];
-        var order = orders.find(function(o) { return o.id === orderId; });
-        if (!order) {
-            this.toast('订单不存在', 'error');
-            return;
-        }
+function renderSummary() {
+    const container = document.getElementById('summaryContainer');
+    if (!container) return;
 
-        var msg = '📋 订单详情\n';
-        msg += '订单号: ' + (order.order_number || order.id.slice(0, 8)) + '\n';
-        msg += '日期: ' + (order.date || '') + '\n';
-        msg += '车牌: ' + (order.plate_number || 'N/A') + '\n';
-        msg += '服务: ' + (order.service_name || '') + '\n';
-        msg += '员工: ' + (order.staff_name || '') + '\n';
-        msg += '金额: ' + (parseFloat(order.amount) || 0).toFixed(2) + ' SAR\n';
-        msg += '增值税: ' + (parseFloat(order.vat) || 0).toFixed(2) + ' SAR\n';
-        msg += '总计: ' + (parseFloat(order.total) || 0).toFixed(2) + ' SAR\n';
-        msg += '状态: ' + (ORDER_STATUS_LABELS[order.status] || order.status);
+    const total = state.orders.reduce((sum, o) => sum + o.total, 0);
+    const avg = state.orders.length > 0 ? total / state.orders.length : 0;
 
-        this.toast(msg, 'info');
-    };
+    container.innerHTML = `
+        <div class="flex gap-6 text-sm">
+            <span>订单数: <strong>${state.orders.length}</strong></span>
+            <span>总金额: <strong>¥${formatCurrency(total)}</strong></span>
+            <span>平均单价: <strong>¥${formatCurrency(avg)}</strong></span>
+        </div>
+    `;
+}
 
-    console.log('[Orders] 模块已注册');
-})();
+function updateSelectedOrders() {
+    const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+    state.selectedOrders = Array.from(checkboxes).map(cb => cb.dataset.id);
+    
+    const batchActions = document.getElementById('batchActions');
+    if (batchActions) {
+        batchActions.style.display = state.selectedOrders.length > 0 ? 'flex' : 'none';
+        document.getElementById('selectedCount').textContent = state.selectedOrders.length;
+    }
+}
+
+// 全局函数供HTML调用
+window.changePage = function(page) {
+    if (page < 1 || page > Math.ceil(state.pagination.total / state.pagination.limit)) return;
+    state.pagination.page = page;
+    loadOrders();
+};
+
+window.viewOrder = function(id) {
+    // 跳转到详情页
+    window.location.href = `../detail/detail.html?id=${id}`;
+};
+
+window.editOrder = function(id) {
+    showToast(`编辑订单: ${id}`, 'info');
+};
+
+window.deleteOrder = async function(id) {
+    if (!confirm('确认删除该订单吗？')) return;
+    try {
+        await deleteOrder(id);
+        showToast('删除成功', 'success');
+        await loadOrders();
+    } catch (error) {
+        showToast('删除失败', 'error');
+    }
+};
+
+window.batchDelete = async function() {
+    if (!confirm(`确认删除 ${state.selectedOrders.length} 个订单吗？`)) return;
+    showToast(`批量删除 ${state.selectedOrders.length} 个订单`, 'success');
+    state.selectedOrders = [];
+    await loadOrders();
+};
+
+window.batchUpdateStatus = function() {
+    // 显示状态选择下拉
+    showToast('批量更新状态功能', 'info');
+};
+
+function handleSearch() {
+    state.pagination.page = 1;
+    loadOrders();
+}
+
+function handleReset() {
+    state.filters = { orderNo: '', customer: '', status: '', dateRange: { start: '', end: '' } };
+    document.getElementById('searchOrderNo').value = '';
+    document.getElementById('searchCustomer').value = '';
+    document.getElementById('searchStatus').value = '';
+    document.querySelectorAll('.date-input').forEach(el => el.value = '');
+    state.pagination.page = 1;
+    loadOrders();
+}
+
+function initDatePicker() {
+    // 简单的日期选择器，实际项目可以用插件
+    const startInput = document.getElementById('dateStart');
+    const endInput = document.getElementById('dateEnd');
+    if (startInput && endInput) {
+        startInput.type = 'date';
+        endInput.type = 'date';
+    }
+}
+
+function bindEvents() {
+    document.getElementById('searchBtn')?.addEventListener('click', handleSearch);
+    document.getElementById('resetBtn')?.addEventListener('click', handleReset);
+    document.getElementById('batchDeleteBtn')?.addEventListener('click', window.batchDelete);
+    document.getElementById('batchStatusBtn')?.addEventListener('click', window.batchUpdateStatus);
+}
+
+function showLoading() {
+    document.getElementById('loadingSpinner')?.classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loadingSpinner')?.classList.add('hidden');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

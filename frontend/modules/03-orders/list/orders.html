@@ -1,57 +1,285 @@
-<div id="ordersContainer" class="space-y-6">
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h2 class="text-xl font-bold text-blue-600">📋 订单管理</h2>
-            <div class="flex gap-2 flex-wrap">
-                <button onclick="OrdersModule.refresh()" class="btn-primary btn-sm">
-                    <i class="fas fa-sync"></i> 刷新
-                </button>
-                <button onclick="OrdersModule.exportOrders()" class="bg-green-600 text-white btn-sm">
-                    <i class="fas fa-file-excel"></i> 导出
-                </button>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - CarwashPro</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/design-system.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .toolbar .left {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+        .toolbar .right {
+            display: flex;
+            gap: 8px;
+        }
+        .search-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .search-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .search-row .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .search-row .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+        .search-row .form-group input,
+        .search-row .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .search-row .form-group input:focus,
+        .search-row .form-group select:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .search-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 4px;
+        }
+        .batch-actions {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #F3F4F6;
+            border-radius: 6px;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            background: #F9FAFB;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: #6B7280;
+            text-transform: uppercase;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 14px;
+        }
+        .table tr:hover {
+            background: #F9FAFB;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .badge-info { background: #DBEAFE; color: #1E40AF; }
+        .badge-secondary { background: #F3F4F6; color: #4B5563; }
+        .btn-sm {
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-sm-primary { background: #4F46E5; color: white; }
+        .btn-sm-primary:hover { background: #4338CA; }
+        .btn-sm-warning { background: #F59E0B; color: white; }
+        .btn-sm-warning:hover { background: #D97706; }
+        .btn-sm-danger { background: #EF4444; color: white; }
+        .btn-sm-danger:hover { background: #DC2626; }
+        .btn-primary { background: #4F46E5; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #4338CA; }
+        .btn-secondary { background: #F3F4F6; color: #374151; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .btn-danger { background: #EF4444; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-danger:hover { background: #DC2626; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-mono { font-family: monospace; }
+        .font-semibold { font-weight: 600; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .text-gray-500 { color: #6B7280; }
+        .flex { display: flex; }
+        .gap-1 { gap: 4px; }
+        .gap-6 { gap: 24px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .mt-2 { margin-top: 8px; }
+        .mb-4 { margin-bottom: 16px; }
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .py-3 { padding-top: 12px; padding-bottom: 12px; }
+        .py-8 { padding-top: 32px; padding-bottom: 32px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div class="main-content">
+        <div id="navbar"></div>
+        <div class="page-content">
+            <div class="container-fluid">
+                <!-- 页面标题 -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">订单管理</h1>
+                        <p class="page-subtitle">管理和追踪所有订单</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='../detail/detail.html'">
+                        <i class="fas fa-plus"></i> 新建订单
+                    </button>
+                </div>
+
+                <!-- Loading -->
+                <div id="loadingSpinner" class="hidden text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+                </div>
+
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <div class="search-row">
+                        <div class="form-group">
+                            <label>订单编号</label>
+                            <input id="searchOrderNo" type="text" placeholder="输入订单编号" />
+                        </div>
+                        <div class="form-group">
+                            <label>客户名称</label>
+                            <input id="searchCustomer" type="text" placeholder="输入客户名称" />
+                        </div>
+                        <div class="form-group">
+                            <label>订单状态</label>
+                            <select id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="pending">待处理</option>
+                                <option value="processing">处理中</option>
+                                <option value="completed">已完成</option>
+                                <option value="cancelled">已取消</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="max-width:150px;">
+                            <label>开始日期</label>
+                            <input id="dateStart" class="date-input" type="date" />
+                        </div>
+                        <div class="form-group" style="max-width:150px;">
+                            <label>结束日期</label>
+                            <input id="dateEnd" class="date-input" type="date" />
+                        </div>
+                        <div class="search-actions">
+                            <button id="searchBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <button id="resetBtn" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="left">
+                        <div id="batchActions" class="batch-actions">
+                            <span>已选 <strong id="selectedCount">0</strong> 项</span>
+                            <button id="batchStatusBtn" class="btn-sm btn-secondary">更新状态</button>
+                            <button id="batchDeleteBtn" class="btn-sm btn-danger">删除</button>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <button class="btn btn-secondary" onclick="window.location.reload()">
+                            <i class="fas fa-sync"></i> 刷新
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.location.href='../refunds/refunds.html'">
+                            <i class="fas fa-undo-alt"></i> 退款管理
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 数据摘要 -->
+                <div id="summaryContainer" class="mb-4 text-sm text-gray-500"></div>
+
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">
+                                    <input type="checkbox" id="selectAll" />
+                                </th>
+                                <th>订单编号</th>
+                                <th>客户信息</th>
+                                <th>商品明细</th>
+                                <th class="text-right">总金额</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th style="width:120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl"></i>
+                                    <p class="mt-2">加载中...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div id="paginationContainer" class="mt-4"></div>
             </div>
         </div>
-
-        <!-- 统计卡片 -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-            <div class="bg-blue-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-blue-600" id="orderTotalCount">0</div>
-                <div class="text-xs text-gray-500">总订单</div>
-            </div>
-            <div class="bg-green-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-green-600" id="orderTodayCount">0</div>
-                <div class="text-xs text-gray-500">今日订单</div>
-            </div>
-            <div class="bg-amber-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-amber-600" id="orderPendingCount">0</div>
-                <div class="text-xs text-gray-500">待处理</div>
-            </div>
-            <div class="bg-purple-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-purple-600" id="orderCompletedCount">0</div>
-                <div class="text-xs text-gray-500">已完成</div>
-            </div>
-            <div class="bg-red-50 p-3 rounded-xl text-center">
-                <div class="text-2xl font-bold text-red-600" id="orderCancelledCount">0</div>
-                <div class="text-xs text-gray-500">已取消</div>
-            </div>
-        </div>
-
-        <!-- 筛选 -->
-        <div class="flex gap-3 mb-4 flex-wrap">
-            <select id="orderStatusFilter" class="p-3 border rounded-xl bg-gray-50">
-                <option value="all">全部状态</option>
-                <option value="pending">⏳ 待确认</option>
-                <option value="confirmed">✅ 已确认</option>
-                <option value="in_progress">🔄 施工中</option>
-                <option value="completed">✔️ 已完成</option>
-                <option value="cancelled">❌ 已取消</option>
-            </select>
-            <input type="date" id="orderDateFilter" class="p-3 border rounded-xl bg-gray-50">
-            <input type="text" id="orderSearch" placeholder="🔍 搜索订单号/车牌..." class="flex-1 p-3 border rounded-xl bg-gray-50 min-w-[150px]">
-            <button onclick="OrdersModule.loadData()" class="btn-primary px-4 py-3 rounded-xl">筛选</button>
-        </div>
-
-        <!-- 订单列表 -->
-        <div id="ordersList" class="space-y-2 max-h-[500px] overflow-auto"></div>
     </div>
-</div>
+
+    <script type="module">
+        import { init } from './orders.js';
+        await import('../../components/sidebar.js');
+        await import('../../components/navbar.js');
+        init();
+    </script>
+</body>
+</html>
