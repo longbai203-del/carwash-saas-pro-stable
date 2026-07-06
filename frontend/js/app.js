@@ -1,6 +1,6 @@
 /**
- * app.js - Carwash Pro 完整应用
- * 包含：路由系统 + 数据服务 + 页面加载
+ * app.js - Carwash Pro 完整应用 (V1 路由兼容版)
+ * 支持 #/module/page 格式
  */
 
 (function() {
@@ -9,48 +9,7 @@
   console.log('🚀 Carwash Pro 应用启动...');
 
   // ============================================================
-  // 导入数据服务（新增）
-  // ============================================================
-  // 使用动态导入，不阻塞页面加载
-  let Services = null;
-
-  async function loadServices() {
-    try {
-      const module = await import('./services.js');
-      Services = module;
-      window.Services = Services;
-      console.log('✅ 数据服务已加载');
-    } catch (e) {
-      console.warn('⚠️ 数据服务加载失败，使用备用数据:', e.message);
-      // 备用数据服务
-      window.Services = {
-        dashboard: {
-          getDashboardData: () => ({
-            stats: {
-              todayRevenue: 28650.00,
-              todayOrders: 47,
-              activeCustomers: 328,
-              conversionRate: 68.5
-            },
-            recentOrders: [
-              { id: 'ORD-001', customer: '张伟', amount: 680, status: 'completed', time: '10:30' },
-              { id: 'ORD-002', customer: '李娜', amount: 420, status: 'pending', time: '10:15' },
-              { id: 'ORD-003', customer: '王强', amount: 1250, status: 'processing', time: '09:45' }
-            ],
-            chartData: { labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], values: [3200, 4500, 3800, 6200, 5800, 7200, 4800] }
-          })
-        },
-        order: {
-          getList: () => Promise.resolve({ list: [], total: 0 }),
-          getStats: () => ({ total: 0, completed: 0, pending: 0, processing: 0, cancelled: 0, totalRevenue: 0 }),
-          getRecent: () => []
-        }
-      };
-    }
-  }
-
-  // ============================================================
-  // Mock 数据（备用，保留原有数据）
+  // Mock 数据（备用）
   // ============================================================
 
   var MockDB = {
@@ -182,10 +141,11 @@
   };
 
   // ============================================================
-  // 路由配置
+  // 路由配置 - V1 格式 (#/module/page)
   // ============================================================
 
-  var MODULES = {
+  // 模块映射：URL key → 实际文件夹
+  var MODULE_MAP = {
     'dashboard': { id: '01-dashboard', label: 'Dashboard', icon: 'chart-pie', defaultPage: 'sales' },
     'pos': { id: '02-pos', label: 'POS', icon: 'cash-register', defaultPage: 'quick-sale' },
     'orders': { id: '03-orders', label: 'Orders', icon: 'clipboard-list', defaultPage: 'list' },
@@ -202,6 +162,14 @@
     'settings': { id: '14-settings', label: 'Settings', icon: 'sliders-h', defaultPage: 'company' }
   };
 
+  // 反向映射：folder id → URL key
+  var FOLDER_TO_KEY = {};
+  for (var key in MODULE_MAP) {
+    var mod = MODULE_MAP[key];
+    FOLDER_TO_KEY[mod.id] = key;
+  }
+
+  // 页面列表
   var PAGES = {
     '01-dashboard': ['executive', 'sales', 'finance', 'inventory', 'crm', 'marketing', 'ai', 'employee'],
     '02-pos': ['quick-sale', 'touch-pos', 'returns', 'exchange', 'customer-display', 'receipt', 'kitchen-display', 'offline-pos', 'cash-register'],
@@ -223,33 +191,38 @@
   // 核心函数
   // ============================================================
 
-  function getModuleInfo(moduleId) {
-    for (var key in MODULES) {
-      if (MODULES[key].id === moduleId) {
-        return MODULES[key];
-      }
-    }
-    return null;
+  function getModuleInfo(moduleKey) {
+    return MODULE_MAP[moduleKey] || null;
   }
 
-  function getPages(moduleId) {
-    return PAGES[moduleId] || ['index'];
+  function getFolderId(moduleKey) {
+    var info = getModuleInfo(moduleKey);
+    return info ? info.id : null;
   }
 
-  function getHtmlPath(moduleId, page) {
-    return '/modules/' + moduleId + '/' + page + '/' + page + '.html';
+  function getPages(folderId) {
+    return PAGES[folderId] || ['index'];
   }
 
-  function getJsPath(moduleId, page) {
-    return '/modules/' + moduleId + '/' + page + '/' + page + '.js';
+  function getHtmlPath(folderId, page) {
+    return '/modules/' + folderId + '/' + page + '/' + page + '.html';
+  }
+
+  function getJsPath(folderId, page) {
+    return '/modules/' + folderId + '/' + page + '/' + page + '.js';
+  }
+
+  function getDefaultPage(moduleKey) {
+    var info = getModuleInfo(moduleKey);
+    return info ? info.defaultPage : 'index';
   }
 
   // ============================================================
   // 页面加载
   // ============================================================
 
-  async function loadPage(moduleId, page) {
-    console.log('📄 加载:', moduleId, '/', page);
+  async function loadPage(moduleKey, page) {
+    console.log('📄 加载:', moduleKey, '/', page);
 
     var content = document.getElementById('content');
     if (!content) {
@@ -257,6 +230,22 @@
       return;
     }
 
+    // 获取文件夹ID
+    var folderId = getFolderId(moduleKey);
+    if (!folderId) {
+      content.innerHTML = generateErrorPage('模块 "' + moduleKey + '" 不存在');
+      return;
+    }
+
+    // 验证页面
+    var pages = getPages(folderId);
+    if (pages.indexOf(page) === -1) {
+      page = getDefaultPage(moduleKey);
+      window.location.hash = '/' + moduleKey + '/' + page;
+      return;
+    }
+
+    // 显示加载状态
     content.innerHTML = `
       <div style="display:flex;justify-content:center;align-items:center;height:400px;">
         <div style="text-align:center;">
@@ -270,7 +259,7 @@
     `;
 
     try {
-      var htmlPath = getHtmlPath(moduleId, page);
+      var htmlPath = getHtmlPath(folderId, page);
       console.log('📄 HTML:', htmlPath);
 
       var response = await fetch(htmlPath);
@@ -282,7 +271,7 @@
       console.log('✅ HTML 加载成功, 长度:', html.length);
 
       if (!html || html.trim().length < 10) {
-        content.innerHTML = generatePlaceholder(moduleId, page);
+        content.innerHTML = generatePlaceholder(moduleKey, folderId, page);
         return;
       }
 
@@ -290,7 +279,7 @@
 
       // 尝试加载JS
       try {
-        var jsPath = getJsPath(moduleId, page);
+        var jsPath = getJsPath(folderId, page);
         console.log('📄 JS:', jsPath);
 
         var module = await import(jsPath);
@@ -305,13 +294,11 @@
         }
       } catch (jsError) {
         console.warn('⚠️ JS加载失败:', jsError.message);
-        // 如果JS加载失败，尝试使用备用数据
-        if (typeof window.Services !== 'undefined') {
-          console.log('🔄 使用备用数据服务');
-        }
+        // 如果JS加载失败但HTML已显示，保持页面可见
       }
 
-      var info = getModuleInfo(moduleId);
+      // 更新标题
+      var info = getModuleInfo(moduleKey);
       if (info) {
         document.title = info.label + ' - CarwashPro';
         var titleEl = document.getElementById('currentPageTitle');
@@ -320,7 +307,7 @@
         }
       }
 
-      console.log('✅ 加载完成:', moduleId, '/', page);
+      console.log('✅ 加载完成:', moduleKey, '/', page);
 
     } catch (error) {
       console.error('❌ 加载失败:', error);
@@ -346,15 +333,15 @@
   }
 
   // ============================================================
-  // 占位内容（含数据 - 使用服务层）
+  // 占位内容
   // ============================================================
 
-  function generatePlaceholder(moduleId, page) {
-    var info = getModuleInfo(moduleId);
-    var label = info ? info.label : moduleId;
+  function generatePlaceholder(moduleKey, folderId, page) {
+    var info = getModuleInfo(moduleKey);
+    var label = info ? info.label : moduleKey;
 
     // Dashboard 特殊处理
-    if (moduleId === '01-dashboard' || page === 'sales' || page === 'executive') {
+    if (moduleKey === 'dashboard') {
       var stats = MockDB.getDashboardStats();
       return `
         <div style="padding:20px;">
@@ -414,14 +401,14 @@
     var data = [];
     var columns = [];
     var dataMap = {
-      '03-orders': { data: MockDB.getOrders, cols: ['订单编号', '客户', '金额', '状态'] },
-      '04-products': { data: MockDB.getProducts, cols: ['商品名称', '分类', '价格', '库存'] },
-      '05-customers': { data: MockDB.getCustomers, cols: ['姓名', '手机', '等级', '累计消费'] },
-      '08-purchase': { data: MockDB.getPurchaseOrders, cols: ['订单编号', '供应商', '金额', '状态'] },
-      '10-hr': { data: MockDB.getEmployees, cols: ['姓名', '部门', '职位', '薪资'] }
+      'orders': { data: MockDB.getOrders, cols: ['订单编号', '客户', '金额', '状态'] },
+      'products': { data: MockDB.getProducts, cols: ['商品名称', '分类', '价格', '库存'] },
+      'crm': { data: MockDB.getCustomers, cols: ['姓名', '手机', '等级', '累计消费'] },
+      'purchasing': { data: MockDB.getPurchaseOrders, cols: ['订单编号', '供应商', '金额', '状态'] },
+      'hr': { data: MockDB.getEmployees, cols: ['姓名', '部门', '职位', '薪资'] }
     };
 
-    var mapping = dataMap[moduleId];
+    var mapping = dataMap[moduleKey];
     if (mapping) {
       data = mapping.data().slice(0, 8);
       columns = mapping.cols;
@@ -474,31 +461,31 @@
   // ============================================================
 
   function handleRoute() {
-    var hash = window.location.hash.replace('#', '') || '/dashboard';
+    var hash = window.location.hash.replace('#', '') || '/dashboard/sales';
     if (!hash.startsWith('/')) hash = '/' + hash;
 
     var parts = hash.split('/').filter(function(p) { return p.length > 0; });
     var moduleKey = parts[0] || 'dashboard';
     var page = parts[1] || '';
 
-    var moduleInfo = MODULES[moduleKey];
-    if (!moduleInfo) {
+    // 验证模块
+    var info = getModuleInfo(moduleKey);
+    if (!info) {
       console.warn('未知模块:', moduleKey);
-      window.location.hash = '/dashboard';
+      window.location.hash = '/dashboard/sales';
       return;
     }
 
-    var moduleId = moduleInfo.id;
-    var defaultPage = moduleInfo.defaultPage;
-
-    var pages = getPages(moduleId);
+    // 验证页面
+    var folderId = info.id;
+    var pages = getPages(folderId);
     if (!page || pages.indexOf(page) === -1) {
-      page = defaultPage;
+      page = info.defaultPage;
       window.location.hash = '/' + moduleKey + '/' + page;
       return;
     }
 
-    loadPage(moduleId, page);
+    loadPage(moduleKey, page);
   }
 
   // ============================================================
@@ -512,7 +499,7 @@
       return;
     }
 
-    var currentHash = window.location.hash.replace('#', '') || '/dashboard';
+    var currentHash = window.location.hash.replace('#', '') || '/dashboard/sales';
     var currentKey = currentHash.split('/')[1] || 'dashboard';
 
     var html = `
@@ -531,14 +518,15 @@
 
     html += '<nav style="padding:8px 12px;flex:1;overflow-y:auto;">';
 
-    var keys = Object.keys(MODULES);
+    var keys = Object.keys(MODULE_MAP);
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
-      var mod = MODULES[key];
+      var mod = MODULE_MAP[key];
       var isActive = currentKey === key;
+      var defaultPage = mod.defaultPage;
 
       html += `
-        <a href="#/${key}/${mod.defaultPage}"
+        <a href="#/${key}/${defaultPage}"
            style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;text-decoration:none;color:${isActive ? '#FFFFFF' : '#1F2937'};background:${isActive ? '#4F46E5' : 'transparent'};margin-bottom:2px;transition:all 0.2s;cursor:pointer;font-size:14px;"
            onmouseover="this.style.background='${isActive ? '#4F46E5' : '#F3F4F6'}'"
            onmouseout="this.style.background='${isActive ? '#4F46E5' : 'transparent'}'">
@@ -560,27 +548,14 @@
     `;
 
     sidebar.innerHTML = html;
-
-    sidebar.querySelectorAll('a[href^="#"]').forEach(function(link) {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        var href = this.getAttribute('href');
-        if (href) {
-          window.location.hash = href.substring(1);
-        }
-      });
-    });
   }
 
   // ============================================================
   // 初始化
   // ============================================================
 
-  async function init() {
+  function init() {
     console.log('🚀 启动应用...');
-
-    // 加载数据服务（新增）
-    await loadServices();
 
     buildSidebar();
 
@@ -606,4 +581,4 @@
 
 })();
 
-console.log('✅ app.js 加载完成');
+console.log('✅ app.js 加载完成 (V1 路由兼容版)');
