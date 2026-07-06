@@ -21,7 +21,8 @@ const state = {
         level: ''
     },
     selectedCustomer: null,
-    isEditing: false
+    isEditing: false,
+    _initialized: false
 };
 
 const LEVEL_MAP = {
@@ -49,12 +50,24 @@ function formatCurrency(amount) {
 
 function formatDate(dateStr) {
     if (!dateStr) return '-';
-    var d = new Date(dateStr);
-    return d.toLocaleDateString('zh-CN');
+    try {
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('zh-CN');
+    } catch (e) {
+        return '-';
+    }
 }
 
 function showToast(message, type) {
+    // 移除已有 toast
+    var oldToasts = document.querySelectorAll('.crm-toast');
+    for (var i = 0; i < oldToasts.length; i++) {
+        oldToasts[i].remove();
+    }
+
     var toast = document.createElement('div');
+    toast.className = 'crm-toast';
     var colors = {
         success: '#10B981',
         error: '#EF4444',
@@ -73,7 +86,7 @@ function showToast(message, type) {
         z-index: 99999;
         font-size: 14px;
         max-width: 400px;
-        animation: slideUp 0.3s ease;
+        animation: crmSlideUp 0.3s ease;
     `;
     toast.textContent = message;
     document.body.appendChild(toast);
@@ -87,7 +100,7 @@ function showToast(message, type) {
 }
 
 // ============================================================
-// 3. Mock 数据（备用）
+// 3. Mock 数据（纯净版）
 // ============================================================
 
 function getMockCustomers() {
@@ -98,13 +111,14 @@ function getMockCustomers() {
 
     for (var i = 0; i < 25; i++) {
         var level = levels[i % levels.length];
+        var spent = Math.floor(Math.random() * 50000) + 1000;
         customers.push({
             id: 'CUS-' + String(i + 1).padStart(6, '0'),
-            name: names[i % names.length] + (i > 9 ? ' ' + String(i) : ''),
+            name: names[i % names.length] + (i > 9 ? '' : ''),
             phone: phones[i % phones.length],
             email: 'user' + (i + 1) + '@example.com',
             level: level,
-            totalSpent: Math.floor(Math.random() * 50000) + 1000,
+            totalSpent: spent,
             orderCount: Math.floor(Math.random() * 50) + 1,
             lastVisit: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
             address: '中国' + ['上海', '北京', '深圳', '广州', '成都'][i % 5] + '市XX区XX路' + (i + 1) + '号',
@@ -120,6 +134,12 @@ function getMockCustomers() {
 // ============================================================
 
 export async function init() {
+    // 防止重复初始化
+    if (state._initialized) {
+        console.log('👥 客户管理已初始化，跳过');
+        return;
+    }
+
     console.log('👥 客户管理初始化...');
 
     if (typeof document === 'undefined') {
@@ -127,12 +147,27 @@ export async function init() {
         return;
     }
 
+    state._initialized = true;
+
+    // 清除旧缓存
+    try {
+        var services = getServices();
+        if (services && services.customer) {
+            services.customer.clearCache();
+        }
+    } catch (e) {
+        // 忽略
+    }
+
     // 绑定弹窗事件
     bindModalEvents();
 
+    // 加载数据
     await loadCustomers();
     await loadStats();
     bindEvents();
+
+    console.log('✅ 客户管理初始化完成');
 }
 
 // ============================================================
@@ -300,29 +335,29 @@ function renderTable() {
         html += `
             <tr>
                 <td>
-                    <div class="flex items-center gap-3">
-                        <div class="customer-avatar" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;background:#DBEAFE;color:#2563EB;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="crm-avatar" style="background:#DBEAFE;color:#2563EB;">
                             ${initial}
                         </div>
                         <div>
-                            <div class="font-medium">${c.name || '-'}</div>
-                            <div class="text-xs text-gray-500">${c.id || ''}</div>
+                            <div style="font-weight:500;">${c.name || '-'}</div>
+                            <div style="font-size:12px;color:#6B7280;">${c.id || ''}</div>
                         </div>
                     </div>
                 </td>
                 <td>${c.phone || '-'}</td>
-                <td class="text-sm">${c.email || '-'}</td>
+                <td style="font-size:14px;">${c.email || '-'}</td>
                 <td>
-                    <span class="badge badge-${levelInfo.color}">
+                    <span class="crm-badge crm-badge-${levelInfo.color}">
                         <i class="fas ${levelInfo.icon}"></i>
                         ${levelInfo.label}
                     </span>
                 </td>
-                <td class="text-right font-semibold">¥${formatCurrency(c.totalSpent || 0)}</td>
-                <td class="text-center">${c.orderCount || 0}</td>
-                <td class="text-sm">${formatDate(c.lastVisit)}</td>
+                <td style="text-align:right;font-weight:600;">¥${formatCurrency(c.totalSpent || 0)}</td>
+                <td style="text-align:center;">${c.orderCount || 0}</td>
+                <td style="font-size:14px;">${formatDate(c.lastVisit)}</td>
                 <td>
-                    <div class="flex gap-1">
+                    <div style="display:flex;gap:4px;">
                         <button class="btn-sm btn-primary" onclick="viewCustomer('${c.id}')" title="查看">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -351,13 +386,12 @@ function renderPagination() {
     var totalPages = Math.ceil(total / limit) || 1;
 
     var html = `
-        <div class="flex items-center justify-between px-4 py-3">
-            <div class="text-sm text-gray-500">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;">
+            <div style="font-size:14px;color:#6B7280;">
                 共 ${total} 位客户，第 ${page}/${totalPages} 页
             </div>
-            <div class="flex gap-1">
-                <button class="px-3 py-1 border rounded ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" 
-                        onclick="changePage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>
+            <div style="display:flex;gap:4px;">
+                <button class="btn-sm btn-secondary" onclick="changePage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>
                     <i class="fas fa-chevron-left"></i>
                 </button>
     `;
@@ -366,23 +400,22 @@ function renderPagination() {
     var endPage = Math.min(totalPages, page + 2);
 
     if (startPage > 1) {
-        html += `<button class="px-3 py-1 border rounded" onclick="changePage(1)">1</button>`;
-        if (startPage > 2) html += `<button class="px-3 py-1 border rounded" disabled>...</button>`;
+        html += `<button class="btn-sm btn-secondary" onclick="changePage(1)">1</button>`;
+        if (startPage > 2) html += `<button class="btn-sm btn-secondary" disabled>...</button>`;
     }
 
     for (var i = startPage; i <= endPage; i++) {
-        html += `<button class="px-3 py-1 border rounded ${i === page ? 'bg-blue-500 text-white' : ''}" 
+        html += `<button class="btn-sm ${i === page ? 'btn-primary' : 'btn-secondary'}" 
                         onclick="changePage(${i})">${i}</button>`;
     }
 
     if (endPage < totalPages) {
-        if (endPage < totalPages - 1) html += `<button class="px-3 py-1 border rounded" disabled>...</button>`;
-        html += `<button class="px-3 py-1 border rounded" onclick="changePage(${totalPages})">${totalPages}</button>`;
+        if (endPage < totalPages - 1) html += `<button class="btn-sm btn-secondary" disabled>...</button>`;
+        html += `<button class="btn-sm btn-secondary" onclick="changePage(${totalPages})">${totalPages}</button>`;
     }
 
     html += `
-                <button class="px-3 py-1 border rounded ${page >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}" 
-                        onclick="changePage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>
+                <button class="btn-sm btn-secondary" onclick="changePage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
@@ -416,8 +449,6 @@ window.viewCustomer = function(id) {
         return;
     }
     showToast('查看客户: ' + customer.name, 'info');
-    // 可以跳转到详情页
-    // window.location.href = '../detail/detail.html?id=' + id;
 };
 
 window.editCustomer = function(id) {
@@ -430,7 +461,6 @@ window.editCustomer = function(id) {
     state.isEditing = true;
     state.selectedCustomer = customer;
 
-    // 填充表单
     document.getElementById('customerId').value = customer.id;
     document.getElementById('customerName').value = customer.name || '';
     document.getElementById('customerPhone').value = customer.phone || '';
@@ -505,7 +535,6 @@ async function handleSaveCustomer() {
     var address = document.getElementById('customerAddress').value.trim();
     var notes = document.getElementById('customerNotes').value.trim();
 
-    // 验证
     if (!name) {
         showToast('请输入客户姓名', 'warning');
         return;
@@ -529,13 +558,11 @@ async function handleSaveCustomer() {
         var services = getServices();
 
         if (customerId) {
-            // 更新
             if (services && services.customer) {
                 await services.customer.update(customerId, data);
             }
             showToast('客户更新成功', 'success');
         } else {
-            // 新建
             if (services && services.customer) {
                 await services.customer.create(data);
             }
@@ -577,13 +604,11 @@ async function handleConfirmDelete() {
 // ============================================================
 
 function bindModalEvents() {
-    // 关闭弹窗
     document.getElementById('closeModal')?.addEventListener('click', closeModal);
     document.getElementById('cancelModal')?.addEventListener('click', closeModal);
     document.getElementById('closeDeleteModal')?.addEventListener('click', closeDeleteModal);
     document.getElementById('cancelDelete')?.addEventListener('click', closeDeleteModal);
 
-    // 点击遮罩关闭
     document.getElementById('customerModal')?.addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
@@ -591,13 +616,9 @@ function bindModalEvents() {
         if (e.target === this) closeDeleteModal();
     });
 
-    // 保存
     document.getElementById('saveCustomer')?.addEventListener('click', handleSaveCustomer);
-
-    // 确认删除
     document.getElementById('confirmDelete')?.addEventListener('click', handleConfirmDelete);
 
-    // 回车键提交
     document.getElementById('customerForm')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -617,9 +638,10 @@ function handleSearch() {
 function handleReset() {
     state.pagination.page = 1;
     state.filters = { name: '', phone: '', level: '' };
-    document.getElementById('searchName').value = '';
-    document.getElementById('searchPhone').value = '';
-    document.getElementById('searchLevel').value = '';
+    var inputs = document.querySelectorAll('.crm-search-bar input, .crm-search-bar select');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].value = '';
+    }
     loadCustomers();
 }
 
@@ -634,8 +656,7 @@ function bindEvents() {
     document.getElementById('resetBtn')?.addEventListener('click', handleReset);
     document.getElementById('createBtn')?.addEventListener('click', showCreateCustomer);
 
-    // Enter 键搜索
-    var inputs = document.querySelectorAll('.search-bar input');
+    var inputs = document.querySelectorAll('.crm-search-bar input');
     for (var i = 0; i < inputs.length; i++) {
         inputs[i].addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -662,7 +683,8 @@ function hideLoading() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
-    init();
+    // 延迟执行，确保 DOM 完全加载
+    setTimeout(init, 100);
 }
 
 console.log('✅ 客户管理模块加载完成');

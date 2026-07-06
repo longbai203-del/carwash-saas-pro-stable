@@ -1,19 +1,20 @@
 /**
  * customers.css - 客户管理专用样式
+ * 使用 .crm- 前缀避免全局冲突
  */
 
 /* ============================================================
    统计卡片
    ============================================================ */
 
-   .stats-grid {
+   .crm-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 20px;
 }
 
-.stat-card {
+.crm-stat-card {
     background: white;
     border-radius: 12px;
     padding: 16px 20px;
@@ -24,12 +25,12 @@
     transition: all 0.3s;
 }
 
-.stat-card:hover {
+.crm-stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.stat-icon {
+.crm-stat-icon {
     width: 48px;
     height: 48px;
     border-radius: 12px;
@@ -41,18 +42,18 @@
     flex-shrink: 0;
 }
 
-.stat-icon.blue { background: #4F46E5; }
-.stat-icon.purple { background: #8B5CF6; }
-.stat-icon.gold { background: #F59E0B; }
-.stat-icon.green { background: #10B981; }
+.crm-stat-icon.blue { background: #4F46E5; }
+.crm-stat-icon.purple { background: #8B5CF6; }
+.crm-stat-icon.gold { background: #F59E0B; }
+.crm-stat-icon.green { background: #10B981; }
 
-.stat-value {
+.crm-stat-value {
     font-size: 24px;
     font-weight: 700;
     color: #1F2937;
 }
 
-.stat-label {
+.crm-stat-label {
     font-size: 14px;
     color: #6B7280;
     margin-top: 2px;
@@ -62,7 +63,7 @@
    搜索栏
    ============================================================ */
 
-.search-bar {
+.crm-search-bar {
     background: white;
     border-radius: 8px;
     padding: 16px 20px;
@@ -70,43 +71,44 @@
     margin-bottom: 20px;
 }
 
-.search-row {
+.crm-search-row {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
     align-items: flex-end;
 }
 
-.search-row .form-group {
+.crm-search-row .crm-form-group {
     flex: 1;
     min-width: 150px;
 }
 
-.search-row .form-group label {
+.crm-search-row .crm-form-group label {
     display: block;
     font-size: 12px;
     color: #6B7280;
     margin-bottom: 4px;
 }
 
-.search-row .form-group input,
-.search-row .form-group select {
+.crm-search-row .crm-form-group input,
+.crm-search-row .crm-form-group select {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #D1D5DB;
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s;
+    background: white;
 }
 
-.search-row .form-group input:focus,
-.search-row .form-group select:focus {
+.crm-search-row .crm-form-group input:focus,
+.crm-search-row .crm-form-group select:focus {
     outline: none;
     border-color: #4F46E5;
     box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
 }
 
-.search-actions {
+.crm-search-actions {
     display: flex;
     gap: 8px;
     padding-top: 4px;
@@ -116,7 +118,7 @@
    工具栏
    ============================================================ */
 
-.toolbar {
+.crm-toolbar {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
@@ -124,139 +126,74 @@
     margin-bottom: 16px;
 }
 
-.toolbar .left {
+.crm-toolbar .crm-left {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     flex: 1;
 }
 
-.toolbar .right {
+.crm-toolbar .crm-right {
     display: flex;
     gap: 8px;
     align-items: center;
 }
 
 /* ============================================================
-   表格
+   客户头像
    ============================================================ */
 
-.table-container {
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th {
-    background: #F9FAFB;
-    padding: 12px 16px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 12px;
-    color: #6B7280;
-    text-transform: uppercase;
-    border-bottom: 1px solid #E5E7EB;
-}
-
-.table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #F3F4F6;
-    font-size: 14px;
-}
-
-.table tr:hover {
-    background: #F9FAFB;
+.crm-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 /* ============================================================
-   等级徽章
+   等级徽章 (使用更具体的类名)
    ============================================================ */
 
-.badge {
-    display: inline-block;
+.crm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 4px 10px;
     border-radius: 9999px;
     font-size: 12px;
     font-weight: 500;
 }
 
-.badge-vip {
+.crm-badge-vip {
     background: #EDE9FE;
     color: #6D28D9;
 }
 
-.badge-gold {
+.crm-badge-gold {
     background: #FEF3C7;
     color: #92400E;
 }
 
-.badge-silver {
+.crm-badge-silver {
     background: #F3F4F6;
     color: #4B5563;
 }
 
-.badge-bronze {
+.crm-badge-bronze {
     background: #FDE68A;
     color: #92400E;
-}
-
-/* ============================================================
-   按钮
-   ============================================================ */
-
-.btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-primary {
-    background: #4F46E5;
-    color: white;
-}
-.btn-primary:hover { background: #4338CA; }
-
-.btn-secondary {
-    background: #F3F4F6;
-    color: #374151;
-}
-.btn-secondary:hover { background: #E5E7EB; }
-
-.btn-danger {
-    background: #EF4444;
-    color: white;
-}
-.btn-danger:hover { background: #DC2626; }
-
-.btn-success {
-    background: #10B981;
-    color: white;
-}
-.btn-success:hover { background: #059669; }
-
-.btn-sm {
-    padding: 4px 10px;
-    font-size: 12px;
-    border-radius: 4px;
 }
 
 /* ============================================================
    弹窗 (Modal)
    ============================================================ */
 
-.modal-overlay {
+.crm-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -267,14 +204,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.2s ease;
+    animation: crmFadeIn 0.2s ease;
 }
 
-.modal-overlay.hidden {
+.crm-modal-overlay.hidden {
     display: none;
 }
 
-.modal-content {
+.crm-modal-content {
     background: white;
     border-radius: 12px;
     max-width: 560px;
@@ -282,10 +219,10 @@
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    animation: slideUp 0.3s ease;
+    animation: crmSlideUp 0.3s ease;
 }
 
-.modal-header {
+.crm-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -293,13 +230,13 @@
     border-bottom: 1px solid #E5E7EB;
 }
 
-.modal-header h3 {
+.crm-modal-header h3 {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
 }
 
-.modal-close {
+.crm-modal-close {
     background: none;
     border: none;
     font-size: 24px;
@@ -308,15 +245,15 @@
     padding: 0 4px;
     transition: color 0.2s;
 }
-.modal-close:hover { color: #1F2937; }
+.crm-modal-close:hover { color: #1F2937; }
 
-.modal-body {
+.crm-modal-body {
     padding: 24px;
     overflow-y: auto;
     max-height: calc(90vh - 120px);
 }
 
-.modal-footer {
+.crm-modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -328,11 +265,11 @@
    表单
    ============================================================ */
 
-.form-group {
+.crm-form-group {
     margin-bottom: 16px;
 }
 
-.form-group label {
+.crm-form-group label {
     display: block;
     font-size: 14px;
     font-weight: 500;
@@ -340,26 +277,27 @@
     margin-bottom: 4px;
 }
 
-.form-group .required {
+.crm-form-group .crm-required {
     color: #EF4444;
 }
 
-.form-control {
+.crm-form-control {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid #D1D5DB;
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s;
+    background: white;
 }
 
-.form-control:focus {
+.crm-form-control:focus {
     outline: none;
     border-color: #4F46E5;
     box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
 }
 
-textarea.form-control {
+textarea.crm-form-control {
     resize: vertical;
     min-height: 60px;
 }
@@ -368,7 +306,7 @@ textarea.form-control {
    分页
    ============================================================ */
 
-.pagination-container {
+.crm-pagination {
     margin-top: 16px;
 }
 
@@ -376,12 +314,12 @@ textarea.form-control {
    动画
    ============================================================ */
 
-@keyframes fadeIn {
+@keyframes crmFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-@keyframes slideUp {
+@keyframes crmSlideUp {
     from {
         opacity: 0;
         transform: translateY(20px) scale(0.95);
@@ -397,45 +335,37 @@ textarea.form-control {
    ============================================================ */
 
 @media (max-width: 768px) {
-    .stats-grid {
+    .crm-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .search-row .form-group {
+    .crm-search-row .crm-form-group {
         min-width: 100%;
     }
 
-    .search-actions {
+    .crm-search-actions {
         width: 100%;
     }
 
-    .search-actions .btn {
+    .crm-search-actions .btn {
         flex: 1;
     }
 
-    .modal-content {
+    .crm-modal-content {
         width: 95%;
         margin: 16px;
-    }
-
-    .table {
-        font-size: 12px;
-    }
-    .table th,
-    .table td {
-        padding: 8px 10px;
     }
 }
 
 @media (max-width: 480px) {
-    .stats-grid {
+    .crm-stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
-    .stat-card {
+    .crm-stat-card {
         padding: 12px;
     }
-    .stat-value {
+    .crm-stat-value {
         font-size: 18px;
     }
 }
