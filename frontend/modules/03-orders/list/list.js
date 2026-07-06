@@ -7,7 +7,12 @@
 // 1. 导入服务
 // ============================================================
 
-import { orderService, formatCurrency, formatDateTime, showToast } from '../../../js/services/supabase.js';
+import {
+    orderService,
+    formatCurrency,
+    formatDateTime,
+    showToast
+} from '../../../js/services/supabase.js';
 
 // ============================================================
 // 2. 状态管理

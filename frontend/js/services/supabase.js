@@ -21,14 +21,12 @@ function getSupabase() {
         // 检查是否已加载 Supabase
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
             supabaseClient = window.supabase.createClient(url, anonKey);
+            console.log('✅ Supabase 客户端已初始化');
+            return supabaseClient;
         } else {
-            // 尝试从 CDN 加载
-            console.warn('⚠️ Supabase 未加载，请确保在 index.html 中引入');
+            console.warn('⚠️ Supabase 未加载，使用 Mock 模式');
             return null;
         }
-
-        console.log('✅ Supabase 客户端已初始化');
-        return supabaseClient;
     } catch (error) {
         console.error('❌ Supabase 初始化失败:', error);
         return null;
@@ -39,12 +37,12 @@ function getSupabase() {
 // 2. 工具函数
 // ============================================================
 
-function formatCurrency(amount) {
+export function formatCurrency(amount) {
     if (amount === undefined || amount === null) return '0.00';
     return Number(amount).toFixed(2);
 }
 
-function formatDate(dateStr) {
+export function formatDate(dateStr) {
     if (!dateStr) return '-';
     try {
         const d = new Date(dateStr);
@@ -53,7 +51,7 @@ function formatDate(dateStr) {
     } catch (e) { return '-'; }
 }
 
-function formatDateTime(dateStr) {
+export function formatDateTime(dateStr) {
     if (!dateStr) return '-';
     try {
         const d = new Date(dateStr);
@@ -62,7 +60,7 @@ function formatDateTime(dateStr) {
     } catch (e) { return '-'; }
 }
 
-function showToast(message, type) {
+export function showToast(message, type) {
     const colors = {
         success: '#10B981',
         error: '#EF4444',
@@ -124,7 +122,6 @@ function getMockOrders() {
             customer_phone: '138' + String(Math.floor(Math.random() * 90000000) + 10000000),
             total_amount: Math.floor(Math.random() * 1000) + 100,
             status: statuses[i % statuses.length],
-            payment_status: ['unpaid', 'paid'][i % 2],
             created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
         });
     }
@@ -440,20 +437,6 @@ class OrderService {
         return { ...data, id: 'ORD-' + Date.now() };
     }
 
-    async updateStatus(id, status) {
-        try {
-            const client = await this.getClient();
-            if (this._usingSupabase && client) {
-                const { data: result, error } = await client.from('orders').update({ status }).eq('id', id).select().single();
-                if (error) throw error;
-                return result;
-            }
-        } catch (error) {
-            console.warn('⚠️ 更新失败，使用 Mock:', error.message);
-        }
-        return { id, status };
-    }
-
     async delete(id) {
         try {
             const client = await this.getClient();
@@ -536,75 +519,6 @@ class ProductService {
             page: page,
             limit: limit
         };
-    }
-
-    async getById(id) {
-        try {
-            const client = await this.getClient();
-            if (this._usingSupabase && client) {
-                const { data, error } = await client.from('products').select('*').eq('id', id).single();
-                if (error) throw error;
-                return data;
-            }
-        } catch (error) {
-            console.warn('⚠️ 查询失败，使用 Mock:', error.message);
-        }
-        return getMockProducts().find(p => p.id === id);
-    }
-
-    async create(data) {
-        try {
-            const client = await this.getClient();
-            if (this._usingSupabase && client) {
-                const { data: result, error } = await client.from('products').insert(data).select().single();
-                if (error) throw error;
-                return result;
-            }
-        } catch (error) {
-            console.warn('⚠️ 创建失败，使用 Mock:', error.message);
-        }
-        return { ...data, id: 'PRD-' + Date.now() };
-    }
-
-    async update(id, data) {
-        try {
-            const client = await this.getClient();
-            if (this._usingSupabase && client) {
-                const { data: result, error } = await client.from('products').update(data).eq('id', id).select().single();
-                if (error) throw error;
-                return result;
-            }
-        } catch (error) {
-            console.warn('⚠️ 更新失败，使用 Mock:', error.message);
-        }
-        return { ...data, id: id };
-    }
-
-    async updateStock(id, quantity, warehouseId, note) {
-        try {
-            const client = await this.getClient();
-            if (this._usingSupabase && client) {
-                const { data: product, error: findError } = await client
-                    .from('products')
-                    .select('stock_quantity')
-                    .eq('id', id)
-                    .single();
-                if (findError) throw findError;
-
-                const newStock = (product.stock_quantity || 0) + quantity;
-                const { data: result, error } = await client
-                    .from('products')
-                    .update({ stock_quantity: newStock })
-                    .eq('id', id)
-                    .select()
-                    .single();
-                if (error) throw error;
-                return result;
-            }
-        } catch (error) {
-            console.warn('⚠️ 库存更新失败，使用 Mock:', error.message);
-        }
-        return { id, stock_quantity: quantity };
     }
 
     async delete(id) {
@@ -694,14 +608,6 @@ export function getCustomerService() { return customerService; }
 export function getOrderService() { return orderService; }
 export function getProductService() { return productService; }
 export function getDashboardService() { return dashboardService; }
-
-// 导出工具函数
-export {
-    formatCurrency,
-    formatDate,
-    formatDateTime,
-    showToast
-};
 
 // 全局访问
 if (typeof window !== 'undefined') {

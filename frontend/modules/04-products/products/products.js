@@ -1,39 +1,47 @@
 /**
  * modules/04-products/products/products.js - 商品管理
- * 使用真实数据服务
+ * 使用 Supabase 服务
  */
 
-let productService = null;
-let formatCurrency = null;
-let showToast = null;
+// ============================================================
+// 1. 导入服务
+// ============================================================
 
-async function loadServices() {
-    try {
-        const services = await import('../../../js/services.js');
-        productService = services.productService;
-        formatCurrency = services.formatCurrency;
-        showToast = window.showToast || function(msg) { alert(msg); };
-        return true;
-    } catch (error) {
-        console.warn('⚠️ 服务加载失败:', error.message);
-        formatCurrency = (n) => Number(n || 0).toFixed(2);
-        showToast = (msg) => alert(msg);
-        return false;
-    }
-}
+import {
+    productService,
+    formatCurrency,
+    showToast
+} from '../../../js/services/supabase.js';
+
+// ============================================================
+// 2. 状态管理
+// ============================================================
 
 const state = {
     products: [],
     loading: false,
     pagination: { page: 1, limit: 10, total: 0 },
-    filters: { name: '', category: '', status: '' }
+    filters: { name: '', category: '', status: '' },
+    _initialized: false
 };
 
+// ============================================================
+// 3. 核心功能
+// ============================================================
+
 export async function init() {
+    if (state._initialized) {
+        console.log('📦 商品管理已初始化，跳过');
+        return;
+    }
+
     console.log('📦 商品管理初始化...');
-    await loadServices();
+    state._initialized = true;
+
     await loadProducts();
     bindEvents();
+
+    console.log('✅ 商品管理初始化完成');
 }
 
 async function loadProducts() {
@@ -49,6 +57,8 @@ async function loadProducts() {
             status: state.filters.status
         });
 
+        console.log('📊 加载商品数据:', result);
+
         state.products = result.list || [];
         state.pagination.total = result.total || 0;
 
@@ -63,6 +73,10 @@ async function loadProducts() {
         hideLoading();
     }
 }
+
+// ============================================================
+// 4. 渲染函数
+// ============================================================
 
 function renderTable() {
     const tbody = document.getElementById('productsTableBody');
@@ -136,6 +150,10 @@ function renderPagination() {
     container.innerHTML = html;
 }
 
+// ============================================================
+// 5. 全局函数
+// ============================================================
+
 window.changePage = function(page) {
     const totalPages = Math.ceil(state.pagination.total / state.pagination.limit) || 1;
     if (page < 1 || page > totalPages) return;
@@ -154,13 +172,17 @@ window.deleteProduct = async function(id) {
         showToast('删除成功', 'success');
         await loadProducts();
     } catch (error) {
-        showToast('删除失败', 'error');
+        showToast('删除失败: ' + error.message, 'error');
     }
 };
 
 function showCreateProduct() {
     showToast('新建商品功能开发中', 'info');
 }
+
+// ============================================================
+// 6. 搜索/重置
+// ============================================================
 
 function handleSearch() {
     state.pagination.page = 1;
@@ -179,6 +201,10 @@ function handleReset() {
     loadProducts();
 }
 
+// ============================================================
+// 7. 事件绑定
+// ============================================================
+
 function bindEvents() {
     document.getElementById('searchBtn')?.addEventListener('click', handleSearch);
     document.getElementById('resetBtn')?.addEventListener('click', handleReset);
@@ -196,8 +222,14 @@ function hideLoading() {
     document.getElementById('loadingSpinner')?.classList.add('hidden');
 }
 
+// ============================================================
+// 8. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     setTimeout(init, 100);
 }
+
+console.log('✅ 商品管理模块加载完成');

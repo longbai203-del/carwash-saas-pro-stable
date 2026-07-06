@@ -1,41 +1,18 @@
 /**
  * modules/05-customers/customers/customers.js - 客户管理
- * 使用真实数据服务 (Supabase)
+ * 直接使用 supabase.js 服务
  */
 
 // ============================================================
 // 1. 导入服务
 // ============================================================
 
-let customerService = null;
-let formatCurrency = null;
-let formatDate = null;
-let showToast = null;
-
-async function loadServices() {
-    try {
-        const services = await import('../../../js/services.js');
-        customerService = services.customerService;
-        formatCurrency = services.formatCurrency;
-        formatDate = services.formatDate;
-        showToast = window.showToast || function(msg) { alert(msg); };
-        return true;
-    } catch (error) {
-        console.warn('⚠️ 服务加载失败，使用内置功能:', error.message);
-        // 内置备用函数
-        formatCurrency = (n) => Number(n || 0).toFixed(2);
-        formatDate = (s) => s ? new Date(s).toLocaleDateString('zh-CN') : '-';
-        showToast = (msg, type) => {
-            const colors = { success: '#10B981', error: '#EF4444', warning: '#F59E0B', info: '#3B82F6' };
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 24px;background:' + (colors[type] || '#4F46E5') + ';color:white;border-radius:8px;z-index:99999;font-size:14px;';
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        };
-        return false;
-    }
-}
+import {
+    customerService,
+    formatCurrency,
+    formatDate,
+    showToast
+} from '../../../js/services/supabase.js';
 
 // ============================================================
 // 2. 状态管理
@@ -69,13 +46,7 @@ export async function init() {
     console.log('👥 客户管理初始化...');
     state._initialized = true;
 
-    // 加载服务
-    await loadServices();
-
-    // 绑定弹窗事件
     bindModalEvents();
-
-    // 加载数据
     await loadCustomers();
     await loadStats();
     bindEvents();
@@ -100,6 +71,8 @@ async function loadCustomers() {
             level: state.filters.level
         });
 
+        console.log('📊 加载客户数据:', result);
+
         state.customers = result.list || [];
         state.pagination.total = result.total || 0;
 
@@ -119,6 +92,7 @@ async function loadCustomers() {
 async function loadStats() {
     try {
         const stats = await customerService.getStats();
+        console.log('📊 加载统计:', stats);
         renderStats(stats);
     } catch (error) {
         console.error('❌ 加载统计失败:', error);
@@ -130,10 +104,15 @@ async function loadStats() {
 // ============================================================
 
 function renderStats(stats) {
-    document.getElementById('totalCustomers').textContent = stats.total || 0;
-    document.getElementById('vipCount').textContent = stats.vip || 0;
-    document.getElementById('goldCount').textContent = stats.gold || 0;
-    document.getElementById('totalSpent').textContent = '¥' + formatCurrency(stats.totalSpent || 0);
+    const totalEl = document.getElementById('totalCustomers');
+    const vipEl = document.getElementById('vipCount');
+    const goldEl = document.getElementById('goldCount');
+    const spentEl = document.getElementById('totalSpent');
+
+    if (totalEl) totalEl.textContent = stats.total || 0;
+    if (vipEl) vipEl.textContent = stats.vip || 0;
+    if (goldEl) goldEl.textContent = stats.gold || 0;
+    if (spentEl) spentEl.textContent = '¥' + formatCurrency(stats.totalSpent || 0);
 }
 
 function renderTable() {
@@ -150,6 +129,9 @@ function renderTable() {
         const c = state.customers[i];
         const lv = LEVEL_MAP[c.level] || LEVEL_MAP.bronze;
         const initial = c.name ? c.name.charAt(0) : '?';
+        const spent = c.total_spent || c.totalSpent || 0;
+        const orders = c.total_orders || c.orderCount || 0;
+        const visit = c.last_visit || c.lastVisit || '';
 
         html += `<tr>
             <td>
@@ -168,9 +150,9 @@ function renderTable() {
                     <i class="fas ${lv.icon}"></i> ${lv.label}
                 </span>
             </td>
-            <td style="text-align:right;font-weight:600;">¥${formatCurrency(c.total_spent || c.totalSpent || 0)}</td>
-            <td style="text-align:center;">${c.total_orders || c.orderCount || 0}</td>
-            <td>${formatDate(c.last_visit || c.lastVisit)}</td>
+            <td style="text-align:right;font-weight:600;">¥${formatCurrency(spent)}</td>
+            <td style="text-align:center;">${orders}</td>
+            <td>${formatDate(visit)}</td>
             <td>
                 <div style="display:flex;gap:4px;">
                     <button class="btn-sm btn-primary" onclick="viewCustomer('${c.id}')"><i class="fas fa-eye"></i></button>
@@ -208,7 +190,8 @@ function renderPagination() {
 }
 
 function updateTotalCount() {
-    document.getElementById('totalCount').textContent = state.pagination.total || 0;
+    const el = document.getElementById('totalCount');
+    if (el) el.textContent = state.pagination.total || 0;
 }
 
 // ============================================================
