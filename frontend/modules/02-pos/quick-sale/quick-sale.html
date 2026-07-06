@@ -1,54 +1,143 @@
-<!-- 02-pos/quick-sale.html -->
-<div class="page-container" data-page="02-pos-quick-sale">
-    <div class="page-header">
-        <h1>快速销售</h1>
-        <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
-            </button>
-            <button class="btn btn-outline" onclick="location.reload()">
-                <i class="fas fa-sync-alt"></i> 刷新
-            </button>
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS收银 - CarwashPro</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/design-system.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .pos-container { display: grid; grid-template-columns: 1fr 420px; gap: 20px; height: calc(100vh - 160px); }
+        .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; overflow-y: auto; padding: 4px; }
+        .product-item { background: white; border-radius: 10px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 2px solid transparent; }
+        .product-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-color: #4F46E5; }
+        .product-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 20px; }
+        .product-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+        .product-price { font-size: 16px; font-weight: 700; color: #4F46E5; }
+        .cart-panel { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 100%; }
+        .cart-header { padding: 16px 20px; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 12px 16px; }
+        .empty-cart { text-align: center; padding: 60px 0; color: #9CA3AF; }
+        .empty-cart i { font-size: 48px; margin-bottom: 12px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; }
+        .cart-item:hover { background: #F9FAFB; }
+        .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #D1D5DB; background: white; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .qty-btn:hover { background: #4F46E5; color: white; border-color: #4F46E5; }
+        .qty-num { min-width: 24px; text-align: center; font-weight: 600; font-size: 14px; }
+        .remove-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; cursor: pointer; color: #9CA3AF; }
+        .remove-btn:hover { background: #FEE2E2; color: #EF4444; }
+        .cart-footer { padding: 16px 20px; border-top: 1px solid #F3F4F6; }
+        .totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+        .totals-row.total { font-size: 18px; font-weight: 700; border-top: 2px solid #E5E7EB; padding-top: 12px; margin-top: 4px; }
+        .payment-methods { display: flex; gap: 8px; margin: 12px 0; }
+        .payment-btn { flex: 1; padding: 8px; border: 2px solid #E5E7EB; border-radius: 6px; background: white; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+        .payment-btn:hover { border-color: #4F46E5; }
+        .payment-btn.active { border-color: #4F46E5; background: #EEF2FF; }
+        .checkout-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #4F46E5; color: white; font-size: 18px; font-weight: 700; cursor: pointer; }
+        .checkout-btn:hover:not(:disabled) { background: #4338CA; }
+        .checkout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .search-bar-pos { display: flex; gap: 12px; margin-bottom: 16px; }
+        .search-bar-pos input { flex: 1; padding: 10px 16px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 14px; }
+        .search-bar-pos input:focus { outline: none; border-color: #4F46E5; }
+        .customer-section { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+        .customer-section select { flex: 1; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; }
+        .receipt-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+        .receipt-modal .modal-content { background: white; border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: #F3F4F6; color: #4B5563; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #4F46E5; color: white; }
+        .btn-primary:hover { background: #4338CA; }
+        .btn-secondary { background: #F3F4F6; color: #374151; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .text-sm { font-size: 14px; }
+        .text-gray-500 { color: #6B7280; }
+        @media (max-width: 1024px) { .pos-container { grid-template-columns: 1fr 320px; } .product-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .pos-container { grid-template-columns: 1fr; height: auto; } .product-grid { grid-template-columns: repeat(3, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="pos-container">
+        <div>
+            <div class="search-bar-pos">
+                <input id="searchInput" type="text" placeholder="搜索商品" />
+                <button class="btn btn-secondary" onclick="location.reload()">
+                    <i class="fas fa-sync"></i>
+                </button>
+            </div>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+        <div class="cart-panel">
+            <div class="cart-header">
+                <h3>🛒 购物车 <span id="cartCount" class="badge">0</span></h3>
+                <span id="totalItems" class="text-sm text-gray-500">共 0 件</span>
+            </div>
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-basket"></i>
+                    <p>购物车是空的</p>
+                </div>
+            </div>
+            <div class="cart-footer">
+                <div class="customer-section">
+                    <label class="text-sm font-medium">客户:</label>
+                    <select id="customerSelect"></select>
+                    <div id="customerInfo"></div>
+                </div>
+                <div class="totals-row"><span>小计</span><span id="subtotal">¥0.00</span></div>
+                <div class="totals-row"><span>折扣</span><span id="discountAmount">-¥0.00</span></div>
+                <div class="totals-row"><span>税费 (6%)</span><span id="taxAmount">¥0.00</span></div>
+                <div class="totals-row total"><span>总计</span><span id="totalAmount">¥0.00</span></div>
+                <div style="margin: 8px 0;">
+                    <label class="text-sm text-gray-500">折扣 %</label>
+                    <input id="discountInput" type="number" min="0" max="100" value="0" style="width:80px; padding:4px 8px; border:1px solid #D1D5DB; border-radius:4px; margin-left:8px;" />
+                </div>
+                <div class="payment-methods">
+                    <button class="payment-btn active" data-method="cash">💵 现金</button>
+                    <button class="payment-btn" data-method="card">💳 刷卡</button>
+                    <button class="payment-btn" data-method="wechat">💚 微信</button>
+                    <button class="payment-btn" data-method="alipay">💙 支付宝</button>
+                </div>
+                <button id="checkoutBtn" class="checkout-btn" disabled>
+                    <i class="fas fa-check-circle"></i> 结账 (F9)
+                </button>
+            </div>
         </div>
     </div>
-    <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-cash-register"></i>
-            </div>
-            <h2>快速销售</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: POS | 页面: quick sale</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
-            </div>
+    <div id="receiptModal" class="receipt-modal">
+        <div class="modal-content">
+            <div id="receiptContent"></div>
         </div>
     </div>
-</div>
-
-<style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
-</style>
+    <script type="module">
+        import('./quick-sale.js').then(function(m) {
+            if (m && typeof m.init === 'function') m.init();
+        }).catch(function(e) {
+            console.warn('POS JS 加载失败:', e.message);
+            var grid = document.getElementById('productGrid');
+            if (grid) {
+                var products = [
+                    { name: '标准洗车', price: 68, icon: 'fa-car', color: '#4F46E5' },
+                    { name: '精致洗车', price: 128, icon: 'fa-car', color: '#4F46E5' },
+                    { name: '深度清洁', price: 268, icon: 'fa-spray-can', color: '#10B981' },
+                    { name: '抛光打蜡', price: 388, icon: 'fa-wax', color: '#F59E0B' },
+                    { name: '内饰清洗', price: 328, icon: 'fa-couch', color: '#8B5CF6' },
+                    { name: '发动机清洗', price: 188, icon: 'fa-engine', color: '#EF4444' }
+                ];
+                var html = '';
+                for (var i = 0; i < products.length; i++) {
+                    var p = products[i];
+                    html += '<div class="product-item" onclick="alert(\'已添加: ' + p.name + '\')">';
+                    html += '  <div class="product-icon" style="background:' + p.color + '20;color:' + p.color + '">';
+                    html += '    <i class="fas ' + p.icon + '"></i>';
+                    html += '  </div>';
+                    html += '  <div class="product-name">' + p.name + '</div>';
+                    html += '  <div class="product-price">¥' + p.price + '</div>';
+                    html += '</div>';
+                }
+                grid.innerHTML = html;
+            }
+        });
+    </script>
+</body>
+</html>
