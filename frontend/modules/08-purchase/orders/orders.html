@@ -1,129 +1,48 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>采购订单 - CarwashPro</title>
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../../css/design-system.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .search-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .search-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
-        .search-row .form-group { flex: 1; min-width: 150px; }
-        .search-row .form-group label { display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px; }
-        .search-row .form-group input, .search-row .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; }
-        .search-actions { display: flex; gap: 8px; padding-top: 4px; }
-        .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .table { width: 100%; border-collapse: collapse; }
-        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
-        .table td { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
-        .table tr:hover { background: #F9FAFB; }
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
-        .badge-success { background: #D1FAE5; color: #065F46; }
-        .badge-warning { background: #FEF3C7; color: #92400E; }
-        .badge-danger { background: #FEE2E2; color: #991B1B; }
-        .badge-info { background: #DBEAFE; color: #1E40AF; }
-        .badge-secondary { background: #F3F4F6; color: #4B5563; }
-        .btn-sm { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
-        .btn-sm-primary { background: #4F46E5; color: white; }
-        .btn-sm-primary:hover { background: #4338CA; }
-        .btn-sm-danger { background: #EF4444; color: white; }
-        .btn-sm-danger:hover { background: #DC2626; }
-        .btn-primary { background: #4F46E5; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
-        .btn-primary:hover { background: #4338CA; }
-        .btn-secondary { background: #F3F4F6; color: #374151; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
-        .btn-secondary:hover { background: #E5E7EB; }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .font-mono { font-family: monospace; }
-        .text-sm { font-size: 14px; }
-        .text-xs { font-size: 12px; }
-        .text-gray-500 { color: #6B7280; }
-        .flex { display: flex; }
-        .gap-1 { gap: 4px; }
-        .mt-4 { margin-top: 16px; }
-        .mb-4 { margin-bottom: 16px; }
-        .px-4 { padding-left: 16px; padding-right: 16px; }
-        .py-2 { padding-top: 8px; padding-bottom: 8px; }
-        .py-3 { padding-top: 12px; padding-bottom: 12px; }
-        .py-8 { padding-top: 32px; padding-bottom: 32px; }
-        .hidden { display: none !important; }
-        .border { border: 1px solid #E5E7EB; }
-        .rounded { border-radius: 4px; }
-    </style>
-</head>
-<body>
-    <div id="sidebar"></div>
-    <div class="main-content">
-        <div id="navbar"></div>
-        <div class="page-content">
-            <div class="container-fluid">
-                <div class="page-header">
-                    <div>
-                        <h1 class="page-title">采购订单</h1>
-                        <p class="page-subtitle">管理所有采购订单</p>
-                    </div>
-                    <button id="createBtn" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> 新建订单
-                    </button>
-                </div>
-                <div id="loadingSpinner" class="hidden text-center py-4">
-                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
-                </div>
-                <div class="search-bar">
-                    <div class="search-row">
-                        <div class="form-group"><label>订单编号</label><input id="searchOrderNo" type="text" placeholder="输入订单编号" /></div>
-                        <div class="form-group"><label>供应商</label><input id="searchSupplier" type="text" placeholder="输入供应商名称" /></div>
-                        <div class="form-group"><label>状态</label>
-                            <select id="searchStatus">
-                                <option value="">全部状态</option>
-                                <option value="draft">草稿</option>
-                                <option value="pending">待审批</option>
-                                <option value="approved">已批准</option>
-                                <option value="completed">已完成</option>
-                                <option value="cancelled">已取消</option>
-                            </select>
-                        </div>
-                        <div class="search-actions">
-                            <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
-                            <button id="resetBtn" class="btn btn-secondary"><i class="fas fa-undo"></i> 重置</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="toolbar">
-                    <button class="btn btn-secondary" onclick="location.reload()"><i class="fas fa-sync"></i> 刷新</button>
-                </div>
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>订单编号</th>
-                                <th>供应商</th>
-                                <th class="text-right">总金额</th>
-                                <th>状态</th>
-                                <th class="text-center">商品数</th>
-                                <th>创建时间</th>
-                                <th style="width:120px;">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordersTableBody">
-                            <tr><td colspan="7" class="text-center py-8 text-gray-500">加载中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div id="paginationContainer" class="mt-4"></div>
+﻿<div class="container-fluid">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div>
+            <h1 class="page-title" style="font-size:24px;font-weight:700;margin:0;">📋 采购订单</h1>
+            <p class="page-subtitle" style="color:#6B7280;margin:4px 0 0 0;">管理所有采购订单</p>
+        </div>
+        <button style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">
+            <i class="fas fa-plus"></i> 新建采购单
+        </button>
+    </div>
+
+    <div style="background:white;border-radius:8px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:20px;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:1;min-width:150px;">
+                <label style="display:block;font-size:12px;color:#6B7280;margin-bottom:4px;">采购单号</label>
+                <input type="text" placeholder="输入采购单号" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <label style="display:block;font-size:12px;color:#6B7280;margin-bottom:4px;">供应商</label>
+                <input type="text" placeholder="输入供应商名称" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+            </div>
+            <div style="display:flex;gap:8px;padding-top:4px;">
+                <button style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;"><i class="fas fa-search"></i> 搜索</button>
+                <button style="padding:8px 16px;background:#F3F4F6;border:none;border-radius:6px;cursor:pointer;"><i class="fas fa-undo"></i> 重置</button>
             </div>
         </div>
     </div>
-    <script type="module">
-        import { init } from './orders.js';
-        window.changePage = window.changePage;
-        window.viewOrder = window.viewOrder;
-        window.editOrder = window.editOrder;
-        window.deleteOrder = window.deleteOrder;
-        init();
-    </script>
-</body>
-</html>
+
+    <div style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#F9FAFB;">
+                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">采购单号</th>
+                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">供应商</th>
+                    <th style="padding:12px 16px;text-align:right;font-weight:600;font-size:12px;color:#6B7280;">总金额</th>
+                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">状态</th>
+                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;font-family:monospace;">PO-001</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;">上海供应商有限公司</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;">¥12,500</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#D1FAE5;color:#065F46;">已完成</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="display:flex;gap:4px;"><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#4F46E5;color:white;"><i class="fas fa-eye"></i></button><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#EF4444;color:white;"><i class="fas fa-trash"></i></button></div></td></tr>
+                <tr><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;font-family:monospace;">PO-002</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;">深圳科技材料公司</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;">¥8,500</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#FEF3C7;color:#92400E;">待审批</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="display:flex;gap:4px;"><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#4F46E5;color:white;"><i class="fas fa-eye"></i></button><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#EF4444;color:white;"><i class="fas fa-trash"></i></button></div></td></tr>
+                <tr><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;font-family:monospace;">PO-003</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;">广州五金制品厂</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;">¥32,000</td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#DBEAFE;color:#1E40AF;">已批准</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="display:flex;gap:4px;"><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#4F46E5;color:white;"><i class="fas fa-eye"></i></button><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#EF4444;color:white;"><i class="fas fa-trash"></i></button></div></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="margin-top:16px;text-align:right;font-size:14px;color:#6B7280;">共 3 条记录</div>
+</div>
