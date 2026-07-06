@@ -3,33 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品管理 - CarwashPro</title>
+    <title>客户管理 - CarwashPro</title>
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="../../css/design-system.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 复用 orders 样式，根据实际情况调整 */
         .search-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .search-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
         .search-row .form-group { flex: 1; min-width: 150px; }
         .search-row .form-group label { display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px; }
         .search-row .form-group input, .search-row .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; }
-        .search-row .form-group input:focus, .search-row .form-group select:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
         .search-actions { display: flex; gap: 8px; padding-top: 4px; }
         .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-        .toolbar .left { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
-        .toolbar .right { display: flex; gap: 8px; }
         .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .table { width: 100%; border-collapse: collapse; }
-        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
+        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
         .table td { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
         .table tr:hover { background: #F9FAFB; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
-        .badge-success { background: #D1FAE5; color: #065F46; }
-        .badge-warning { background: #FEF3C7; color: #92400E; }
-        .badge-danger { background: #FEE2E2; color: #991B1B; }
-        .badge-info { background: #DBEAFE; color: #1E40AF; }
-        .badge-secondary { background: #F3F4F6; color: #4B5563; }
         .btn-sm { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
         .btn-sm-primary { background: #4F46E5; color: white; }
         .btn-sm-primary:hover { background: #4338CA; }
@@ -42,16 +33,14 @@
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .font-medium { font-weight: 500; }
-        .text-xs { font-size: 12px; }
+        .font-semibold { font-weight: 600; }
         .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
         .text-gray-500 { color: #6B7280; }
-        .text-red-500 { color: #EF4444; }
         .flex { display: flex; }
         .gap-1 { gap: 4px; }
         .gap-3 { gap: 12px; }
         .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .mt-2 { margin-top: 8px; }
         .mt-4 { margin-top: 16px; }
         .mb-4 { margin-bottom: 16px; }
         .px-4 { padding-left: 16px; padding-right: 16px; }
@@ -61,10 +50,12 @@
         .hidden { display: none !important; }
         .w-10 { width: 40px; }
         .h-10 { height: 40px; }
-        .bg-gray-200 { background: #E5E7EB; }
-        .rounded { border-radius: 4px; }
+        .rounded-full { border-radius: 9999px; }
+        .bg-blue-100 { background: #DBEAFE; }
+        .text-blue-600 { color: #2563EB; }
         .font-bold { font-weight: 700; }
-        .ml-1 { margin-left: 4px; }
+        .border { border: 1px solid #E5E7EB; }
+        .rounded { border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -73,107 +64,69 @@
         <div id="navbar"></div>
         <div class="page-content">
             <div class="container-fluid">
-                <!-- 页面标题 -->
                 <div class="page-header">
                     <div>
-                        <h1 class="page-title">商品管理</h1>
-                        <p class="page-subtitle">管理所有商品和服务</p>
+                        <h1 class="page-title">客户管理</h1>
+                        <p class="page-subtitle">管理所有客户信息</p>
                     </div>
                     <button id="createBtn" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> 新建商品
+                        <i class="fas fa-plus"></i> 新建客户
                     </button>
                 </div>
-
-                <!-- Loading -->
                 <div id="loadingSpinner" class="hidden text-center py-4">
                     <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
                 </div>
-
-                <!-- 搜索栏 -->
                 <div class="search-bar">
                     <div class="search-row">
-                        <div class="form-group">
-                            <label>商品名称</label>
-                            <input id="searchName" type="text" placeholder="输入商品名称" />
-                        </div>
-                        <div class="form-group">
-                            <label>分类</label>
-                            <select id="searchCategory">
-                                <option value="">全部分类</option>
-                                <option value="洗车">洗车</option>
-                                <option value="美容">美容</option>
-                                <option value="保养">保养</option>
-                                <option value="配件">配件</option>
-                                <option value="其他">其他</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>状态</label>
-                            <select id="searchStatus">
-                                <option value="">全部状态</option>
-                                <option value="active">上架</option>
-                                <option value="inactive">下架</option>
+                        <div class="form-group"><label>客户姓名</label><input id="searchName" type="text" placeholder="输入客户姓名" /></div>
+                        <div class="form-group"><label>手机号</label><input id="searchPhone" type="text" placeholder="输入手机号" /></div>
+                        <div class="form-group"><label>会员等级</label>
+                            <select id="searchLevel">
+                                <option value="">全部等级</option>
+                                <option value="vip">VIP</option>
+                                <option value="gold">黄金</option>
+                                <option value="silver">白银</option>
+                                <option value="bronze">青铜</option>
                             </select>
                         </div>
                         <div class="search-actions">
-                            <button id="searchBtn" class="btn btn-primary">
-                                <i class="fas fa-search"></i> 搜索
-                            </button>
-                            <button id="resetBtn" class="btn btn-secondary">
-                                <i class="fas fa-undo"></i> 重置
-                            </button>
+                            <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
+                            <button id="resetBtn" class="btn btn-secondary"><i class="fas fa-undo"></i> 重置</button>
                         </div>
                     </div>
                 </div>
-
-                <!-- 工具栏 -->
                 <div class="toolbar">
-                    <div class="left">
-                        <button class="btn btn-secondary" onclick="window.location.reload()">
-                            <i class="fas fa-sync"></i> 刷新
-                        </button>
-                        <button class="btn btn-secondary" onclick="window.location.href='../categories/categories.html'">
-                            <i class="fas fa-tags"></i> 分类管理
-                        </button>
-                    </div>
+                    <button class="btn btn-secondary" onclick="location.reload()"><i class="fas fa-sync"></i> 刷新</button>
+                    <button class="btn btn-secondary" onclick="location.href='#/05-customers/membership'"><i class="fas fa-crown"></i> 会员管理</button>
                 </div>
-
-                <!-- 表格 -->
                 <div class="table-container">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>商品信息</th>
-                                <th>分类</th>
-                                <th class="text-right">售价</th>
-                                <th class="text-right">成本</th>
-                                <th class="text-right">库存</th>
-                                <th>单位</th>
-                                <th>状态</th>
+                                <th>客户信息</th>
+                                <th>手机号</th>
+                                <th>邮箱</th>
+                                <th>等级</th>
+                                <th class="text-right">累计消费</th>
+                                <th class="text-center">订单数</th>
+                                <th>最近访问</th>
                                 <th style="width:80px;">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="productsTableBody">
-                            <tr>
-                                <td colspan="8" class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin text-2xl"></i>
-                                    <p class="mt-2">加载中...</p>
-                                </td>
-                            </tr>
+                        <tbody id="customersTableBody">
+                            <tr><td colspan="8" class="text-center py-8 text-gray-500">加载中...</td></tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- 分页 -->
                 <div id="paginationContainer" class="mt-4"></div>
             </div>
         </div>
     </div>
-
     <script type="module">
-        import { init } from './products.js';
-        await import('../../components/sidebar.js');
-        await import('../../components/navbar.js');
+        import { init } from './customers.js';
+        window.changePage = window.changePage;
+        window.viewCustomer = window.viewCustomer;
+        window.deleteCustomer = window.deleteCustomer;
         init();
     </script>
 </body>

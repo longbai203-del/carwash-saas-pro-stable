@@ -17,7 +17,7 @@
         .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
         .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .table { width: 100%; border-collapse: collapse; }
-        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
+        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
         .table td { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
         .table tr:hover { background: #F9FAFB; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
@@ -34,16 +34,17 @@
         .btn-secondary:hover { background: #E5E7EB; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .text-sm { font-size: 14px; }
-        .text-xs { font-size: 12px; }
         .font-medium { font-weight: 500; }
         .font-bold { font-weight: 700; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
         .text-gray-500 { color: #6B7280; }
         .flex { display: flex; }
         .gap-1 { gap: 4px; }
         .gap-3 { gap: 12px; }
         .items-center { align-items: center; }
         .mt-4 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 16px; }
         .px-4 { padding-left: 16px; padding-right: 16px; }
         .py-2 { padding-top: 8px; padding-bottom: 8px; }
         .py-3 { padding-top: 12px; padding-bottom: 12px; }
@@ -73,19 +74,13 @@
                         <i class="fas fa-plus"></i> 新建员工
                     </button>
                 </div>
-
                 <div id="loadingSpinner" class="hidden text-center py-4">
                     <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
                 </div>
-
                 <div class="search-bar">
                     <div class="search-row">
-                        <div class="form-group">
-                            <label>姓名</label>
-                            <input id="searchName" type="text" placeholder="输入姓名" />
-                        </div>
-                        <div class="form-group">
-                            <label>部门</label>
+                        <div class="form-group"><label>姓名</label><input id="searchName" type="text" placeholder="输入姓名" /></div>
+                        <div class="form-group"><label>部门</label>
                             <select id="searchDepartment">
                                 <option value="">全部</option>
                                 <option value="管理部">管理部</option>
@@ -95,8 +90,7 @@
                                 <option value="市场部">市场部</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>状态</label>
+                        <div class="form-group"><label>状态</label>
                             <select id="searchStatus">
                                 <option value="">全部</option>
                                 <option value="active">在职</option>
@@ -109,19 +103,11 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="toolbar">
-                    <button class="btn btn-secondary" onclick="window.location.reload()">
-                        <i class="fas fa-sync"></i> 刷新
-                    </button>
-                    <button class="btn btn-secondary" onclick="window.location.href='../attendance/attendance.html'">
-                        <i class="fas fa-clock"></i> 考勤管理
-                    </button>
-                    <button class="btn btn-secondary" onclick="window.location.href='../payroll/payroll.html'">
-                        <i class="fas fa-wallet"></i> 薪资管理
-                    </button>
+                    <button class="btn btn-secondary" onclick="location.reload()"><i class="fas fa-sync"></i> 刷新</button>
+                    <button class="btn btn-secondary" onclick="location.href='#/10-hr/attendance'"><i class="fas fa-clock"></i> 考勤管理</button>
+                    <button class="btn btn-secondary" onclick="location.href='#/10-hr/payroll'"><i class="fas fa-wallet"></i> 薪资管理</button>
                 </div>
-
                 <div class="table-container">
                     <table class="table">
                         <thead>
@@ -141,16 +127,15 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div id="paginationContainer" class="mt-4"></div>
             </div>
         </div>
     </div>
-
     <script type="module">
         import { init } from './employees.js';
-        await import('../../components/sidebar.js');
-        await import('../../components/navbar.js');
+        window.changePage = window.changePage;
+        window.editEmployee = window.editEmployee;
+        window.deleteEmployee = window.deleteEmployee;
         init();
     </script>
 </body>

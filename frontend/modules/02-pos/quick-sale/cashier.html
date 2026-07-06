@@ -99,7 +99,6 @@
             padding: 8px 12px;
             border-radius: 6px;
             margin-bottom: 4px;
-            transition: background 0.2s;
         }
         .cart-item:hover {
             background: #F9FAFB;
@@ -128,7 +127,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
         }
         .qty-btn:hover {
             background: #4F46E5;
@@ -149,7 +147,6 @@
             background: transparent;
             cursor: pointer;
             color: #9CA3AF;
-            transition: all 0.2s;
         }
         .remove-btn:hover {
             background: #FEE2E2;
@@ -204,12 +201,9 @@
             font-size: 18px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
         }
         .checkout-btn:hover:not(:disabled) {
             background: #4338CA;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         }
         .checkout-btn:disabled {
             opacity: 0.5;
@@ -274,9 +268,6 @@
             padding-bottom: 16px;
             margin-bottom: 16px;
         }
-        .receipt-header h3 {
-            font-size: 20px;
-        }
         .receipt-item {
             display: flex;
             justify-content: space-between;
@@ -288,12 +279,6 @@
             padding-top: 12px;
             margin-top: 12px;
         }
-        .receipt-totals > div {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            font-size: 14px;
-        }
         .receipt-total {
             font-size: 18px;
             font-weight: 700;
@@ -304,29 +289,17 @@
             padding-top: 16px;
             margin-top: 16px;
         }
-        .receipt-footer button {
-            margin: 4px;
-        }
         .badge-gold { background: #FEF3C7; color: #92400E; }
         .badge-vip { background: #EDE9FE; color: #6D28D9; }
         .badge-silver { background: #F3F4F6; color: #4B5563; }
         .badge-bronze { background: #FDE68A; color: #92400E; }
         @media (max-width: 1024px) {
-            .pos-container {
-                grid-template-columns: 1fr 320px;
-            }
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .pos-container { grid-template-columns: 1fr 320px; }
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
-            .pos-container {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .pos-container { grid-template-columns: 1fr; height: auto; }
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
@@ -339,23 +312,19 @@
                 <div class="page-header">
                     <div>
                         <h1 class="page-title">POS收银</h1>
-                        <p class="page-subtitle">快速收银 · 快捷键 F9结账 · 数字键1-9添加商品</p>
+                        <p class="page-subtitle">快速收银 · 快捷键 F9结账</p>
                     </div>
                 </div>
-
                 <div class="pos-container">
-                    <!-- 左侧：商品 -->
                     <div>
                         <div class="search-bar-pos">
-                            <input id="searchInput" type="text" placeholder="搜索商品 (F1)" />
-                            <button class="btn btn-secondary" onclick="window.location.reload()">
+                            <input id="searchInput" type="text" placeholder="搜索商品" />
+                            <button class="btn btn-secondary" onclick="location.reload()">
                                 <i class="fas fa-sync"></i>
                             </button>
                         </div>
                         <div class="product-grid" id="productGrid"></div>
                     </div>
-
-                    <!-- 右侧：购物车 -->
                     <div class="cart-panel">
                         <div class="cart-header">
                             <h3>🛒 购物车 <span id="cartCount" class="badge">0</span></h3>
@@ -368,54 +337,26 @@
                             </div>
                         </div>
                         <div class="cart-footer">
-                            <!-- 客户选择 -->
                             <div class="customer-section">
                                 <label class="text-sm font-medium">客户:</label>
                                 <select id="customerSelect"></select>
                                 <div id="customerInfo"></div>
                             </div>
-
-                            <!-- 合计 -->
-                            <div class="totals-row">
-                                <span>小计</span>
-                                <span id="subtotal">¥0.00</span>
-                            </div>
-                            <div class="totals-row">
-                                <span>折扣</span>
-                                <span id="discountAmount">-¥0.00</span>
-                            </div>
-                            <div class="totals-row">
-                                <span>税费 (6%)</span>
-                                <span id="taxAmount">¥0.00</span>
-                            </div>
-                            <div class="totals-row total">
-                                <span>总计</span>
-                                <span id="totalAmount">¥0.00</span>
-                            </div>
-
-                            <!-- 折扣 -->
+                            <div class="totals-row"><span>小计</span><span id="subtotal">¥0.00</span></div>
+                            <div class="totals-row"><span>折扣</span><span id="discountAmount">-¥0.00</span></div>
+                            <div class="totals-row"><span>税费 (6%)</span><span id="taxAmount">¥0.00</span></div>
+                            <div class="totals-row total"><span>总计</span><span id="totalAmount">¥0.00</span></div>
                             <div style="margin: 8px 0;">
                                 <label class="text-sm text-gray-500">折扣 %</label>
                                 <input id="discountInput" type="number" min="0" max="100" value="0" 
                                        style="width:80px; padding:4px 8px; border:1px solid #D1D5DB; border-radius:4px; margin-left:8px;" />
                             </div>
-
-                            <!-- 支付方式 -->
                             <div class="payment-methods">
-                                <button class="payment-btn active" data-method="cash" onclick="selectPayment('cash')">
-                                    <i class="fas fa-money-bill"></i> 现金
-                                </button>
-                                <button class="payment-btn" data-method="card" onclick="selectPayment('card')">
-                                    <i class="fas fa-credit-card"></i> 刷卡
-                                </button>
-                                <button class="payment-btn" data-method="wechat" onclick="selectPayment('wechat')">
-                                    <i class="fab fa-weixin"></i> 微信
-                                </button>
-                                <button class="payment-btn" data-method="alipay" onclick="selectPayment('alipay')">
-                                    <i class="fab fa-alipay"></i> 支付宝
-                                </button>
+                                <button class="payment-btn active" data-method="cash">💵 现金</button>
+                                <button class="payment-btn" data-method="card">💳 刷卡</button>
+                                <button class="payment-btn" data-method="wechat">💚 微信</button>
+                                <button class="payment-btn" data-method="alipay">💙 支付宝</button>
                             </div>
-
                             <button id="checkoutBtn" class="checkout-btn" disabled>
                                 <i class="fas fa-check-circle"></i> 结账 (F9)
                             </button>
@@ -425,25 +366,18 @@
             </div>
         </div>
     </div>
-
-    <!-- 收据弹窗 -->
     <div id="receiptModal" class="receipt-modal">
         <div class="modal-content">
             <div id="receiptContent"></div>
         </div>
     </div>
-
     <script type="module">
         import { init } from './cashier.js';
-        // 暴露函数给全局
         window.addToCart = window.addToCart;
         window.updateQty = window.updateQty;
         window.removeFromCart = window.removeFromCart;
         window.selectPayment = window.selectPayment;
         window.closeReceipt = window.closeReceipt;
-        
-        await import('../../components/sidebar.js');
-        await import('../../components/navbar.js');
         init();
     </script>
 </body>

@@ -89,7 +89,6 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.2s;
         }
         .btn-primary:hover {
             background: #4338CA;
@@ -103,24 +102,9 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.2s;
         }
         .btn-secondary:hover {
             background: #E5E7EB;
-        }
-        .btn-danger {
-            background: #EF4444;
-            color: white;
-            padding: 10px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-danger:hover {
-            background: #DC2626;
         }
         .btn-sm {
             padding: 6px 12px;
@@ -154,22 +138,17 @@
                         <p class="page-subtitle">管理公司基本信息和配置</p>
                     </div>
                 </div>
-
                 <div id="loadingSpinner" class="hidden text-center py-4">
                     <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
                 </div>
-
                 <div class="settings-container">
-                    <!-- 侧边导航 -->
                     <div class="settings-sidebar">
-                        <a href="#" class="active">公司信息</a>
-                        <a href="../general/settings.html">通用设置</a>
-                        <a href="../preferences/preferences.html">偏好设置</a>
-                        <a href="../profile/profile.html">个人资料</a>
-                        <a href="../branches/branches.html">分店管理</a>
+                        <a href="#/14-settings/company" class="active">公司信息</a>
+                        <a href="#/14-settings/general">通用设置</a>
+                        <a href="#/14-settings/preferences">偏好设置</a>
+                        <a href="#/14-settings/profile">个人资料</a>
+                        <a href="#/14-settings/branches">分店管理</a>
                     </div>
-
-                    <!-- Logo -->
                     <div class="logo-section">
                         <div id="logoPreview">
                             <span class="text-gray-500">未设置Logo</span>
@@ -178,11 +157,7 @@
                             <i class="fas fa-upload"></i> 上传Logo
                         </button>
                     </div>
-
-                    <!-- 表单 -->
                     <form id="companyForm"></form>
-
-                    <!-- 操作按钮 -->
                     <div class="settings-actions">
                         <button id="saveBtn" class="btn btn-primary">
                             <i class="fas fa-save"></i> 保存设置
@@ -195,11 +170,8 @@
             </div>
         </div>
     </div>
-
     <script type="module">
         import { init } from './company.js';
-        await import('../../components/sidebar.js');
-        await import('../../components/navbar.js');
         init();
     </script>
 </body>
