@@ -1,4 +1,4 @@
-﻿// 02-pos/returns.js
+// 02-pos/returns.js
 console.log('📄 02-pos/returns page loaded');
 
 export function init() {

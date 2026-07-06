@@ -1,4 +1,4 @@
-﻿// 07-inventory/warehouses.js
+// 07-inventory/warehouses.js
 console.log('📄 07-inventory/warehouses page loaded');
 
 export function init() {

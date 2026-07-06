@@ -1,4 +1,4 @@
-﻿// 13-analytics/custom-reports.js
+// 13-analytics/custom-reports.js
 console.log('📄 13-analytics/custom-reports page loaded');
 
 export function init() {

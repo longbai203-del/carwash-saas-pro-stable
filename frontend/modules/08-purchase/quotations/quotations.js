@@ -1,4 +1,4 @@
-﻿// 08-purchase/quotations.js
+// 08-purchase/quotations.js
 console.log('📄 08-purchase/quotations page loaded');
 
 export function init() {

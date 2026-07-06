@@ -1,4 +1,4 @@
-﻿// modules/12-system/audit-logs/audit-logs.js
+// modules/12-system/audit-logs/audit-logs.js
 import { getAuditLogs } from '../../../api/system.js';
 import { formatDateTime, showToast } from '../../../js/utils.js';
 

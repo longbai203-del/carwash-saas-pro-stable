@@ -1,4 +1,4 @@
-﻿// 10-hr/bonuses.js
+// 10-hr/bonuses.js
 console.log('📄 10-hr/bonuses page loaded');
 
 export function init() {

@@ -1,4 +1,4 @@
-﻿// 04-products/price-lists.js
+// 04-products/price-lists.js
 console.log('📄 04-products/price-lists page loaded');
 
 export function init() {

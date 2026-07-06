@@ -1,4 +1,4 @@
-﻿// 10-hr/penalties.js
+// 10-hr/penalties.js
 console.log('📄 10-hr/penalties page loaded');
 
 export function init() {

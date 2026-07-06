@@ -1,4 +1,4 @@
-﻿// 04-products/combos.js
+// 04-products/combos.js
 console.log('📄 04-products/combos page loaded');
 
 export function init() {

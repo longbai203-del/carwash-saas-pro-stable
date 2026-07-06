@@ -1,4 +1,4 @@
-﻿// 07-inventory/batches.js
+// 07-inventory/batches.js
 console.log('📄 07-inventory/batches page loaded');
 
 export function init() {

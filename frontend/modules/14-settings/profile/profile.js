@@ -1,4 +1,4 @@
-﻿// 14-settings/profile.js
+// 14-settings/profile.js
 console.log('📄 14-settings/profile page loaded');
 
 export function init() {

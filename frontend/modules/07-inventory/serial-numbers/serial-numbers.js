@@ -1,4 +1,4 @@
-﻿// 07-inventory/serial-numbers.js
+// 07-inventory/serial-numbers.js
 console.log('📄 07-inventory/serial-numbers page loaded');
 
 export function init() {

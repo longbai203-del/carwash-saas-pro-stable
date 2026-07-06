@@ -1,4 +1,4 @@
-﻿// 12-system/backup.js
+// 12-system/backup.js
 console.log('📄 12-system/backup page loaded');
 
 export function init() {

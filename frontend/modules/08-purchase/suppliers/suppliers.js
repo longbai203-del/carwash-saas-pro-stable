@@ -1,4 +1,4 @@
-﻿// modules/08-purchase/suppliers/suppliers.js
+// modules/08-purchase/suppliers/suppliers.js
 import { getSuppliers, deleteSupplier } from '../../../api/purchase.js';
 import { showToast } from '../../../js/utils.js';
 

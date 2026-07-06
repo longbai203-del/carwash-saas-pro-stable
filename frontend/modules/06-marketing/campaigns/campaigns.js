@@ -1,4 +1,4 @@
-﻿// 06-marketing/campaigns.js
+// 06-marketing/campaigns.js
 console.log('📄 06-marketing/campaigns page loaded');
 
 export function init() {

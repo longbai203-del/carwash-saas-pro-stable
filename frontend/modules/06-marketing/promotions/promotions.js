@@ -1,4 +1,4 @@
-﻿// modules/06-marketing/promotions/promotions.js
+// modules/06-marketing/promotions/promotions.js
 import { getPromotions, deletePromotion } from '../../../api/marketing.js';
 import { formatCurrency, formatDate, showToast } from '../../../js/utils.js';
 

@@ -1,4 +1,4 @@
-﻿// 14-settings/preferences.js
+// 14-settings/preferences.js
 console.log('📄 14-settings/preferences page loaded');
 
 export function init() {

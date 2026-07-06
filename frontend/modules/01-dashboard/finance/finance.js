@@ -1,4 +1,4 @@
-﻿// 01-dashboard/finance.js
+// 01-dashboard/finance.js
 console.log('📄 01-dashboard/finance page loaded');
 
 export function init() {

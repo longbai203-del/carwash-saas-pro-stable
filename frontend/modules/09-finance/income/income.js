@@ -1,4 +1,4 @@
-﻿// modules/09-finance/income/income.js
+// modules/09-finance/income/income.js
 import { getIncome, getIncomeStats } from '../../../api/finance.js';
 import { formatCurrency, formatDate, showToast } from '../../../js/utils.js';
 

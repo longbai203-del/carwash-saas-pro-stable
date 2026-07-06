@@ -1,4 +1,4 @@
-﻿// 07-inventory/low-stock.js
+// 07-inventory/low-stock.js
 console.log('📄 07-inventory/low-stock page loaded');
 
 export function init() {

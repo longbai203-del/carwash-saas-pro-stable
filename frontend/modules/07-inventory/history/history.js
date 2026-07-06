@@ -1,4 +1,4 @@
-﻿// 07-inventory/history.js
+// 07-inventory/history.js
 console.log('📄 07-inventory/history page loaded');
 
 export function init() {

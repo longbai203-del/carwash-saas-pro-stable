@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 01-dashboard/executive/executive.js
  * 执行仪表板 - 使用模拟数据（无需 API）
  */

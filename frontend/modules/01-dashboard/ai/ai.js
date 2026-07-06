@@ -1,4 +1,4 @@
-﻿// 01-dashboard/ai.js
+// 01-dashboard/ai.js
 console.log('📄 01-dashboard/ai page loaded');
 
 export function init() {

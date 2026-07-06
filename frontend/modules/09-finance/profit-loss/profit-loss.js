@@ -1,4 +1,4 @@
-﻿// 09-finance/profit-loss.js
+// 09-finance/profit-loss.js
 console.log('📄 09-finance/profit-loss page loaded');
 
 export function init() {

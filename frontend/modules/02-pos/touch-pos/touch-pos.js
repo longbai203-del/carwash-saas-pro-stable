@@ -1,4 +1,4 @@
-﻿// 02-pos/touch-pos.js
+// 02-pos/touch-pos.js
 console.log('📄 02-pos/touch-pos page loaded');
 
 export function init() {

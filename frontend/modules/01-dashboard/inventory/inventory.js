@@ -1,4 +1,4 @@
-﻿// 01-dashboard/inventory.js
+// 01-dashboard/inventory.js
 console.log('📄 01-dashboard/inventory page loaded');
 
 export function init() {

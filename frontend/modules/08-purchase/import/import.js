@@ -1,4 +1,4 @@
-﻿// 08-purchase/import.js
+// 08-purchase/import.js
 console.log('📄 08-purchase/import page loaded');
 
 export function init() {

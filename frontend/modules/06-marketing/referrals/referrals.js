@@ -1,4 +1,4 @@
-﻿// 06-marketing/referrals.js
+// 06-marketing/referrals.js
 console.log('📄 06-marketing/referrals page loaded');
 
 export function init() {

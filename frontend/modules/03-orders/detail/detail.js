@@ -1,4 +1,4 @@
-﻿// 03-orders/detail.js
+// 03-orders/detail.js
 console.log('📄 03-orders/detail page loaded');
 
 export function init() {

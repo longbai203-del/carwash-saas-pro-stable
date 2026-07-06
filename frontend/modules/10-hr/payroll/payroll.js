@@ -1,4 +1,4 @@
-﻿// 10-hr/payroll.js
+// 10-hr/payroll.js
 console.log('📄 10-hr/payroll page loaded');
 
 export function init() {

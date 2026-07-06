@@ -1,4 +1,4 @@
-﻿// 09-finance/taxes.js
+// 09-finance/taxes.js
 console.log('📄 09-finance/taxes page loaded');
 
 export function init() {

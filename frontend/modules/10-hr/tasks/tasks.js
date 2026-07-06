@@ -1,4 +1,4 @@
-﻿// 10-hr/tasks.js
+// 10-hr/tasks.js
 console.log('📄 10-hr/tasks page loaded');
 
 export function init() {

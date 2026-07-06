@@ -1,4 +1,4 @@
-﻿// 10-hr/shifts.js
+// 10-hr/shifts.js
 console.log('📄 10-hr/shifts page loaded');
 
 export function init() {

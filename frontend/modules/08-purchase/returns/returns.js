@@ -1,4 +1,4 @@
-﻿// 08-purchase/returns.js
+// 08-purchase/returns.js
 console.log('📄 08-purchase/returns page loaded');
 
 export function init() {

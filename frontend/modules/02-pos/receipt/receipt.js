@@ -1,4 +1,4 @@
-﻿// 02-pos/receipt.js
+// 02-pos/receipt.js
 console.log('📄 02-pos/receipt page loaded');
 
 export function init() {

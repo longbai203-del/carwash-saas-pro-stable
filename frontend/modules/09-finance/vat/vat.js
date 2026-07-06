@@ -1,4 +1,4 @@
-﻿// 09-finance/vat.js
+// 09-finance/vat.js
 console.log('📄 09-finance/vat page loaded');
 
 export function init() {

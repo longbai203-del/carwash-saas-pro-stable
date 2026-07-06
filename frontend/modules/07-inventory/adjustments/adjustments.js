@@ -1,4 +1,4 @@
-﻿// 07-inventory/adjustments.js
+// 07-inventory/adjustments.js
 console.log('📄 07-inventory/adjustments page loaded');
 
 export function init() {

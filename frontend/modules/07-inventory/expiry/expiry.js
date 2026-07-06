@@ -1,4 +1,4 @@
-﻿// 07-inventory/expiry.js
+// 07-inventory/expiry.js
 console.log('📄 07-inventory/expiry page loaded');
 
 export function init() {

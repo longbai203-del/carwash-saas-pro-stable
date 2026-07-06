@@ -1,4 +1,4 @@
-﻿// 13-analytics/forecast.js
+// 13-analytics/forecast.js
 console.log('📄 13-analytics/forecast page loaded');
 
 export function init() {

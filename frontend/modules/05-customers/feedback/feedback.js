@@ -1,4 +1,4 @@
-﻿// 05-customers/feedback.js
+// 05-customers/feedback.js
 console.log('📄 05-customers/feedback page loaded');
 
 export function init() {

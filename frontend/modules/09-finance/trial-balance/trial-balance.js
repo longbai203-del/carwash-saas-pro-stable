@@ -1,4 +1,4 @@
-﻿// 09-finance/trial-balance.js
+// 09-finance/trial-balance.js
 console.log('📄 09-finance/trial-balance page loaded');
 
 export function init() {

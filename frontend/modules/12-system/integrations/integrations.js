@@ -1,4 +1,4 @@
-﻿// 12-system/integrations.js
+// 12-system/integrations.js
 console.log('📄 12-system/integrations page loaded');
 
 export function init() {

@@ -1,4 +1,4 @@
-﻿// 12-system/settings.js
+// 12-system/settings.js
 console.log('📄 12-system/settings page loaded');
 
 export function init() {

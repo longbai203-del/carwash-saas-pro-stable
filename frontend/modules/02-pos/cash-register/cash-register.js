@@ -1,4 +1,4 @@
-﻿// 02-pos/cash-register.js
+// 02-pos/cash-register.js
 console.log('📄 02-pos/cash-register page loaded');
 
 export function init() {

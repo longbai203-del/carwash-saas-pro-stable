@@ -1,4 +1,4 @@
-﻿// 10-hr/commissions.js
+// 10-hr/commissions.js
 console.log('📄 10-hr/commissions page loaded');
 
 export function init() {

@@ -1,4 +1,4 @@
-﻿// 04-products/barcodes.js
+// 04-products/barcodes.js
 console.log('📄 04-products/barcodes page loaded');
 
 export function init() {

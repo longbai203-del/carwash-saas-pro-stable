@@ -1,4 +1,4 @@
-﻿// 04-products/categories.js
+// 04-products/categories.js
 console.log('📄 04-products/categories page loaded');
 
 export function init() {

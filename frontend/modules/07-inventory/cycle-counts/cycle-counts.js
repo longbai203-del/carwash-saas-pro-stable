@@ -1,4 +1,4 @@
-﻿// 07-inventory/cycle-counts.js
+// 07-inventory/cycle-counts.js
 console.log('📄 07-inventory/cycle-counts page loaded');
 
 export function init() {

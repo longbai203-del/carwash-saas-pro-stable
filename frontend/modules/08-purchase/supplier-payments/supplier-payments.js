@@ -1,4 +1,4 @@
-﻿// 08-purchase/supplier-payments.js
+// 08-purchase/supplier-payments.js
 console.log('📄 08-purchase/supplier-payments page loaded');
 
 export function init() {

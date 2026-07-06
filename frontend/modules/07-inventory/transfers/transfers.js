@@ -1,4 +1,4 @@
-﻿// 07-inventory/transfers.js
+// 07-inventory/transfers.js
 console.log('📄 07-inventory/transfers page loaded');
 
 export function init() {

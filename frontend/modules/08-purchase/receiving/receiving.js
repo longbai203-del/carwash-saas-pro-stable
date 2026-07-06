@@ -1,4 +1,4 @@
-﻿// modules/08-purchase/receiving/receiving.js
+// modules/08-purchase/receiving/receiving.js
 import { getPurchaseOrders, receiveOrder } from '../../../api/orders.js';
 import { formatCurrency, formatDate, showToast } from '../../../js/utils.js';
 

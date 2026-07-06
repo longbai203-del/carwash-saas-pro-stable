@@ -1,4 +1,4 @@
-﻿// 05-customers/coupons.js
+// 05-customers/coupons.js
 console.log('📄 05-customers/coupons page loaded');
 
 export function init() {

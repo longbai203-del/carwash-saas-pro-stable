@@ -1,4 +1,4 @@
-﻿// 12-system/system-logs.js
+// 12-system/system-logs.js
 console.log('📄 12-system/system-logs page loaded');
 
 export function init() {

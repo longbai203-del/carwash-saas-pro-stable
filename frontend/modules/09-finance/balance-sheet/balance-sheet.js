@@ -1,4 +1,4 @@
-﻿// 09-finance/balance-sheet.js
+// 09-finance/balance-sheet.js
 console.log('📄 09-finance/balance-sheet page loaded');
 
 export function init() {

@@ -1,4 +1,4 @@
-﻿// 09-finance/cash-flow.js
+// 09-finance/cash-flow.js
 console.log('📄 09-finance/cash-flow page loaded');
 
 export function init() {

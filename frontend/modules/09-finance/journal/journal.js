@@ -1,4 +1,4 @@
-﻿// 09-finance/journal.js
+// 09-finance/journal.js
 console.log('📄 09-finance/journal page loaded');
 
 export function init() {

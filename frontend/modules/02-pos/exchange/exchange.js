@@ -1,4 +1,4 @@
-﻿// 02-pos/exchange.js
+// 02-pos/exchange.js
 console.log('📄 02-pos/exchange page loaded');
 
 export function init() {

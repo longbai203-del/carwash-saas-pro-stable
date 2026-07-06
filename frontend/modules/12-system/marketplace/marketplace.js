@@ -1,4 +1,4 @@
-﻿// 12-system/marketplace.js
+// 12-system/marketplace.js
 console.log('📄 12-system/marketplace page loaded');
 
 export function init() {

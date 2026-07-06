@@ -1,4 +1,4 @@
-﻿// 12-system/restore.js
+// 12-system/restore.js
 console.log('📄 12-system/restore page loaded');
 
 export function init() {

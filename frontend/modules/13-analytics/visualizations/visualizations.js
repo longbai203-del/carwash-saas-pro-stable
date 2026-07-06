@@ -1,4 +1,4 @@
-﻿// 13-analytics/visualizations.js
+// 13-analytics/visualizations.js
 console.log('📄 13-analytics/visualizations page loaded');
 
 export function init() {

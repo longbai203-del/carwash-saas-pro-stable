@@ -1,4 +1,4 @@
-﻿// 05-customers/wallet.js
+// 05-customers/wallet.js
 console.log('📄 05-customers/wallet page loaded');
 
 export function init() {

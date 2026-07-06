@@ -1,4 +1,4 @@
-﻿// 10-hr/permissions.js
+// 10-hr/permissions.js
 console.log('📄 10-hr/permissions page loaded');
 
 export function init() {

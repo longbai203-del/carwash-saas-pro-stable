@@ -1,4 +1,4 @@
-﻿// 10-hr/performance.js
+// 10-hr/performance.js
 console.log('📄 10-hr/performance page loaded');
 
 export function init() {

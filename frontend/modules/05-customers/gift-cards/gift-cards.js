@@ -1,4 +1,4 @@
-﻿// 05-customers/gift-cards.js
+// 05-customers/gift-cards.js
 console.log('📄 05-customers/gift-cards page loaded');
 
 export function init() {

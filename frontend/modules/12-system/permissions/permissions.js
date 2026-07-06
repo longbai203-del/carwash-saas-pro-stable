@@ -1,4 +1,4 @@
-﻿// 12-system/permissions.js
+// 12-system/permissions.js
 console.log('📄 12-system/permissions page loaded');
 
 export function init() {

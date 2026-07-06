@@ -1,4 +1,4 @@
-﻿// 05-customers/vehicles.js
+// 05-customers/vehicles.js
 console.log('📄 05-customers/vehicles page loaded');
 
 export function init() {

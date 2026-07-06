@@ -1,4 +1,4 @@
-﻿// 09-finance/invoices.js
+// 09-finance/invoices.js
 console.log('📄 09-finance/invoices page loaded');
 
 export function init() {

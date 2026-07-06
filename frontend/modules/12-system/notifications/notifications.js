@@ -1,4 +1,4 @@
-﻿// 12-system/notifications.js
+// 12-system/notifications.js
 console.log('📄 12-system/notifications page loaded');
 
 export function init() {

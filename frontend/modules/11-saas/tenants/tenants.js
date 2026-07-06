@@ -1,4 +1,4 @@
-﻿// modules/11-saas/tenants/tenants.js
+// modules/11-saas/tenants/tenants.js
 import { getTenants, deleteTenant } from '../../../api/saas.js';
 import { formatCurrency, formatDate, showToast } from '../../../js/utils.js';
 

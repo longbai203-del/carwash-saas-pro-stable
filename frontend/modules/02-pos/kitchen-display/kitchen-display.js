@@ -1,4 +1,4 @@
-﻿// 02-pos/kitchen-display.js
+// 02-pos/kitchen-display.js
 console.log('📄 02-pos/kitchen-display page loaded');
 
 export function init() {

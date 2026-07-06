@@ -1,4 +1,4 @@
-﻿// 02-pos/customer-display.js
+// 02-pos/customer-display.js
 console.log('📄 02-pos/customer-display page loaded');
 
 export function init() {

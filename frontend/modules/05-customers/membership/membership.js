@@ -1,4 +1,4 @@
-﻿// 05-customers/membership.js
+// 05-customers/membership.js
 console.log('📄 05-customers/membership page loaded');
 
 export function init() {

@@ -1,4 +1,4 @@
-﻿// 04-products/brands.js
+// 04-products/brands.js
 console.log('📄 04-products/brands page loaded');
 
 export function init() {

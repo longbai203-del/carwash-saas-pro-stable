@@ -1,4 +1,4 @@
-﻿// 02-pos/offline-pos.js
+// 02-pos/offline-pos.js
 console.log('📄 02-pos/offline-pos page loaded');
 
 export function init() {

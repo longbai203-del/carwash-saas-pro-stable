@@ -1,4 +1,4 @@
-﻿// 06-marketing/loyalty.js
+// 06-marketing/loyalty.js
 console.log('📄 06-marketing/loyalty page loaded');
 
 export function init() {

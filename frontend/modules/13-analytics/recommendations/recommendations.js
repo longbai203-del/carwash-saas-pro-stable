@@ -1,4 +1,4 @@
-﻿// 13-analytics/recommendations.js
+// 13-analytics/recommendations.js
 console.log('📄 13-analytics/recommendations page loaded');
 
 export function init() {

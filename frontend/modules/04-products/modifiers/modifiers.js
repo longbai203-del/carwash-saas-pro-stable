@@ -1,4 +1,4 @@
-﻿// 04-products/modifiers.js
+// 04-products/modifiers.js
 console.log('📄 04-products/modifiers page loaded');
 
 export function init() {
