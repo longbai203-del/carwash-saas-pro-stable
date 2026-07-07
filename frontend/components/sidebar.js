@@ -63,8 +63,14 @@ window.SidebarComponent = {
             '<nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">' +
             '<style>' +
             '.sidebar-group-items { overflow: hidden; transition: max-height 0.3s ease; max-height: 0; }' +
-            '.sidebar-group.open .sidebar-group-items { max-height: 500px; }' +
+            '.sidebar-group.open .sidebar-group-items { max-height: 600px; }' +
             '.sidebar-group.open .toggle-icon { transform: rotate(180deg); }' +
+            '.sidebar-group-label { display: flex; align-items: center; padding: 10px 14px; border-radius: 8px; cursor: pointer; }' +
+            '.sidebar-group-label:hover { background: #F3F4F6; }' +
+            '.sidebar-link.sub-item { display: block; padding: 8px 16px 8px 36px; border-radius: 6px; text-decoration: none; font-size: 14px; cursor: pointer; margin: 2px 0; }' +
+            '.sidebar-link.sub-item:hover { background: #F3F4F6; }' +
+            '.sidebar-link.sub-item.nav-item-active { background: #4F46E5; color: #FFFFFF; }' +
+            '.toggle-icon { transition: transform 0.3s; margin-left: auto; }' +
             '</style>';
 
         for (var i = 0; i < this._menuItems.length; i++) {
@@ -83,10 +89,10 @@ window.SidebarComponent = {
                     var isExpanded = (currentKey === 'dashboard' || isDashboardSub);
 
                     html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '" style="margin-bottom:4px;">';
-                    html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
+                    html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
                     html += '<i class="fas ' + item.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>';
                     html += '<span style="margin-left:12px;">' + item.label + '</span>';
-                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto"></i>';
+                    html += '<i class="fas fa-chevron-down toggle-icon"></i>';
                     html += '</div>';
                     html += '<div class="sidebar-group-items">';
 
@@ -95,7 +101,7 @@ window.SidebarComponent = {
                         var isSubActive = (currentKey === 'dashboard' && currentPage === sub.module);
                         var href = '#/dashboard/' + sub.module;
 
-                        html += '<a href="' + href + '" data-module="' + sub.module + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '" style="display:block;padding:8px 16px 8px 36px;border-radius:6px;text-decoration:none;color:' + (isSubActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isSubActive ? '#4F46E5' : 'transparent') + ';font-size:14px;cursor:pointer;margin:2px 0;" onmouseover="this.style.background=\'' + (isSubActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isSubActive ? '#4F46E5' : 'transparent') + '\'">' +
+                        html += '<a href="' + href + '" data-module="' + sub.module + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '">' +
                             '<span>' + sub.label + '</span>' +
                             '</a>';
                     }
@@ -153,15 +159,6 @@ window.SidebarComponent = {
                     }
                 });
             }
-
-            if (window.innerWidth > 768) {
-                var saved = localStorage.getItem('sidebar_expanded');
-                if (saved === 'true') {
-                    container.classList.add('expanded');
-                } else {
-                    container.classList.remove('expanded');
-                }
-            }
         }
         return html;
     },
@@ -170,9 +167,7 @@ window.SidebarComponent = {
         var links = container.querySelectorAll('[data-module]');
         for (var i = 0; i < links.length; i++) {
             var el = links[i];
-            if (el.getAttribute('href')) {
-                // 已由事件委托处理
-            } else {
+            if (!el.getAttribute('href')) {
                 el.addEventListener('click', function(e) {
                     e.preventDefault();
                     var module = this.dataset.module;
