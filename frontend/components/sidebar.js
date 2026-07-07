@@ -38,6 +38,13 @@ window.SidebarComponent = {
         var user = AppStore.get('currentUser');
         var perms = user ? AppConfig.permissions[user.role] || [] : [];
         var isMobile = window.innerWidth <= 768;
+        var currentHash = window.location.hash.replace('#', '') || '/dashboard/sales';
+        var parts = currentHash.split('/').filter(function(p) { return p.length > 0; });
+        var currentKey = parts[0] || 'dashboard';
+        var currentPage = parts[1] || 'sales';
+
+        // ✅ 判断当前是否在 Dashboard 子模块
+        var isDashboardSub = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'].indexOf(currentPage) !== -1;
 
         var html = '<aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100 h-full">' +
             '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
@@ -63,46 +70,43 @@ window.SidebarComponent = {
             var show = perms.indexOf(item.module) !== -1 || perms.length === 0;
 
             if (show) {
-                var activeClass = '';
-                var currentModule = AppStore.get('currentModule') || '';
-
-                // 判断是否是 Dashboard 子模块
-                var isDashboardSub = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'].indexOf(currentModule) !== -1;
-
+                // 判断当前项是否激活
+                var isActive = false;
                 if (item.module === 'dashboard') {
-                    activeClass = (currentModule === 'dashboard' || isDashboardSub) ? ' nav-item-active' : '';
+                    isActive = (currentKey === 'dashboard' || isDashboardSub);
                 } else {
-                    activeClass = (item.module === currentModule) ? ' nav-item-active' : '';
+                    isActive = (currentKey === item.module);
                 }
 
-                // 判断是否是 Dashboard（有子菜单）
+                // ✅ 判断是否是 Dashboard（有子菜单）
                 if (item.module === 'dashboard') {
-                    var isExpanded = (currentModule === 'dashboard' || isDashboardSub);
+                    var isExpanded = (currentKey === 'dashboard' || isDashboardSub);
 
-                    html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '">';
-                    html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')">';
-                    html += '<i class="fas ' + item.icon + ' w-5"></i>';
-                    html += '<span class="menu-label">' + item.label + '</span>';
-                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto"></i>';
+                    html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '" style="margin-bottom:4px;">';
+                    html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
+                    html += '<i class="fas ' + item.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>';
+                    html += '<span style="margin-left:12px;">' + item.label + '</span>';
+                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;"></i>';
                     html += '</div>';
-                    html += '<div class="sidebar-group-items">';
+                    html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;">';
 
                     // 渲染 Dashboard 子菜单
                     for (var j = 0; j < this._dashboardSubMenu.length; j++) {
                         var sub = this._dashboardSubMenu[j];
-                        var isSubActive = (currentModule === sub.module);
-                        var onClickAttr = isMobile ? ' onclick="setTimeout(function(){ if(window.closeSidebar) window.closeSidebar(); }, 300);"' : '';
-                        html += '<a href="#" data-module="' + sub.module + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '"' + onClickAttr + '>' +
-                            '<span class="menu-label">' + sub.label + '</span>' +
+                        var isSubActive = (currentKey === 'dashboard' && currentPage === sub.module);
+                        var href = '#/dashboard/' + sub.module;
+
+                        html += '<a href="' + href + '" data-module="' + sub.module + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '" style="display:block;padding:8px 16px 8px 36px;border-radius:6px;text-decoration:none;color:' + (isSubActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isSubActive ? '#4F46E5' : 'transparent') + ';font-size:14px;cursor:pointer;margin:2px 0;" onmouseover="this.style.background=\'' + (isSubActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isSubActive ? '#4F46E5' : 'transparent') + '\'">' +
+                            '<span>' + sub.label + '</span>' +
                             '</a>';
                     }
 
                     html += '</div></div>';
                 } else {
-                    var onClickAttr = isMobile ? ' onclick="setTimeout(function(){ if(window.closeSidebar) window.closeSidebar(); }, 300);"' : '';
-                    html += '<a href="#" data-module="' + item.module + '" class="sidebar-link' + activeClass + '"' + onClickAttr + '>' +
-                        '<i class="fas ' + item.icon + ' w-5"></i>' +
-                        '<span class="menu-label">' + item.label + '</span>' +
+                    var href = '#/' + item.module + '/' + (item.defaultPage || 'index');
+                    html += '<a href="' + href + '" data-module="' + item.module + '" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;text-decoration:none;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';margin-bottom:2px;transition:all 0.2s;cursor:pointer;font-size:14px;" onmouseover="this.style.background=\'' + (isActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isActive ? '#4F46E5' : 'transparent') + '\'">' +
+                        '<i class="fas ' + item.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>' +
+                        '<span style="margin-left:12px;">' + item.label + '</span>' +
                         '</a>';
                 }
             }
@@ -130,8 +134,30 @@ window.SidebarComponent = {
 
         if (container) {
             container.innerHTML = html;
-            this.bindEvents(container);
 
+            // ✅ 绑定点击事件（使用事件委托）
+            container.querySelectorAll('a[href^="#"]').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var href = this.getAttribute('href');
+                    if (href) {
+                        window.location.hash = href.substring(1);
+                    }
+                });
+            });
+
+            // 绑定门店切换事件
+            var branchSel = container.querySelector('#branchSelector');
+            if (branchSel) {
+                branchSel.addEventListener('change', function() {
+                    AppStore.set('currentBranch', this.value);
+                    if (window.AppUtils) {
+                        AppUtils.toast('已切换门店', 'info');
+                    }
+                });
+            }
+
+            // 桌面端侧边栏折叠状态
             if (window.innerWidth > 768) {
                 var saved = localStorage.getItem('sidebar_expanded');
                 if (saved === 'true') {
@@ -150,36 +176,38 @@ window.SidebarComponent = {
     },
 
     bindEvents: function(container) {
+        // 兼容旧的事件绑定方式（保留）
         var links = container.querySelectorAll('[data-module]');
         for (var i = 0; i < links.length; i++) {
             var el = links[i];
-            el.addEventListener('click', function(e) {
-                e.preventDefault();
-                var module = this.dataset.module;
-                AppStore.set('currentModule', module);
-
-                if (window.ModuleLoader) {
-                    ModuleLoader.load(module);
-                }
-
-                var allLinks = container.querySelectorAll('[data-module]');
-                for (var j = 0; j < allLinks.length; j++) {
-                    allLinks[j].classList.remove('nav-item-active');
-                }
-                this.classList.add('nav-item-active');
-
-                // 展开 Dashboard 组
-                var group = this.closest('.sidebar-group');
-                if (group) {
-                    group.classList.add('open');
-                }
-
-                if (window.innerWidth <= 768 && window.closeSidebar) {
-                    setTimeout(function() {
-                        window.closeSidebar();
-                    }, 300);
-                }
-            });
+            // 如果已经有 href，使用 href 跳转
+            if (el.getAttribute('href')) {
+                // 已由事件委托处理
+            } else {
+                // 没有 href 的旧方式
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var module = this.dataset.module;
+                    AppStore.set('currentModule', module);
+                    if (window.ModuleLoader) {
+                        ModuleLoader.load(module);
+                    }
+                    var allLinks = container.querySelectorAll('[data-module]');
+                    for (var j = 0; j < allLinks.length; j++) {
+                        allLinks[j].classList.remove('nav-item-active');
+                    }
+                    this.classList.add('nav-item-active');
+                    var group = this.closest('.sidebar-group');
+                    if (group) {
+                        group.classList.add('open');
+                    }
+                    if (window.innerWidth <= 768 && window.closeSidebar) {
+                        setTimeout(function() {
+                            window.closeSidebar();
+                        }, 300);
+                    }
+                });
+            }
         }
 
         var branchSel = container.querySelector('#branchSelector');
