@@ -1,5 +1,27 @@
-{{
+{
   "name": "Marketing",
   "icon": "megaphone",
-  "order": 6
-}}
+  "order": 6,
+  "pages": [
+    {
+      "path": "promotions",
+      "name": "促销管理",
+      "icon": "tags"
+    },
+    {
+      "path": "campaigns",
+      "name": "营销活动",
+      "icon": "bullhorn"
+    },
+    {
+      "path": "loyalty",
+      "name": "积分管理",
+      "icon": "star"
+    },
+    {
+      "path": "referrals",
+      "name": "推荐管理",
+      "icon": "share-alt"
+    }
+  ]
+}
