@@ -162,19 +162,6 @@
     'settings': { id: '14-settings', label: 'Settings', icon: 'sliders-h', defaultPage: 'company' }
   };
 
-  // ✅ 新增：Dashboard 子模块映射（用于侧边栏直接跳转）
-  var DASHBOARD_SUB_MAP = {
-    'sales': { id: '01-dashboard', page: 'sales', label: '📊 Sales' },
-    'executive': { id: '01-dashboard', page: 'executive', label: '📈 Executive' },
-    'ai': { id: '01-dashboard', page: 'ai', label: '🤖 AI' },
-    'crm': { id: '01-dashboard', page: 'crm', label: '👥 CRM' },
-    'finance': { id: '01-dashboard', page: 'finance', label: '💰 Finance' },
-    'inventory': { id: '01-dashboard', page: 'inventory', label: '📦 Inventory' },
-    'marketing': { id: '01-dashboard', page: 'marketing', label: '📢 Marketing' },
-    'employee': { id: '01-dashboard', page: 'employee', label: '👤 Employee' },
-    'vehicle-monitor': { id: '01-dashboard', page: 'vehicle-monitor', label: '🚗 Vehicle Monitor' }
-  };
-
   // 反向映射：folder id → URL key
   var FOLDER_TO_KEY = {};
   for (var key in MODULE_MAP) {
@@ -243,20 +230,15 @@
       return;
     }
 
-    // ✅ 特殊处理：如果是 dashboard 子模块，直接映射
+    // ✅ 特殊处理：如果是 dashboard 子模块，保持 moduleKey 为 'dashboard'
+    // 但获取 folderId 时使用 'dashboard' → '01-dashboard'
     var actualModuleKey = moduleKey;
     var actualPage = page;
-
-    if (moduleKey === 'dashboard' && DASHBOARD_SUB_MAP[page]) {
-      var subInfo = DASHBOARD_SUB_MAP[page];
-      actualModuleKey = subInfo.id; // '01-dashboard'
-      actualPage = subInfo.page;    // 'sales' 等
-      console.log('📌 Dashboard 子模块映射:', page, '→', actualModuleKey, '/', actualPage);
-    }
 
     // 获取文件夹ID
     var folderId = getFolderId(actualModuleKey);
     if (!folderId) {
+      console.error('❌ 模块 "' + actualModuleKey + '" 不存在');
       content.innerHTML = generateErrorPage('模块 "' + actualModuleKey + '" 不存在');
       return;
     }
@@ -492,10 +474,6 @@
     var moduleKey = parts[0] || 'dashboard';
     var page = parts[1] || '';
 
-    // ✅ 特殊处理：dashboard 子模块直接路由
-    // 例如 #/dashboard/sales → moduleKey='dashboard', page='sales'
-    // 由 loadPage 内部处理映射
-
     // 验证模块
     var info = getModuleInfo(moduleKey);
     if (!info) {
@@ -569,13 +547,13 @@
       if (key === 'dashboard') {
         var isExpanded = (currentKey === 'dashboard' || isDashboardSub);
 
-        html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '">';
-        html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')">';
+        html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '" style="margin-bottom:4px;">';
+        html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
         html += '<i class="fas fa-' + mod.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>';
-        html += '<span style="margin-left:12px;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';">' + mod.label + '</span>';
-        html += '<i class="fas fa-chevron-down toggle-icon ml-auto"></i>';
+        html += '<span style="margin-left:12px;">' + mod.label + '</span>';
+        html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;"></i>';
         html += '</div>';
-        html += '<div class="sidebar-group-items">';
+        html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;">';
 
         // Dashboard 子菜单
         var subModules = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'];
@@ -585,15 +563,17 @@
           var subKey = subModules[j];
           var subLabel = subLabels[j];
           var isSubActive = (currentKey === 'dashboard' && currentPage === subKey);
+          var href = '#/dashboard/' + subKey;
 
-          html += '<a href="#/dashboard/' + subKey + '" data-module="' + subKey + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '" style="display:block;padding:8px 16px 8px 36px;border-radius:6px;text-decoration:none;color:' + (isSubActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isSubActive ? '#4F46E5' : 'transparent') + ';font-size:14px;cursor:pointer;" onmouseover="this.style.background=\'' + (isSubActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isSubActive ? '#4F46E5' : 'transparent') + '\'">' +
+          html += '<a href="' + href + '" data-module="' + subKey + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '" style="display:block;padding:8px 16px 8px 36px;border-radius:6px;text-decoration:none;color:' + (isSubActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isSubActive ? '#4F46E5' : 'transparent') + ';font-size:14px;cursor:pointer;margin:2px 0;" onmouseover="this.style.background=\'' + (isSubActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isSubActive ? '#4F46E5' : 'transparent') + '\'">' +
             '<span>' + subLabel + '</span>' +
             '</a>';
         }
 
         html += '</div></div>';
       } else {
-        html += '<a href="#/' + key + '/' + defaultPage + '" data-module="' + key + '" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;text-decoration:none;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';margin-bottom:2px;transition:all 0.2s;cursor:pointer;font-size:14px;" onmouseover="this.style.background=\'' + (isActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isActive ? '#4F46E5' : 'transparent') + '\'">' +
+        var href = '#/' + key + '/' + defaultPage;
+        html += '<a href="' + href + '" data-module="' + key + '" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;text-decoration:none;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';margin-bottom:2px;transition:all 0.2s;cursor:pointer;font-size:14px;" onmouseover="this.style.background=\'' + (isActive ? '#4F46E5' : '#F3F4F6') + '\'" onmouseout="this.style.background=\'' + (isActive ? '#4F46E5' : 'transparent') + '\'">' +
           '<i class="fas fa-' + mod.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>' +
           '<span style="margin-left:12px;">' + mod.label + '</span>' +
           '</a>';
