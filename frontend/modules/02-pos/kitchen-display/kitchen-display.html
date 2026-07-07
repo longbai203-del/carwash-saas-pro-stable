@@ -1,10 +1,13 @@
 <!-- 02-pos/kitchen-display.html -->
 <div class="page-container" data-page="02-pos-kitchen-display">
     <div class="page-header">
-        <h1>厨房显示</h1>
+        <h1><i class="fas fa-utensils"></i> 厨房显示</h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
+            <button class="btn btn-primary" onclick="window.KitchenDisplayModule.newOrder()">
+                <i class="fas fa-plus"></i> 新订单
+            </button>
+            <button class="btn btn-success" onclick="window.KitchenDisplayModule.markReady()">
+                <i class="fas fa-check"></i> 标记完成
             </button>
             <button class="btn btn-outline" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> 刷新
@@ -12,43 +15,212 @@
         </div>
     </div>
     <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-cash-register"></i>
+        <div class="kitchen-container">
+            <div class="kitchen-stats">
+                <div class="stat-card">
+                    <span class="stat-label">待处理</span>
+                    <span class="stat-number" id="pendingCount">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">制作中</span>
+                    <span class="stat-number" id="cookingCount">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已完成</span>
+                    <span class="stat-number" id="completedCount">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">今日订单</span>
+                    <span class="stat-number" id="todayCount">0</span>
+                </div>
             </div>
-            <h2>厨房显示</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: POS | 页面: kitchen display</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+            <div class="kitchen-grid" id="kitchenGrid">
+                <div class="empty-kitchen">
+                    <i class="fas fa-utensils"></i>
+                    <p>暂无订单</p>
+                    <span style="font-size:13px;color:#9ca3af;">等待新订单...</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .kitchen-container { max-width: 1200px; margin: 0 auto; }
+    .kitchen-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .stat-card { background: white; padding: 16px; border-radius: 12px; text-align: center; border: 1px solid #e5e7eb; }
+    .stat-label { display: block; font-size: 13px; color: #6b7280; }
+    .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1f2937; margin-top: 4px; }
+    .stat-card:nth-child(1) .stat-number { color: #f59e0b; }
+    .stat-card:nth-child(2) .stat-number { color: #3b82f6; }
+    .stat-card:nth-child(3) .stat-number { color: #10b981; }
+    .stat-card:nth-child(4) .stat-number { color: #4f46e5; }
+    .kitchen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .kitchen-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; transition: all 0.3s; }
+    .kitchen-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .kitchen-card.pending { border-left: 4px solid #f59e0b; }
+    .kitchen-card.cooking { border-left: 4px solid #3b82f6; }
+    .kitchen-card.ready { border-left: 4px solid #10b981; }
+    .kitchen-card .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .kitchen-card .order-id { font-weight: 700; font-size: 16px; }
+    .kitchen-card .order-time { font-size: 12px; color: #9ca3af; }
+    .kitchen-card .order-items { padding: 8px 0; }
+    .kitchen-card .order-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; border-bottom: 1px solid #f3f4f6; }
+    .kitchen-card .order-item:last-child { border-bottom: none; }
+    .kitchen-card .order-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .kitchen-card .order-actions .btn { flex: 1; font-size: 12px; padding: 6px; }
+    .empty-kitchen { grid-column: 1 / -1; text-align: center; padding: 60px 0; color: #9ca3af; }
+    .empty-kitchen i { font-size: 48px; margin-bottom: 12px; }
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .kitchen-card { background: #2c2c2e; border-color: #48484a; }
+    [data-theme="dark"] .stat-number { color: #f5f5f7; }
 </style>
+
+<script>
+    (function() {
+        window.KitchenDisplayModule = {
+            orders: [],
+            orderId: 0,
+            stats: { pending: 0, cooking: 0, completed: 0, today: 0 },
+            
+            newOrder: function() {
+                this.orderId++;
+                const items = [];
+                const names = ['标准洗车', '精致洗车', '深度清洁', '抛光打蜡', '内饰清洗'];
+                const count = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < count; i++) {
+                    items.push({
+                        name: names[Math.floor(Math.random() * names.length)],
+                        qty: Math.floor(Math.random() * 2) + 1,
+                        note: Math.random() > 0.7 ? '备注: 尽快' : ''
+                    });
+                }
+                this.orders.push({
+                    id: 'ORD-' + String(this.orderId).padStart(4, '0'),
+                    items: items,
+                    status: 'pending',
+                    time: new Date().toLocaleTimeString(),
+                    elapsed: 0
+                });
+                this.stats.today++;
+                this.stats.pending++;
+                this.render();
+                this.updateStats();
+            },
+            
+            markReady: function() {
+                const pending = this.orders.filter(o => o.status === 'pending' || o.status === 'cooking');
+                if (pending.length === 0) {
+                    alert('没有可标记完成的订单');
+                    return;
+                }
+                const order = pending[0];
+                const confirm = confirm('标记订单 ' + order.id + ' 为已完成？');
+                if (confirm) {
+                    order.status = 'ready';
+                    this.stats.pending = this.orders.filter(o => o.status === 'pending').length;
+                    this.stats.cooking = this.orders.filter(o => o.status === 'cooking').length;
+                    this.stats.completed = this.orders.filter(o => o.status === 'ready').length;
+                    this.render();
+                    this.updateStats();
+                }
+            },
+            
+            startCooking: function(id) {
+                const order = this.orders.find(o => o.id === id);
+                if (order && order.status === 'pending') {
+                    order.status = 'cooking';
+                    this.stats.pending = this.orders.filter(o => o.status === 'pending').length;
+                    this.stats.cooking = this.orders.filter(o => o.status === 'cooking').length;
+                    this.render();
+                    this.updateStats();
+                }
+            },
+            
+            completeOrder: function(id) {
+                const order = this.orders.find(o => o.id === id);
+                if (order && (order.status === 'pending' || order.status === 'cooking')) {
+                    order.status = 'ready';
+                    this.stats.pending = this.orders.filter(o => o.status === 'pending').length;
+                    this.stats.cooking = this.orders.filter(o => o.status === 'cooking').length;
+                    this.stats.completed = this.orders.filter(o => o.status === 'ready').length;
+                    this.render();
+                    this.updateStats();
+                }
+            },
+            
+            render: function() {
+                const grid = document.getElementById('kitchenGrid');
+                if (this.orders.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-kitchen">
+                            <i class="fas fa-utensils"></i>
+                            <p>暂无订单</p>
+                            <span style="font-size:13px;color:#9ca3af;">等待新订单...</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                this.orders.slice().reverse().forEach(order => {
+                    const statusClass = order.status;
+                    const statusLabel = { pending: '待处理', cooking: '制作中', ready: '已完成' }[order.status] || order.status;
+                    html += `<div class="kitchen-card ${statusClass}">`;
+                    html += `<div class="order-header">`;
+                    html += `<span class="order-id">${order.id}</span>`;
+                    html += `<span class="order-time">${order.time}</span>`;
+                    html += `</div>`;
+                    html += `<div class="order-items">`;
+                    order.items.forEach(item => {
+                        html += `<div class="order-item">
+                            <span>${item.name} × ${item.qty}</span>
+                            ${item.note ? `<span style="font-size:12px;color:#f59e0b;">${item.note}</span>` : ''}
+                        </div>`;
+                    });
+                    html += `</div>`;
+                    html += `<div style="font-size:12px;color:#6b7280;margin-top:4px;">状态: ${statusLabel}</div>`;
+                    if (order.status === 'pending') {
+                        html += `<div class="order-actions">
+                            <button class="btn btn-primary" onclick="window.KitchenDisplayModule.startCooking('${order.id}')">开始制作</button>
+                        </div>`;
+                    } else if (order.status === 'cooking') {
+                        html += `<div class="order-actions">
+                            <button class="btn btn-success" onclick="window.KitchenDisplayModule.completeOrder('${order.id}')">标记完成</button>
+                        </div>`;
+                    } else if (order.status === 'ready') {
+                        html += `<div class="order-actions">
+                            <button class="btn btn-outline" onclick="window.KitchenDisplayModule.completeOrder('${order.id}')" disabled>✓ 已完成</button>
+                        </div>`;
+                    }
+                    html += `</div>`;
+                });
+                grid.innerHTML = html;
+            },
+            
+            updateStats: function() {
+                document.getElementById('pendingCount').textContent = this.stats.pending;
+                document.getElementById('cookingCount').textContent = this.stats.cooking;
+                document.getElementById('completedCount').textContent = this.stats.completed;
+                document.getElementById('todayCount').textContent = this.stats.today;
+            }
+        };
+        
+        // 自动添加演示订单
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加3个示例订单
+            setTimeout(() => {
+                window.KitchenDisplayModule.newOrder();
+                setTimeout(() => window.KitchenDisplayModule.newOrder(), 3000);
+                setTimeout(() => window.KitchenDisplayModule.newOrder(), 6000);
+            }, 500);
+            
+            // 模拟接收新订单
+            setInterval(() => {
+                if (Math.random() > 0.6) {
+                    window.KitchenDisplayModule.newOrder();
+                }
+            }, 15000);
+        });
+    })();
+</script>

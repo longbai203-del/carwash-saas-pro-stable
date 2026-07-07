@@ -2,7 +2,42 @@
 import { getProducts } from '../../../api/inventory.js';
 import { getCustomers } from '../../../api/customers.js';
 import { createOrder } from '../../../api/orders.js';
-import { formatCurrency, showToast } from '../../../js/utils.js';
+
+// 本地工具函数 - 避免外部依赖问题
+function formatCurrency(amount) {
+    if (amount === undefined || amount === null) return '0.00';
+    return amount.toFixed(2);
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px; 
+        padding: 12px 24px; border-radius: 8px; 
+        color: white; font-size: 14px; z-index: 10000;
+        background: ${type === 'error' ? '#EF4444' : type === 'warning' ? '#F59E0B' : type === 'success' ? '#10B981' : '#4F46E5'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: fadeInUp 0.3s ease;
+        max-width: 400px;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// 添加动画样式
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(styleSheet);
 
 const state = {
     cart: [],
@@ -23,11 +58,17 @@ export async function init() {
     bindEvents();
     initKeyboardShortcuts();
     updateUI();
+    
+    window.addToCart = addToCart;
+    window.updateQty = updateQty;
+    window.removeFromCart = removeFromCart;
+    window.selectPayment = selectPayment;
+    window.closeReceipt = closeReceipt;
 }
 
 async function loadProducts() {
     try {
-        const data = await getMockPOSProducts();
+        const data = getMockPOSProducts();
         state.products = data;
         renderProductGrid();
     } catch (error) {
@@ -38,7 +79,7 @@ async function loadProducts() {
 
 async function loadCustomers() {
     try {
-        const data = await getMockCustomers();
+        const data = getMockCustomers();
         state.customers = data;
         renderCustomerDropdown();
     } catch (error) {
@@ -110,8 +151,7 @@ function renderCustomerDropdown() {
     });
 }
 
-// 添加到购物车
-window.addToCart = function(productId) {
+function addToCart(productId) {
     const product = state.products.find(p => p.id === productId);
     if (!product) return;
 
@@ -125,10 +165,9 @@ window.addToCart = function(productId) {
     updateUI();
     showToast(`已添加: ${product.name}`, 'success');
     playSound('add');
-};
+}
 
-// 更新购物车数量
-window.updateQty = function(productId, delta) {
+function updateQty(productId, delta) {
     const item = state.cart.find(i => i.id === productId);
     if (!item) return;
 
@@ -138,16 +177,14 @@ window.updateQty = function(productId, delta) {
     }
 
     updateUI();
-};
+}
 
-// 移除购物车项
-window.removeFromCart = function(productId) {
+function removeFromCart(productId) {
     state.cart = state.cart.filter(i => i.id !== productId);
     updateUI();
     playSound('remove');
-};
+}
 
-// 计算总计
 function calculateTotals() {
     const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const discountAmount = (subtotal * state.discount) / 100;
@@ -158,7 +195,6 @@ function calculateTotals() {
     return { subtotal, discountAmount, taxable, tax, total };
 }
 
-// 更新UI
 function updateUI() {
     const cartItems = document.getElementById('cartItems');
     const subtotalEl = document.getElementById('subtotal');
@@ -168,7 +204,6 @@ function updateUI() {
     const cartCount = document.getElementById('cartCount');
     const totalItems = document.getElementById('totalItems');
 
-    // 更新购物车列表
     if (cartItems) {
         if (state.cart.length === 0) {
             cartItems.innerHTML = `
@@ -180,7 +215,7 @@ function updateUI() {
         } else {
             cartItems.innerHTML = state.cart.map(item => `
                 <div class="cart-item">
-                    <div class="cart-item-info">
+                    <div>
                         <div class="cart-item-name">${item.name}</div>
                         <div class="cart-item-price">¥${formatCurrency(item.price)} × ${item.qty}</div>
                     </div>
@@ -197,45 +232,42 @@ function updateUI() {
         }
     }
 
-    // 更新总计
     const totals = calculateTotals();
     if (subtotalEl) subtotalEl.textContent = `¥${formatCurrency(totals.subtotal)}`;
     if (discountEl) discountEl.textContent = `-¥${formatCurrency(totals.discountAmount)}`;
     if (taxEl) taxEl.textContent = `¥${formatCurrency(totals.tax)}`;
     if (totalEl) totalEl.textContent = `¥${formatCurrency(totals.total)}`;
 
-    // 更新数量
     const count = state.cart.reduce((sum, i) => sum + i.qty, 0);
     if (cartCount) cartCount.textContent = count;
     if (totalItems) totalItems.textContent = `共 ${count} 件商品`;
 
-    // 更新结账按钮状态
     const checkoutBtn = document.getElementById('checkoutBtn');
     if (checkoutBtn) {
         checkoutBtn.disabled = state.cart.length === 0;
     }
 
-    // 更新VIP信息
-    if (state.selectedCustomer) {
-        const customer = state.customers.find(c => c.id === state.selectedCustomer);
-        document.getElementById('customerInfo').innerHTML = `
-            <span class="text-sm font-medium">${customer.name}</span>
-            <span class="badge badge-${customer.level}">${customer.level.toUpperCase()}</span>
-        `;
-    } else {
-        document.getElementById('customerInfo').innerHTML = `
-            <span class="text-sm text-gray-500">散客</span>
-        `;
+    const customerInfo = document.getElementById('customerInfo');
+    if (customerInfo) {
+        if (state.selectedCustomer) {
+            const customer = state.customers.find(c => c.id === state.selectedCustomer);
+            if (customer) {
+                customerInfo.innerHTML = `
+                    <span class="text-sm font-medium">${customer.name}</span>
+                    <span class="badge badge-${customer.level}">${customer.level.toUpperCase()}</span>
+                `;
+            }
+        } else {
+            customerInfo.innerHTML = `<span class="text-sm text-gray-500">散客</span>`;
+        }
     }
 }
 
-// 搜索商品
 function searchProducts(query) {
     state.searchQuery = query;
     renderProductGrid();
 }
 
-// 支付方式切换
 function selectPayment(method) {
     state.paymentMethod = method;
     document.querySelectorAll('.payment-btn').forEach(btn => {
@@ -243,7 +275,6 @@ function selectPayment(method) {
     });
 }
 
-// 结账
 async function checkout() {
     if (state.cart.length === 0) {
         showToast('购物车为空', 'warning');
@@ -270,22 +301,12 @@ async function checkout() {
 
     try {
         showToast('正在处理订单...', 'info');
-        // await createOrder(orderData);
-        
-        // 模拟成功
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
         showToast('订单支付成功！', 'success');
         playSound('success');
-        
-        // 打印小票
         printReceipt(orderData);
-        
-        // 清空购物车
         state.cart = [];
         updateUI();
-        
-        // 显示收据弹窗
         showReceiptModal(orderData);
     } catch (error) {
         console.error('支付失败:', error);
@@ -294,9 +315,7 @@ async function checkout() {
     }
 }
 
-// 打印小票
 function printReceipt(orderData) {
-    // 使用 window.print() 或调用打印服务
     const receiptContent = `
         洗车店收据
         ================
@@ -314,17 +333,17 @@ function printReceipt(orderData) {
         ================
         感谢光临！
     `;
-    
     console.log('打印收据:', receiptContent);
-    // 实际项目中使用 window.print() 或连接蓝牙打印机
 }
 
-// 显示收据弹窗
 function showReceiptModal(orderData) {
     const modal = document.getElementById('receiptModal');
     if (!modal) return;
 
-    document.getElementById('receiptContent').innerHTML = `
+    const receiptContent = document.getElementById('receiptContent');
+    if (!receiptContent) return;
+
+    receiptContent.innerHTML = `
         <div class="receipt">
             <div class="receipt-header">
                 <h3>🧼 洗车店</h3>
@@ -339,10 +358,10 @@ function showReceiptModal(orderData) {
                 `).join('')}
             </div>
             <div class="receipt-totals">
-                <div><span>小计</span><span>¥${formatCurrency(orderData.subtotal)}</span></div>
-                <div><span>折扣</span><span>-¥${formatCurrency(orderData.discount)}</span></div>
-                <div><span>税费</span><span>¥${formatCurrency(orderData.tax)}</span></div>
-                <div class="receipt-total"><span>总计</span><span>¥${formatCurrency(orderData.total)}</span></div>
+                <div class="receipt-item"><span>小计</span><span>¥${formatCurrency(orderData.subtotal)}</span></div>
+                <div class="receipt-item"><span>折扣</span><span>-¥${formatCurrency(orderData.discount)}</span></div>
+                <div class="receipt-item"><span>税费</span><span>¥${formatCurrency(orderData.tax)}</span></div>
+                <div class="receipt-item receipt-total"><span>总计</span><span>¥${formatCurrency(orderData.total)}</span></div>
             </div>
             <div class="receipt-footer">
                 <p>支付方式: ${orderData.paymentMethod}</p>
@@ -356,75 +375,68 @@ function showReceiptModal(orderData) {
     modal.style.display = 'flex';
 }
 
-window.closeReceipt = function() {
-    document.getElementById('receiptModal').style.display = 'none';
-};
-
-// 音效
-function playSound(type) {
-    // 简单的UI反馈，实际项目可使用Web Audio API
-    if (type === 'add') {
-        // 点击音效
-    } else if (type === 'success') {
-        // 成功音效
-    }
+function closeReceipt() {
+    const modal = document.getElementById('receiptModal');
+    if (modal) modal.style.display = 'none';
 }
 
-// 键盘快捷键
+function playSound(type) {}
+
 function initKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
-        // F1: 搜索聚焦
         if (e.key === 'F1') {
             e.preventDefault();
-            document.getElementById('searchInput')?.focus();
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.focus();
         }
-        // F2: 切换客户
         if (e.key === 'F2') {
             e.preventDefault();
-            document.getElementById('customerSelect')?.focus();
+            const customerSelect = document.getElementById('customerSelect');
+            if (customerSelect) customerSelect.focus();
         }
-        // F9: 结账
         if (e.key === 'F9') {
             e.preventDefault();
             checkout();
         }
-        // ESC: 关闭弹窗
         if (e.key === 'Escape') {
             closeReceipt();
         }
-        // 数字键快速添加商品
         const num = parseInt(e.key);
-        if (num >= 1 && num <= 9) {
+        if (num >= 1 && num <= 9 && state.products.length >= num) {
             const product = state.products[num - 1];
             if (product) addToCart(product.id);
         }
     });
 
-    // 显示快捷键提示
     console.log('快捷键: F1-搜索, F2-客户, F9-结账, 1-9快速添加');
 }
 
 function bindEvents() {
-    // 搜索
-    document.getElementById('searchInput')?.addEventListener('input', function() {
-        searchProducts(this.value);
-    });
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            searchProducts(this.value);
+        });
+    }
 
-    // 支付方式选择
     document.querySelectorAll('.payment-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             selectPayment(this.dataset.method);
         });
     });
 
-    // 折扣输入
-    document.getElementById('discountInput')?.addEventListener('input', function() {
-        state.discount = parseFloat(this.value) || 0;
-        updateUI();
-    });
+    const discountInput = document.getElementById('discountInput');
+    if (discountInput) {
+        discountInput.addEventListener('input', function() {
+            state.discount = parseFloat(this.value) || 0;
+            updateUI();
+        });
+    }
 
-    // 结账
-    document.getElementById('checkoutBtn')?.addEventListener('click', checkout);
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', checkout);
+    }
 }
 
 if (document.readyState === 'loading') {

@@ -1,10 +1,13 @@
 <!-- 02-pos/touch-pos.html -->
 <div class="page-container" data-page="02-pos-touch-pos">
     <div class="page-header">
-        <h1>触屏 POS</h1>
+        <h1><i class="fas fa-hand-pointer"></i> 触屏 POS</h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
+            <button class="btn btn-primary" onclick="window.TouchPOSModule.toggleFullscreen()">
+                <i class="fas fa-expand"></i> 全屏
+            </button>
+            <button class="btn btn-success" onclick="window.TouchPOSModule.resetLayout()">
+                <i class="fas fa-undo-alt"></i> 重置布局
             </button>
             <button class="btn btn-outline" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> 刷新
@@ -12,43 +15,249 @@
         </div>
     </div>
     <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-cash-register"></i>
+        <div class="touch-container">
+            <div class="touch-header">
+                <div class="touch-title">
+                    <i class="fas fa-hand-pointer"></i>
+                    <span>触屏POS - 点击商品添加到购物车</span>
+                </div>
+                <div class="touch-cart-summary">
+                    <span>🛒 <span id="touchCartCount">0</span>件</span>
+                    <span>总计: <strong id="touchCartTotal">¥0.00</strong></span>
+                    <button class="btn btn-success" onclick="window.TouchPOSModule.checkout()">
+                        <i class="fas fa-check-circle"></i> 结账
+                    </button>
+                </div>
             </div>
-            <h2>触屏 POS</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: POS | 页面: touch pos</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+            <div class="touch-grid">
+                <div class="touch-products" id="touchProducts">
+                    <!-- 商品由JS生成 -->
+                </div>
+                <div class="touch-cart" id="touchCart">
+                    <div class="cart-header">
+                        <h4>🛒 购物车</h4>
+                        <button class="btn btn-sm btn-danger" onclick="window.TouchPOSModule.clearCart()">
+                            <i class="fas fa-trash"></i> 清空
+                        </button>
+                    </div>
+                    <div class="cart-items" id="touchCartItems">
+                        <div class="empty-touch-cart">
+                            <i class="fas fa-shopping-basket"></i>
+                            <p>点击左侧商品添加</p>
+                        </div>
+                    </div>
+                    <div class="cart-totals">
+                        <div class="touch-total-row"><span>小计</span><span id="touchSubtotal">¥0.00</span></div>
+                        <div class="touch-total-row total"><span>总计</span><span id="touchTotal">¥0.00</span></div>
+                    </div>
+                    <div class="cart-actions">
+                        <button class="btn btn-primary btn-block" onclick="window.TouchPOSModule.checkout()">
+                            <i class="fas fa-check-circle"></i> 结账 (F9)
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .touch-container { max-width: 1200px; margin: 0 auto; }
+    .touch-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: white; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .touch-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .touch-cart-summary { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+    .touch-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+    .touch-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; min-height: 400px; align-content: start; }
+    .touch-product { background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.15s; border: 2px solid transparent; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .touch-product:active { transform: scale(0.95); }
+    .touch-product:hover { border-color: #4f46e5; background: #eef2ff; }
+    .touch-product .product-icon { font-size: 28px; margin-bottom: 4px; }
+    .touch-product .product-name { font-size: 12px; font-weight: 500; }
+    .touch-product .product-price { font-size: 14px; font-weight: 700; color: #4f46e5; }
+    .touch-cart { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 500px; }
+    .touch-cart .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .touch-cart .cart-header h4 { margin: 0; font-size: 14px; }
+    .touch-cart .cart-items { flex: 1; overflow-y: auto; margin-bottom: 12px; }
+    .empty-touch-cart { text-align: center; color: #9ca3af; padding: 40px 0; }
+    .empty-touch-cart i { font-size: 32px; }
+    .touch-cart-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+    .touch-cart-item .item-info { display: flex; align-items: center; gap: 8px; }
+    .touch-cart-item .item-info .name { font-weight: 500; }
+    .touch-cart-item .item-info .qty { color: #6b7280; font-size: 12px; }
+    .touch-cart-item .item-actions { display: flex; gap: 4px; align-items: center; }
+    .touch-cart-item .item-actions .btn-sm { padding: 2px 8px; font-size: 12px; min-width: 24px; }
+    .cart-totals { border-top: 1px solid #e5e7eb; padding-top: 10px; margin-bottom: 10px; }
+    .touch-total-row { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
+    .touch-total-row.total { font-size: 18px; font-weight: 700; border-top: 2px solid #e5e7eb; padding-top: 6px; margin-top: 2px; }
+    .cart-actions .btn-block { width: 100%; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 4px; border: 1px solid #d1d5db; background: white; cursor: pointer; transition: all 0.2s; }
+    .btn-sm:hover { background: #f3f4f6; }
+    .btn-sm.btn-danger { background: #ef4444; color: white; border-color: #ef4444; }
+    .btn-sm.btn-danger:hover { background: #dc2626; }
+    [data-theme="dark"] .touch-header,
+    [data-theme="dark"] .touch-products,
+    [data-theme="dark"] .touch-cart { background: #2c2c2e; border-color: #48484a; }
+    [data-theme="dark"] .touch-product { background: #3a3a3c; color: #f5f5f7; }
+    [data-theme="dark"] .touch-product:hover { background: #4a4a4c; }
+    @media (max-width: 768px) { .touch-grid { grid-template-columns: 1fr; } .touch-products { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 480px) { .touch-products { grid-template-columns: repeat(2, 1fr); } }
 </style>
+
+<script>
+    (function() {
+        window.TouchPOSModule = {
+            cart: [],
+            products: [],
+            
+            init: function() {
+                this.products = [
+                    { id: 'P001', name: '标准洗车', price: 68, icon: '🚗' },
+                    { id: 'P002', name: '精致洗车', price: 128, icon: '🚙' },
+                    { id: 'P003', name: '深度清洁', price: 268, icon: '🧹' },
+                    { id: 'P004', name: '抛光打蜡', price: 388, icon: '✨' },
+                    { id: 'P005', name: '内饰清洗', price: 328, icon: '🪑' },
+                    { id: 'P006', name: '发动机清洗', price: 188, icon: '🔧' },
+                    { id: 'P007', name: '空调清洗', price: 158, icon: '❄️' },
+                    { id: 'P008', name: '轮胎养护', price: 88, icon: '🛞' },
+                    { id: 'P009', name: '玻璃镀膜', price: 228, icon: '🪟' },
+                    { id: 'P010', name: '漆面镀晶', price: 688, icon: '💎' },
+                    { id: 'P011', name: '洗车月卡', price: 398, icon: '📇' },
+                    { id: 'P012', name: '洗车季卡', price: 998, icon: '📋' }
+                ];
+                this.renderProducts();
+                this.updateCart();
+            },
+            
+            renderProducts: function() {
+                const container = document.getElementById('touchProducts');
+                let html = '';
+                this.products.forEach(p => {
+                    html += `<div class="touch-product" onclick="window.TouchPOSModule.addToCart('${p.id}')">
+                        <div class="product-icon">${p.icon}</div>
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">¥${p.price}</div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            },
+            
+            addToCart: function(productId) {
+                const product = this.products.find(p => p.id === productId);
+                if (!product) return;
+                
+                const existing = this.cart.find(item => item.id === productId);
+                if (existing) {
+                    existing.qty += 1;
+                } else {
+                    this.cart.push({ ...product, qty: 1 });
+                }
+                this.updateCart();
+                // 触觉反馈
+                if (navigator.vibrate) navigator.vibrate(10);
+            },
+            
+            removeFromCart: function(productId) {
+                const item = this.cart.find(i => i.id === productId);
+                if (!item) return;
+                item.qty -= 1;
+                if (item.qty <= 0) {
+                    this.cart = this.cart.filter(i => i.id !== productId);
+                }
+                this.updateCart();
+            },
+            
+            clearCart: function() {
+                if (this.cart.length === 0) return;
+                if (confirm('清空购物车？')) {
+                    this.cart = [];
+                    this.updateCart();
+                }
+            },
+            
+            updateCart: function() {
+                const container = document.getElementById('touchCartItems');
+                const countEl = document.getElementById('touchCartCount');
+                const subtotalEl = document.getElementById('touchSubtotal');
+                const totalEl = document.getElementById('touchTotal');
+                
+                const count = this.cart.reduce((sum, i) => sum + i.qty, 0);
+                const subtotal = this.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+                const total = subtotal * 1.06;
+                
+                countEl.textContent = count;
+                subtotalEl.textContent = '¥' + subtotal.toFixed(2);
+                totalEl.textContent = '¥' + total.toFixed(2);
+                document.getElementById('touchCartTotal').textContent = '¥' + total.toFixed(2);
+                
+                if (this.cart.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-touch-cart">
+                            <i class="fas fa-shopping-basket"></i>
+                            <p>点击左侧商品添加</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                this.cart.forEach(item => {
+                    html += `<div class="touch-cart-item">
+                        <div class="item-info">
+                            <span class="name">${item.icon} ${item.name}</span>
+                            <span class="qty">×${item.qty}</span>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-sm" onclick="window.TouchPOSModule.removeFromCart('${item.id}')">-</button>
+                            <button class="btn-sm" onclick="window.TouchPOSModule.addToCart('${item.id}')">+</button>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            },
+            
+            checkout: function() {
+                if (this.cart.length === 0) {
+                    alert('购物车为空');
+                    return;
+                }
+                const total = this.cart.reduce((sum, i) => sum + i.price * i.qty, 0) * 1.06;
+                alert('✅ 订单完成!\n总计: ¥' + total.toFixed(2));
+                this.cart = [];
+                this.updateCart();
+            },
+            
+            toggleFullscreen: function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    document.exitFullscreen().catch(() => {});
+                }
+            },
+            
+            resetLayout: function() {
+                const grid = document.querySelector('.touch-grid');
+                if (grid) {
+                    grid.style.display = 'grid';
+                    grid.style.gridTemplateColumns = '1fr 340px';
+                }
+                this.renderProducts();
+                this.updateCart();
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.TouchPOSModule.init();
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    window.TouchPOSModule.checkout();
+                }
+                if (e.key === 'Escape' && document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            });
+        });
+    })();
+</script>
