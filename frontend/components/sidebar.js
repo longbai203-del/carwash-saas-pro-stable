@@ -4,7 +4,6 @@
  */
 window.SidebarComponent = {
     _menuItems: [
-        // Dashboard 模块
         { module: 'dashboard', icon: 'fa-chart-line', label: 'Dashboard' },
         { module: 'pos', icon: 'fa-cash-register', label: 'POS' },
         { module: 'orders', icon: 'fa-clipboard-list', label: 'Orders' },
@@ -21,7 +20,6 @@ window.SidebarComponent = {
         { module: 'settings', icon: 'fa-sliders-h', label: 'Settings' }
     ],
 
-    // Dashboard 子菜单（更新：添加 dashboard 作为默认页）
     _dashboardSubMenu: [
         { module: 'dashboard', label: '📊 Dashboard' },
         { module: 'executive', label: '📈 Executive' },
@@ -43,7 +41,6 @@ window.SidebarComponent = {
         var currentKey = parts[0] || 'dashboard';
         var currentPage = parts[1] || 'dashboard';
 
-        // 判断当前是否在 Dashboard 子模块
         var subModules = ['dashboard', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'];
         var isDashboardSub = subModules.indexOf(currentPage) !== -1;
 
@@ -63,15 +60,18 @@ window.SidebarComponent = {
             '<option value="all">全部门店</option>' +
             '</select>' +
             '</div>' +
-            '<nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">';
+            '<nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">' +
+            '<style>' +
+            '.sidebar-group-items { overflow: hidden; transition: max-height 0.3s ease; max-height: 0; }' +
+            '.sidebar-group.open .sidebar-group-items { max-height: 500px; }' +
+            '.sidebar-group.open .toggle-icon { transform: rotate(180deg); }' +
+            '</style>';
 
-        // 渲染主菜单
         for (var i = 0; i < this._menuItems.length; i++) {
             var item = this._menuItems[i];
             var show = perms.indexOf(item.module) !== -1 || perms.length === 0;
 
             if (show) {
-                // 判断当前项是否激活
                 var isActive = false;
                 if (item.module === 'dashboard') {
                     isActive = (currentKey === 'dashboard' || isDashboardSub);
@@ -79,20 +79,17 @@ window.SidebarComponent = {
                     isActive = (currentKey === item.module);
                 }
 
-                // Dashboard 特殊处理（带子菜单）
                 if (item.module === 'dashboard') {
-                    // 判断是否展开：当前在 dashboard 或子模块
                     var isExpanded = (currentKey === 'dashboard' || isDashboardSub);
 
                     html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '" style="margin-bottom:4px;">';
                     html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
                     html += '<i class="fas ' + item.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>';
                     html += '<span style="margin-left:12px;">' + item.label + '</span>';
-                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;' + (isExpanded ? 'transform:rotate(180deg);' : '') + '"></i>';
+                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto"></i>';
                     html += '</div>';
-                    html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;' + (isExpanded ? 'max-height:500px;' : 'max-height:0;') + '">';
+                    html += '<div class="sidebar-group-items">';
 
-                    // 渲染 Dashboard 子菜单
                     for (var j = 0; j < this._dashboardSubMenu.length; j++) {
                         var sub = this._dashboardSubMenu[j];
                         var isSubActive = (currentKey === 'dashboard' && currentPage === sub.module);
@@ -137,7 +134,6 @@ window.SidebarComponent = {
         if (container) {
             container.innerHTML = html;
 
-            // 绑定点击事件
             container.querySelectorAll('a[href^="#"]').forEach(function(link) {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -148,7 +144,6 @@ window.SidebarComponent = {
                 });
             });
 
-            // 绑定门店切换事件
             var branchSel = container.querySelector('#branchSelector');
             if (branchSel) {
                 branchSel.addEventListener('change', function() {
@@ -159,7 +154,6 @@ window.SidebarComponent = {
                 });
             }
 
-            // 桌面端侧边栏折叠状态
             if (window.innerWidth > 768) {
                 var saved = localStorage.getItem('sidebar_expanded');
                 if (saved === 'true') {
@@ -167,18 +161,12 @@ window.SidebarComponent = {
                 } else {
                     container.classList.remove('expanded');
                 }
-                var mainContent = document.getElementById('mainContentArea');
-                if (mainContent) {
-                    var isExpanded = container.classList.contains('expanded');
-                    mainContent.style.width = isExpanded ? 'calc(100% - 280px)' : 'calc(100% - 64px)';
-                }
             }
         }
         return html;
     },
 
     bindEvents: function(container) {
-        // 兼容旧的事件绑定方式
         var links = container.querySelectorAll('[data-module]');
         for (var i = 0; i < links.length; i++) {
             var el = links[i];
