@@ -23,15 +23,15 @@ window.SidebarComponent = {
 
     // Dashboard 子菜单
     _dashboardSubMenu: [
-        { module: 'sales', label: 'Sales', defaultPage: 'sales' },
-        { module: 'executive', label: 'Executive', defaultPage: 'executive' },
+        { module: 'sales', label: '📊 Sales', defaultPage: 'sales' },
+        { module: 'executive', label: '📈 Executive', defaultPage: 'executive' },
         { module: 'ai', label: '🤖 AI', defaultPage: 'ai' },
-        { module: 'crm', label: 'CRM', defaultPage: 'crm' },
-        { module: 'finance', label: 'Finance', defaultPage: 'finance' },
-        { module: 'inventory', label: 'Inventory', defaultPage: 'inventory' },
-        { module: 'marketing', label: 'Marketing', defaultPage: 'marketing' },
-        { module: 'employee', label: 'Employee', defaultPage: 'employee' },
-        { module: 'vehicle-monitor', label: 'Vehicle Monitor', defaultPage: 'vehicle-monitor' }
+        { module: 'crm', label: '👥 CRM', defaultPage: 'crm' },
+        { module: 'finance', label: '💰 Finance', defaultPage: 'finance' },
+        { module: 'inventory', label: '📦 Inventory', defaultPage: 'inventory' },
+        { module: 'marketing', label: '📢 Marketing', defaultPage: 'marketing' },
+        { module: 'employee', label: '👤 Employee', defaultPage: 'employee' },
+        { module: 'vehicle-monitor', label: '🚗 Vehicle Monitor', defaultPage: 'vehicle-monitor' }
     ],
 
     render: function(container) {
@@ -65,24 +65,20 @@ window.SidebarComponent = {
             if (show) {
                 var activeClass = '';
                 var currentModule = AppStore.get('currentModule') || '';
+
+                // 判断是否是 Dashboard 子模块
+                var isDashboardSub = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'].indexOf(currentModule) !== -1;
+
                 if (item.module === 'dashboard') {
-                    activeClass = currentModule === 'dashboard' || currentModule === 'sales' || 
-                                  currentModule === 'executive' || currentModule === 'ai' ||
-                                  currentModule === 'crm' || currentModule === 'finance' ||
-                                  currentModule === 'inventory' || currentModule === 'marketing' ||
-                                  currentModule === 'employee' || currentModule === 'vehicle-monitor' ? ' nav-item-active' : '';
+                    activeClass = (currentModule === 'dashboard' || isDashboardSub) ? ' nav-item-active' : '';
                 } else {
                     activeClass = (item.module === currentModule) ? ' nav-item-active' : '';
                 }
 
                 // 判断是否是 Dashboard（有子菜单）
                 if (item.module === 'dashboard') {
-                    var isExpanded = currentModule === 'dashboard' || currentModule === 'sales' || 
-                                     currentModule === 'executive' || currentModule === 'ai' ||
-                                     currentModule === 'crm' || currentModule === 'finance' ||
-                                     currentModule === 'inventory' || currentModule === 'marketing' ||
-                                     currentModule === 'employee' || currentModule === 'vehicle-monitor';
-                    
+                    var isExpanded = (currentModule === 'dashboard' || isDashboardSub);
+
                     html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '">';
                     html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')">';
                     html += '<i class="fas ' + item.icon + ' w-5"></i>';
@@ -94,7 +90,7 @@ window.SidebarComponent = {
                     // 渲染 Dashboard 子菜单
                     for (var j = 0; j < this._dashboardSubMenu.length; j++) {
                         var sub = this._dashboardSubMenu[j];
-                        var isSubActive = currentModule === sub.module;
+                        var isSubActive = (currentModule === sub.module);
                         var onClickAttr = isMobile ? ' onclick="setTimeout(function(){ if(window.closeSidebar) window.closeSidebar(); }, 300);"' : '';
                         html += '<a href="#" data-module="' + sub.module + '" class="sidebar-link sub-item' + (isSubActive ? ' nav-item-active' : '') + '"' + onClickAttr + '>' +
                             '<span class="menu-label">' + sub.label + '</span>' +
@@ -161,12 +157,6 @@ window.SidebarComponent = {
                 e.preventDefault();
                 var module = this.dataset.module;
                 AppStore.set('currentModule', module);
-
-                // 如果是 Dashboard 子模块，设置父模块为 dashboard
-                var isDashboardSub = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'].indexOf(module) !== -1;
-                if (isDashboardSub) {
-                    AppStore.set('currentModule', module);
-                }
 
                 if (window.ModuleLoader) {
                     ModuleLoader.load(module);

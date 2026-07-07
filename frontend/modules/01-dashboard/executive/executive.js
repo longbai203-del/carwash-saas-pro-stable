@@ -1,6 +1,6 @@
 /**
  * 01-dashboard/executive/executive.js
- * 执行仪表板 - 使用模拟数据（无需 API）
+ * 执行仪表板 - 完整数据渲染
  */
 console.log('🏠 Executive Dashboard loaded');
 
@@ -36,7 +36,7 @@ function formatNumber(num) {
 }
 
 function getStatusColor(status) {
-    const map = {
+    var map = {
         'completed': '#34c759',
         'processing': '#5ac8fa',
         'pending': '#ff9500',
@@ -46,7 +46,7 @@ function getStatusColor(status) {
 }
 
 function getStatusLabel(status) {
-    const map = {
+    var map = {
         'completed': '已完成',
         'processing': '处理中',
         'pending': '待处理',
@@ -55,191 +55,208 @@ function getStatusLabel(status) {
     return map[status] || status;
 }
 
+function showToast(message, type) {
+    var toast = document.createElement('div');
+    var colors = {
+        success: '#10B981',
+        error: '#EF4444',
+        warning: '#F59E0B',
+        info: '#3B82F6'
+    };
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        padding: 12px 24px;
+        background: ${colors[type] || '#4F46E5'};
+        color: white;
+        border-radius: 8px;
+        z-index: 99999;
+        font-size: 14px;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+}
+
 // ---------- 渲染指标卡片 ----------
 function renderMetricCards(metrics) {
-    const container = document.querySelector('.metric-cards');
+    var container = document.querySelector('.metric-cards');
     if (!container) {
         console.warn('Metric cards container not found');
         return;
     }
-    
-    const cards = [
-        { 
-            key: 'revenue', 
-            icon: 'fa-money-bill-wave', 
-            label: '今日收入', 
-            color: '#007aff', 
-            value: formatCurrency(metrics.revenue.current), 
-            change: metrics.revenue.change 
+
+    var cards = [
+        {
+            key: 'revenue',
+            icon: 'fa-money-bill-wave',
+            label: '今日收入',
+            color: '#007aff',
+            value: formatCurrency(metrics.revenue.current),
+            change: metrics.revenue.change
         },
-        { 
-            key: 'orders', 
-            icon: 'fa-clipboard-list', 
-            label: '今日订单', 
-            color: '#34c759', 
-            value: formatNumber(metrics.orders.current), 
-            change: metrics.orders.change 
+        {
+            key: 'orders',
+            icon: 'fa-clipboard-list',
+            label: '今日订单',
+            color: '#34c759',
+            value: formatNumber(metrics.orders.current),
+            change: metrics.orders.change
         },
-        { 
-            key: 'customers', 
-            icon: 'fa-users', 
-            label: '活跃客户', 
-            color: '#5856d6', 
-            value: formatNumber(metrics.customers.current), 
-            change: metrics.customers.change 
+        {
+            key: 'customers',
+            icon: 'fa-users',
+            label: '活跃客户',
+            color: '#5856d6',
+            value: formatNumber(metrics.customers.current),
+            change: metrics.customers.change
         },
-        { 
-            key: 'profit', 
-            icon: 'fa-chart-line', 
-            label: '利润率', 
-            color: '#ff9500', 
-            value: metrics.profit.current + '%', 
-            change: metrics.profit.change 
+        {
+            key: 'profit',
+            icon: 'fa-chart-line',
+            label: '利润率',
+            color: '#ff9500',
+            value: metrics.profit.current + '%',
+            change: metrics.profit.change
         }
     ];
-    
-    container.innerHTML = cards.map(card => `
-        <div class="metric-card" style="border-top: 4px solid ${card.color};">
-            <div class="metric-header">
-                <span class="metric-icon" style="background: ${card.color}20; color: ${card.color};">
-                    <i class="fas ${card.icon}"></i>
-                </span>
-                <span class="metric-label">${card.label}</span>
-            </div>
-            <div class="metric-value">${card.value}</div>
-            <div class="metric-footer">
-                <span class="metric-change ${card.change > 0 ? 'positive' : 'negative'}">
-                    <i class="fas ${card.change > 0 ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
-                    ${Math.abs(card.change)}%
-                </span>
-                <span class="metric-change-label">较昨日</span>
-            </div>
-        </div>
-    `).join('');
-    
-    // 更新最后更新时间
-    const updateEl = document.getElementById('lastUpdate');
+
+    container.innerHTML = cards.map(function(card) {
+        return '<div class="metric-card" style="border-top: 4px solid ' + card.color + ';">' +
+            '<div class="metric-header">' +
+            '<span class="metric-icon" style="background: ' + card.color + '20; color: ' + card.color + ';">' +
+            '<i class="fas ' + card.icon + '"></i>' +
+            '</span>' +
+            '<span class="metric-label">' + card.label + '</span>' +
+            '</div>' +
+            '<div class="metric-value">' + card.value + '</div>' +
+            '<div class="metric-footer">' +
+            '<span class="metric-change ' + (card.change > 0 ? 'positive' : 'negative') + '">' +
+            '<i class="fas ' + (card.change > 0 ? 'fa-arrow-up' : 'fa-arrow-down') + '"></i>' +
+            Math.abs(card.change) + '%' +
+            '</span>' +
+            '<span class="metric-change-label">较昨日</span>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+
+    var updateEl = document.getElementById('lastUpdate');
     if (updateEl) {
         updateEl.textContent = '更新于: ' + new Date().toLocaleString('zh-CN');
     }
-    
+
     console.log('✅ Metric cards rendered');
 }
 
 // ---------- 渲染最近订单 ----------
 function renderRecentOrders(orders) {
-    const container = document.querySelector('.recent-orders');
+    var container = document.querySelector('.recent-orders');
     if (!container) {
         console.warn('Recent orders container not found');
         return;
     }
-    
+
     if (!orders || orders.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p>暂无订单</p>
-            </div>
-        `;
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>';
         return;
     }
-    
-    container.innerHTML = orders.map(order => {
-        const color = getStatusColor(order.status);
-        const label = getStatusLabel(order.status);
-        return `
-            <div class="order-item">
-                <div class="order-info">
-                    <span class="order-id">#${order.id}</span>
-                    <span class="order-customer">${order.customer}</span>
-                </div>
-                <div class="order-details">
-                    <span class="order-amount">${formatCurrency(order.total)}</span>
-                    <span class="order-status" style="background: ${color}20; color: ${color};">${label}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
+
+    var html = '';
+    for (var i = 0; i < orders.length; i++) {
+        var order = orders[i];
+        var color = getStatusColor(order.status);
+        var label = getStatusLabel(order.status);
+        html += '<div class="order-item">' +
+            '<div class="order-info">' +
+            '<span class="order-id">#' + order.id + '</span>' +
+            '<span class="order-customer">' + order.customer + '</span>' +
+            '</div>' +
+            '<div class="order-details">' +
+            '<span class="order-amount">' + formatCurrency(order.total) + '</span>' +
+            '<span class="order-status" style="background: ' + color + '20; color: ' + color + ';">' + label + '</span>' +
+            '</div>' +
+            '</div>';
+    }
+    container.innerHTML = html;
+
     console.log('✅ Recent orders rendered');
 }
 
 // ---------- 渲染快速操作 ----------
 function renderQuickActions() {
-    const container = document.querySelector('.quick-actions');
+    var container = document.querySelector('.quick-actions');
     if (!container) {
         console.warn('Quick actions container not found');
         return;
     }
-    
-    const actions = [
+
+    var actions = [
         { icon: 'fa-cash-register', label: '新销售', color: '#007aff', action: 'new-sale' },
         { icon: 'fa-user-plus', label: '新客户', color: '#34c759', action: 'new-customer' },
         { icon: 'fa-box', label: '盘点库存', color: '#ff9500', action: 'inventory-count' },
         { icon: 'fa-file-invoice', label: '生成报表', color: '#5856d6', action: 'generate-report' }
     ];
-    
-    container.innerHTML = actions.map(action => `
-        <div class="quick-action" style="border-color: ${action.color};" data-action="${action.action}">
-            <div class="quick-action-icon" style="background: ${action.color}20; color: ${action.color};">
-                <i class="fas ${action.icon}"></i>
-            </div>
-            <span class="quick-action-label">${action.label}</span>
-        </div>
-    `).join('');
-    
-    // 绑定点击事件
-    container.querySelectorAll('.quick-action').forEach(el => {
+
+    var html = '';
+    for (var i = 0; i < actions.length; i++) {
+        var action = actions[i];
+        html += '<div class="quick-action" style="border-color: ' + action.color + ';" data-action="' + action.action + '">' +
+            '<div class="quick-action-icon" style="background: ' + action.color + '20; color: ' + action.color + ';">' +
+            '<i class="fas ' + action.icon + '"></i>' +
+            '</div>' +
+            '<span class="quick-action-label">' + action.label + '</span>' +
+            '</div>';
+    }
+    container.innerHTML = html;
+
+    container.querySelectorAll('.quick-action').forEach(function(el) {
         el.addEventListener('click', function() {
-            const label = this.querySelector('.quick-action-label').textContent;
-            alert(`${label} 功能开发中...`);
+            var label = this.querySelector('.quick-action-label').textContent;
+            showToast(label + ' 功能开发中...', 'info');
         });
     });
-    
+
     console.log('✅ Quick actions rendered');
 }
 
 // ---------- 加载仪表板数据 ----------
 function loadDashboardData() {
     console.log('🔄 Loading dashboard data...');
-    
+
     try {
-        // 使用模拟数据
         renderMetricCards(mockData.metrics);
         renderRecentOrders(mockData.recentOrders);
         renderQuickActions();
         console.log('✅ Dashboard loaded successfully with mock data');
     } catch (error) {
         console.error('❌ Failed to load dashboard:', error);
-        
-        // 显示错误状态
-        const container = document.querySelector('.metric-cards');
+
+        var container = document.querySelector('.metric-cards');
         if (container) {
-            container.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6e6e73;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ff9500; margin-bottom: 16px; display: block;"></i>
-                    <h3 style="margin-bottom: 8px;">加载数据失败</h3>
-                    <p style="margin-bottom: 16px;">${error.message || '请检查网络连接'}</p>
-                    <button onclick="window.ExecutiveDashboard?.refresh()" style="padding: 8px 24px; background: #007aff; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
-                        <i class="fas fa-redo"></i> 重试
-                    </button>
-                </div>
-            `;
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6e6e73;">' +
+                '<i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ff9500; margin-bottom: 16px; display: block;"></i>' +
+                '<h3 style="margin-bottom: 8px;">加载数据失败</h3>' +
+                '<p style="margin-bottom: 16px;">' + (error.message || '请检查网络连接') + '</p>' +
+                '<button onclick="window.ExecutiveDashboard?.refresh()" style="padding: 8px 24px; background: #007aff; color: #fff; border: none; border-radius: 6px; cursor: pointer;">' +
+                '<i class="fas fa-redo"></i> 重试' +
+                '</button>' +
+                '</div>';
         }
     }
 }
 
 // ---------- 自动刷新（每60秒） ----------
-let refreshInterval = null;
+var refreshInterval = null;
 
 function startAutoRefresh() {
     if (refreshInterval) {
         clearInterval(refreshInterval);
     }
-    refreshInterval = setInterval(() => {
+    refreshInterval = setInterval(function() {
         console.log('🔄 Auto-refreshing dashboard...');
         loadDashboardData();
-    }, 60000); // 60秒
+    }, 60000);
 }
 
 function stopAutoRefresh() {
@@ -252,19 +269,16 @@ function stopAutoRefresh() {
 // ---------- 页面初始化 ----------
 export function init() {
     console.log('📊 Executive Dashboard initializing...');
-    
-    // 加载数据
+
     loadDashboardData();
-    
-    // 启动自动刷新
     startAutoRefresh();
-    
+
     console.log('✅ Executive Dashboard ready');
 }
 
 // ---------- 默认导出 ----------
 export default {
-    init,
+    init: init,
     loadData: loadDashboardData,
     refresh: loadDashboardData,
     stopAutoRefresh: stopAutoRefresh
@@ -275,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 Executive Dashboard DOM ready');
 });
 
-// ---------- 暴露全局方法（方便调试） ----------
+// ---------- 暴露全局方法 ----------
 if (typeof window !== 'undefined') {
     window.ExecutiveDashboard = {
         loadData: loadDashboardData,
