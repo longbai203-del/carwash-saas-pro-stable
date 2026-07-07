@@ -1,5 +1,47 @@
-{{
+{
   "name": "Products",
   "icon": "box",
-  "order": 4
-}}
+  "order": 4,
+  "pages": [
+    {
+      "path": "products",
+      "name": "商品管理",
+      "icon": "box"
+    },
+    {
+      "path": "categories",
+      "name": "分类管理",
+      "icon": "folder"
+    },
+    {
+      "path": "brands",
+      "name": "品牌管理",
+      "icon": "tag"
+    },
+    {
+      "path": "barcodes",
+      "name": "条码管理",
+      "icon": "barcode"
+    },
+    {
+      "path": "variants",
+      "name": "产品变体",
+      "icon": "code-branch"
+    },
+    {
+      "path": "combos",
+      "name": "组合产品",
+      "icon": "object-group"
+    },
+    {
+      "path": "modifiers",
+      "name": "附加项",
+      "icon": "plus-circle"
+    },
+    {
+      "path": "price-lists",
+      "name": "价格表",
+      "icon": "tags"
+    }
+  ]
+}

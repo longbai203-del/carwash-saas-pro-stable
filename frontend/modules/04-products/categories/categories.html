@@ -1,10 +1,10 @@
 <!-- 04-products/categories.html -->
 <div class="page-container" data-page="04-products-categories">
     <div class="page-header">
-        <h1>分类管理</h1>
+        <h1><i class="fas fa-folder"></i> 分类管理</h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
+            <button class="btn btn-primary" onclick="window.CategoryModule.newCategory()">
+                <i class="fas fa-plus"></i> 新建分类
             </button>
             <button class="btn btn-outline" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> 刷新
@@ -12,43 +12,263 @@
         </div>
     </div>
     <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-box"></i>
+        <div class="category-container">
+            <!-- 统计卡片 -->
+            <div class="category-stats">
+                <div class="stat-card">
+                    <span class="stat-label">总分类</span>
+                    <span class="stat-number" id="totalCategories">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">一级分类</span>
+                    <span class="stat-number" id="parentCategories">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">子分类</span>
+                    <span class="stat-number" id="childCategories">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">关联商品</span>
+                    <span class="stat-number" id="categoryProducts">0</span>
+                </div>
             </div>
-            <h2>分类管理</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Products | 页面: categories</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+
+            <!-- 分类列表 -->
+            <div class="category-list" id="categoryList">
+                <!-- 由JS生成 -->
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .category-container { max-width: 1000px; margin: 0 auto; }
+    
+    .category-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .category-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .category-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .category-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .category-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .category-stats .stat-card:nth-child(2) .stat-number { color: #10B981; }
+    .category-stats .stat-card:nth-child(3) .stat-number { color: #F59E0B; }
+    .category-stats .stat-card:nth-child(4) .stat-number { color: #8B5CF6; }
+    
+    .category-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .category-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F3F4F6; }
+    .category-item:last-child { border-bottom: none; }
+    .category-item:hover { background: #F9FAFB; }
+    .category-item .category-info { display: flex; align-items: center; gap: 12px; }
+    .category-item .category-icon { font-size: 24px; }
+    .category-item .category-name { font-weight: 500; }
+    .category-item .category-desc { font-size: 13px; color: #6B7280; margin-left: 8px; }
+    .category-item .category-meta { display: flex; gap: 16px; font-size: 13px; color: #6B7280; }
+    .category-item .category-actions { display: flex; gap: 4px; }
+    .category-item .sub-categories { padding-left: 40px; background: #F9FAFB; }
+    
+    .empty-categories { text-align: center; padding: 60px 0; color: #9CA3AF; }
+    .empty-categories i { font-size: 48px; margin-bottom: 12px; }
+    
+    .badge-category { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+    .badge-category-parent { background: #DBEAFE; color: #1E40AF; }
+    .badge-category-child { background: #FEF3C7; color: #92400E; }
+    
+    [data-theme="dark"] .category-stats .stat-card,
+    [data-theme="dark"] .category-list { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .category-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .category-item { border-color: #3A3A3C; }
+    [data-theme="dark"] .category-item:hover { background: #3A3A3C; }
+    [data-theme="dark"] .category-item .sub-categories { background: #2C2C2E; }
+    
+    @media (max-width: 768px) { .category-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
+
+<script>
+    (function() {
+        window.CategoryModule = {
+            categories: [],
+            
+            init: function() {
+                this.loadCategories();
+                this.render();
+            },
+            
+            loadCategories: function() {
+                const saved = localStorage.getItem('category_data');
+                if (saved) {
+                    try {
+                        this.categories = JSON.parse(saved);
+                    } catch (e) {
+                        this.categories = this.getMockCategories();
+                    }
+                } else {
+                    this.categories = this.getMockCategories();
+                    localStorage.setItem('category_data', JSON.stringify(this.categories));
+                }
+            },
+            
+            getMockCategories: function() {
+                return [
+                    { id: 'CAT-001', name: '洗车', icon: '🧼', desc: '洗车相关服务', products: 5, parent: null, status: 'active' },
+                    { id: 'CAT-002', name: '美容', icon: '✨', desc: '汽车美容服务', products: 8, parent: null, status: 'active' },
+                    { id: 'CAT-003', name: '保养', icon: '🔧', desc: '汽车保养服务', products: 6, parent: null, status: 'active' },
+                    { id: 'CAT-004', name: '内饰清洁', icon: '🪑', desc: '内饰深度清洁', products: 3, parent: 'CAT-002', status: 'active' },
+                    { id: 'CAT-005', name: '漆面护理', icon: '🎨', desc: '漆面抛光镀晶', products: 4, parent: 'CAT-002', status: 'active' },
+                    { id: 'CAT-006', name: '发动机护理', icon: '⚙️', desc: '发动机清洗保养', products: 2, parent: 'CAT-003', status: 'active' }
+                ];
+            },
+            
+            render: function() {
+                const container = document.getElementById('categoryList');
+                const parents = this.categories.filter(c => !c.parent);
+                
+                if (parents.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-categories">
+                            <i class="fas fa-folder-open"></i>
+                            <p>暂无分类</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                parents.forEach(p => {
+                    const children = this.categories.filter(c => c.parent === p.id);
+                    html += `
+                        <div class="category-item">
+                            <div class="category-info">
+                                <span class="category-icon">${p.icon || '📁'}</span>
+                                <span class="category-name">${p.name}</span>
+                                <span class="category-desc">${p.desc || ''}</span>
+                                <span class="badge-category badge-category-parent">一级</span>
+                            </div>
+                            <div class="category-meta">
+                                <span>📦 ${p.products || 0}</span>
+                                <span>${children.length} 子分类</span>
+                            </div>
+                            <div class="category-actions">
+                                <button class="btn-sm btn-primary" onclick="window.CategoryModule.editCategory('${p.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-sm btn-success" onclick="window.CategoryModule.addSubCategory('${p.id}')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="btn-sm btn-danger" onclick="window.CategoryModule.deleteCategory('${p.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 子分类
+                    children.forEach(c => {
+                        html += `
+                            <div class="category-item sub-categories">
+                                <div class="category-info">
+                                    <span class="category-icon">${c.icon || '📄'}</span>
+                                    <span class="category-name">${c.name}</span>
+                                    <span class="category-desc">${c.desc || ''}</span>
+                                    <span class="badge-category badge-category-child">子分类</span>
+                                </div>
+                                <div class="category-meta">
+                                    <span>📦 ${c.products || 0}</span>
+                                </div>
+                                <div class="category-actions">
+                                    <button class="btn-sm btn-primary" onclick="window.CategoryModule.editCategory('${c.id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-sm btn-danger" onclick="window.CategoryModule.deleteCategory('${c.id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+                
+                container.innerHTML = html;
+                this.updateStats();
+            },
+            
+            updateStats: function() {
+                document.getElementById('totalCategories').textContent = this.categories.length;
+                document.getElementById('parentCategories').textContent = this.categories.filter(c => !c.parent).length;
+                document.getElementById('childCategories').textContent = this.categories.filter(c => c.parent).length;
+                document.getElementById('categoryProducts').textContent = this.categories.reduce((sum, c) => sum + (c.products || 0), 0);
+            },
+            
+            newCategory: function() {
+                const name = prompt('输入分类名称：');
+                if (!name) return;
+                const desc = prompt('输入分类描述：') || '';
+                const category = {
+                    id: 'CAT-' + Date.now().toString().slice(-6),
+                    name: name,
+                    icon: '📁',
+                    desc: desc,
+                    products: 0,
+                    parent: null,
+                    status: 'active'
+                };
+                this.categories.push(category);
+                localStorage.setItem('category_data', JSON.stringify(this.categories));
+                this.render();
+                alert('分类已创建: ' + name);
+            },
+            
+            addSubCategory: function(parentId) {
+                const parent = this.categories.find(c => c.id === parentId);
+                if (!parent) return;
+                const name = prompt('输入子分类名称（父分类: ' + parent.name + '）：');
+                if (!name) return;
+                const desc = prompt('输入子分类描述：') || '';
+                const category = {
+                    id: 'CAT-' + Date.now().toString().slice(-6),
+                    name: name,
+                    icon: '📄',
+                    desc: desc,
+                    products: 0,
+                    parent: parentId,
+                    status: 'active'
+                };
+                this.categories.push(category);
+                localStorage.setItem('category_data', JSON.stringify(this.categories));
+                this.render();
+                alert('子分类已创建: ' + name);
+            },
+            
+            editCategory: function(id) {
+                const category = this.categories.find(c => c.id === id);
+                if (category) {
+                    const newName = prompt('修改分类名称：', category.name);
+                    if (newName) {
+                        category.name = newName;
+                        localStorage.setItem('category_data', JSON.stringify(this.categories));
+                        this.render();
+                        alert('分类已更新');
+                    }
+                }
+            },
+            
+            deleteCategory: function(id) {
+                const category = this.categories.find(c => c.id === id);
+                if (!category) return;
+                const children = this.categories.filter(c => c.parent === id);
+                if (children.length > 0) {
+                    alert('该分类下有 ' + children.length + ' 个子分类，请先删除子分类');
+                    return;
+                }
+                if (confirm('确认删除分类 "' + category.name + '"？')) {
+                    this.categories = this.categories.filter(c => c.id !== id);
+                    localStorage.setItem('category_data', JSON.stringify(this.categories));
+                    this.render();
+                    alert('分类已删除');
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.CategoryModule.init();
+        });
+    })();
+</script>

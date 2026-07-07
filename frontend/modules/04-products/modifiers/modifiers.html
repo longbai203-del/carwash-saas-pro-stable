@@ -1,10 +1,10 @@
 <!-- 04-products/modifiers.html -->
 <div class="page-container" data-page="04-products-modifiers">
     <div class="page-header">
-        <h1>附加项</h1>
+        <h1><i class="fas fa-plus-circle"></i> 附加项</h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
+            <button class="btn btn-primary" onclick="window.ModifierModule.newModifier()">
+                <i class="fas fa-plus"></i> 新建附加项
             </button>
             <button class="btn btn-outline" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> 刷新
@@ -12,43 +12,197 @@
         </div>
     </div>
     <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-box"></i>
+        <div class="modifier-container">
+            <!-- 统计卡片 -->
+            <div class="modifier-stats">
+                <div class="stat-card">
+                    <span class="stat-label">附加项总数</span>
+                    <span class="stat-number" id="totalModifiers">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">活跃</span>
+                    <span class="stat-number" id="activeModifiers">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">关联商品</span>
+                    <span class="stat-number" id="modifierProducts">0</span>
+                </div>
             </div>
-            <h2>附加项</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Products | 页面: modifiers</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+
+            <!-- 附加项列表 -->
+            <div class="modifier-list" id="modifierList">
+                <!-- 由JS生成 -->
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .modifier-container { max-width: 1000px; margin: 0 auto; }
+    
+    .modifier-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .modifier-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .modifier-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .modifier-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .modifier-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .modifier-stats .stat-card:nth-child(2) .stat-number { color: #10B981; }
+    .modifier-stats .stat-card:nth-child(3) .stat-number { color: #8B5CF6; }
+    
+    .modifier-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .modifier-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F3F4F6; }
+    .modifier-item:last-child { border-bottom: none; }
+    .modifier-item:hover { background: #F9FAFB; }
+    .modifier-item .modifier-info { display: flex; align-items: center; gap: 12px; }
+    .modifier-item .modifier-name { font-weight: 500; }
+    .modifier-item .modifier-price { font-weight: 600; color: #4F46E5; }
+    .modifier-item .modifier-desc { font-size: 13px; color: #6B7280; margin-left: 8px; }
+    .modifier-item .modifier-actions { display: flex; gap: 4px; }
+    
+    .empty-modifiers { text-align: center; padding: 60px 0; color: #9CA3AF; }
+    .empty-modifiers i { font-size: 48px; margin-bottom: 12px; }
+    
+    [data-theme="dark"] .modifier-stats .stat-card,
+    [data-theme="dark"] .modifier-list { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .modifier-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .modifier-item { border-color: #3A3A3C; }
+    [data-theme="dark"] .modifier-item:hover { background: #3A3A3C; }
 </style>
+
+<script>
+    (function() {
+        window.ModifierModule = {
+            modifiers: [],
+            
+            init: function() {
+                this.loadModifiers();
+                this.render();
+            },
+            
+            loadModifiers: function() {
+                const saved = localStorage.getItem('modifier_data');
+                if (saved) {
+                    try {
+                        this.modifiers = JSON.parse(saved);
+                    } catch (e) {
+                        this.modifiers = this.getMockModifiers();
+                    }
+                } else {
+                    this.modifiers = this.getMockModifiers();
+                    localStorage.setItem('modifier_data', JSON.stringify(this.modifiers));
+                }
+            },
+            
+            getMockModifiers: function() {
+                return [
+                    { id: 'MD-001', name: '真皮护理', price: 50, desc: '高级真皮座椅护理', products: 3, status: 'active' },
+                    { id: 'MD-002', name: '香薰', price: 30, desc: '车内香薰服务', products: 2, status: 'active' },
+                    { id: 'MD-003', name: '紫外线杀菌', price: 80, desc: '车内紫外线杀菌', products: 1, status: 'active' },
+                    { id: 'MD-004', name: '轮毂清洗', price: 40, desc: '轮毂深度清洗', products: 4, status: 'inactive' }
+                ];
+            },
+            
+            render: function() {
+                const container = document.getElementById('modifierList');
+                
+                if (this.modifiers.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-modifiers">
+                            <i class="fas fa-plus-circle"></i>
+                            <p>暂无附加项</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = this.modifiers.map(m => `
+                    <div class="modifier-item">
+                        <div class="modifier-info">
+                            <span class="modifier-name">${m.name}</span>
+                            <span class="modifier-price">+¥${m.price}</span>
+                            <span class="modifier-desc">${m.desc || ''}</span>
+                            <span class="badge ${m.status === 'active' ? 'badge-success' : 'badge-secondary'}">
+                                ${m.status === 'active' ? '活跃' : '停用'}
+                            </span>
+                            <span style="font-size:13px;color:#6B7280;">📦 ${m.products || 0}</span>
+                        </div>
+                        <div class="modifier-actions">
+                            <button class="btn-sm btn-primary" onclick="window.ModifierModule.editModifier('${m.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-sm ${m.status === 'active' ? 'btn-warning' : 'btn-success'}" onclick="window.ModifierModule.toggleModifier('${m.id}')">
+                                <i class="fas ${m.status === 'active' ? 'fa-pause' : 'fa-play'}"></i>
+                            </button>
+                            <button class="btn-sm btn-danger" onclick="window.ModifierModule.deleteModifier('${m.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                this.updateStats();
+            },
+            
+            updateStats: function() {
+                document.getElementById('totalModifiers').textContent = this.modifiers.length;
+                document.getElementById('activeModifiers').textContent = this.modifiers.filter(m => m.status === 'active').length;
+                document.getElementById('modifierProducts').textContent = this.modifiers.reduce((sum, m) => sum + (m.products || 0), 0);
+            },
+            
+            newModifier: function() {
+                const name = prompt('输入附加项名称：');
+                if (!name) return;
+                const price = parseFloat(prompt('输入附加项价格：'));
+                if (isNaN(price) || price < 0) return;
+                const desc = prompt('输入附加项描述：') || '';
+                const modifier = {
+                    id: 'MD-' + Date.now().toString().slice(-6),
+                    name: name,
+                    price: price,
+                    desc: desc,
+                    products: 0,
+                    status: 'active'
+                };
+                this.modifiers.push(modifier);
+                localStorage.setItem('modifier_data', JSON.stringify(this.modifiers));
+                this.render();
+                alert('附加项已创建: ' + name);
+            },
+            
+            editModifier: function(id) {
+                const modifier = this.modifiers.find(m => m.id === id);
+                if (modifier) {
+                    const newName = prompt('修改附加项名称：', modifier.name);
+                    if (newName) {
+                        modifier.name = newName;
+                        localStorage.setItem('modifier_data', JSON.stringify(this.modifiers));
+                        this.render();
+                        alert('附加项已更新');
+                    }
+                }
+            },
+            
+            toggleModifier: function(id) {
+                const modifier = this.modifiers.find(m => m.id === id);
+                if (modifier) {
+                    modifier.status = modifier.status === 'active' ? 'inactive' : 'active';
+                    localStorage.setItem('modifier_data', JSON.stringify(this.modifiers));
+                    this.render();
+                    alert('附加项状态已切换');
+                }
+            },
+            
+            deleteModifier: function(id) {
+                if (confirm('确认删除该附加项？')) {
+                    this.modifiers = this.modifiers.filter(m => m.id !== id);
+                    localStorage.setItem('modifier_data', JSON.stringify(this.modifiers));
+                    this.render();
+                    alert('附加项已删除');
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.ModifierModule.init();
+        });
+    })();
+</script>

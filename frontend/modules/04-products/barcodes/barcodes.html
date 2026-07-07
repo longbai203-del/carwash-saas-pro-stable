@@ -1,10 +1,13 @@
 <!-- 04-products/barcodes.html -->
 <div class="page-container" data-page="04-products-barcodes">
     <div class="page-header">
-        <h1>条码管理</h1>
+        <h1><i class="fas fa-barcode"></i> 条码管理</h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
+            <button class="btn btn-primary" onclick="window.BarcodeModule.generateBarcode()">
+                <i class="fas fa-plus"></i> 生成条码
+            </button>
+            <button class="btn btn-success" onclick="window.BarcodeModule.printBarcode()">
+                <i class="fas fa-print"></i> 打印条码
             </button>
             <button class="btn btn-outline" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> 刷新
@@ -12,43 +15,338 @@
         </div>
     </div>
     <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-box"></i>
+        <div class="barcode-container">
+            <!-- 统计卡片 -->
+            <div class="barcode-stats">
+                <div class="stat-card">
+                    <span class="stat-label">总条码数</span>
+                    <span class="stat-number" id="totalBarcodes">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已使用</span>
+                    <span class="stat-number" id="usedBarcodes">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">未使用</span>
+                    <span class="stat-number" id="unusedBarcodes">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">今日生成</span>
+                    <span class="stat-number" id="todayGenerated">0</span>
+                </div>
             </div>
-            <h2>条码管理</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Products | 页面: barcodes</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+
+            <!-- 搜索栏 -->
+            <div class="barcode-search">
+                <input type="text" id="barcodeSearch" placeholder="搜索条码或商品名称..." 
+                       oninput="window.BarcodeModule.search(this.value)" />
+                <select id="barcodeStatusFilter" onchange="window.BarcodeModule.filterByStatus(this.value)">
+                    <option value="">全部状态</option>
+                    <option value="used">已使用</option>
+                    <option value="unused">未使用</option>
+                </select>
+                <button class="btn btn-primary" onclick="window.BarcodeModule.searchBarcodes()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+
+            <!-- 条码列表 -->
+            <div class="barcode-list">
+                <table class="barcode-table">
+                    <thead>
+                        <tr>
+                            <th>条码编号</th>
+                            <th>关联商品</th>
+                            <th>生成时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="barcodeTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align:center;padding:40px;color:#9CA3AF;">
+                                <i class="fas fa-barcode" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                暂无条码记录
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="barcode-pagination" id="barcodePagination">
+                <span id="barcodeTotal">共 0 条记录</span>
+                <div class="pagination-btns">
+                    <button onclick="window.BarcodeModule.prevPage()"><i class="fas fa-chevron-left"></i></button>
+                    <span id="barcodePageInfo">1/1</span>
+                    <button onclick="window.BarcodeModule.nextPage()"><i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .barcode-container { max-width: 1200px; margin: 0 auto; }
+    
+    .barcode-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .barcode-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .barcode-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .barcode-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .barcode-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .barcode-stats .stat-card:nth-child(2) .stat-number { color: #10B981; }
+    .barcode-stats .stat-card:nth-child(3) .stat-number { color: #F59E0B; }
+    .barcode-stats .stat-card:nth-child(4) .stat-number { color: #8B5CF6; }
+    
+    .barcode-search { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .barcode-search input { flex: 1; padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; min-width: 200px; }
+    .barcode-search input:focus { outline: none; border-color: #4F46E5; }
+    .barcode-search select { padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; background: white; }
+    
+    .barcode-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .barcode-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .barcode-table th { background: #F9FAFB; padding: 10px 14px; text-align: left; font-weight: 600; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
+    .barcode-table td { padding: 10px 14px; border-bottom: 1px solid #F3F4F6; }
+    .barcode-table tr:hover { background: #F9FAFB; }
+    
+    .badge-barcode-used { background: #D1FAE5; color: #065F46; }
+    .badge-barcode-unused { background: #FEF3C7; color: #92400E; }
+    
+    .barcode-pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 12px; margin-top: 16px; border: 1px solid #e5e7eb; }
+    .barcode-pagination .pagination-btns { display: flex; gap: 4px; align-items: center; }
+    .barcode-pagination button { padding: 4px 12px; border: 1px solid #D1D5DB; border-radius: 4px; background: white; cursor: pointer; }
+    .barcode-pagination button:hover { background: #F3F4F6; }
+    
+    .btn-sm-barcode { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-sm-barcode-primary { background: #4F46E5; color: white; }
+    .btn-sm-barcode-primary:hover { background: #4338CA; }
+    .btn-sm-barcode-success { background: #10B981; color: white; }
+    .btn-sm-barcode-success:hover { background: #059669; }
+    .btn-sm-barcode-danger { background: #EF4444; color: white; }
+    .btn-sm-barcode-danger:hover { background: #DC2626; }
+    
+    [data-theme="dark"] .barcode-stats .stat-card,
+    [data-theme="dark"] .barcode-list,
+    [data-theme="dark"] .barcode-pagination { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .barcode-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .barcode-table th { background: #3A3A3C; color: #9CA3AF; }
+    [data-theme="dark"] .barcode-table td { border-color: #3A3A3C; }
+    [data-theme="dark"] .barcode-table tr:hover { background: #3A3A3C; }
+    [data-theme="dark"] .barcode-search input,
+    [data-theme="dark"] .barcode-search select { background: #3A3A3C; border-color: #48484A; color: #F5F5F7; }
+    
+    @media (max-width: 768px) { .barcode-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
+
+<script>
+    (function() {
+        window.BarcodeModule = {
+            barcodes: [],
+            filteredBarcodes: [],
+            page: 1,
+            pageSize: 10,
+            
+            init: function() {
+                this.loadBarcodes();
+                this.render();
+            },
+            
+            loadBarcodes: function() {
+                const saved = localStorage.getItem('barcode_data');
+                if (saved) {
+                    try {
+                        this.barcodes = JSON.parse(saved);
+                    } catch (e) {
+                        this.barcodes = this.getMockBarcodes();
+                    }
+                } else {
+                    this.barcodes = this.getMockBarcodes();
+                    localStorage.setItem('barcode_data', JSON.stringify(this.barcodes));
+                }
+                this.filteredBarcodes = [...this.barcodes];
+            },
+            
+            getMockBarcodes: function() {
+                return [
+                    { id: 'BC-001', code: '6901234567890', product: '泡沫洗车液', created: '2024-01-15', status: 'used' },
+                    { id: 'BC-002', code: '6901234567891', product: '水蜡', created: '2024-01-16', status: 'unused' },
+                    { id: 'BC-003', code: '6901234567892', product: '轮胎光亮剂', created: '2024-01-17', status: 'used' },
+                    { id: 'BC-004', code: '6901234567893', product: '抛光蜡', created: '2024-01-18', status: 'unused' },
+                    { id: 'BC-005', code: '6901234567894', product: '内饰清洁剂', created: '2024-01-19', status: 'unused' }
+                ];
+            },
+            
+            render: function() {
+                const tbody = document.getElementById('barcodeTableBody');
+                const start = (this.page - 1) * this.pageSize;
+                const end = start + this.pageSize;
+                const pageData = this.filteredBarcodes.slice(start, end);
+                
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align:center;padding:40px;color:#9CA3AF;">
+                                <i class="fas fa-barcode" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                暂无条码记录
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    const statusMap = { used: '已使用', unused: '未使用' };
+                    const statusClass = { used: 'badge-barcode-used', unused: 'badge-barcode-unused' };
+                    
+                    tbody.innerHTML = pageData.map(b => `
+                        <tr>
+                            <td><strong>${b.code}</strong></td>
+                            <td>${b.product || '-'}</td>
+                            <td>${b.created}</td>
+                            <td><span class="badge ${statusClass[b.status] || 'badge-barcode-unused'}">${statusMap[b.status] || b.status}</span></td>
+                            <td>
+                                <div style="display:flex;gap:4px;">
+                                    <button class="btn-sm-barcode btn-sm-barcode-primary" onclick="window.BarcodeModule.viewBarcode('${b.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${b.status === 'unused' ? `
+                                        <button class="btn-sm-barcode btn-sm-barcode-success" onclick="window.BarcodeModule.useBarcode('${b.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn-sm-barcode btn-sm-barcode-danger" onclick="window.BarcodeModule.deleteBarcode('${b.id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                
+                this.updateStats();
+                this.renderPagination();
+            },
+            
+            updateStats: function() {
+                document.getElementById('totalBarcodes').textContent = this.barcodes.length;
+                document.getElementById('usedBarcodes').textContent = this.barcodes.filter(b => b.status === 'used').length;
+                document.getElementById('unusedBarcodes').textContent = this.barcodes.filter(b => b.status === 'unused').length;
+                const today = new Date().toISOString().slice(0, 10);
+                document.getElementById('todayGenerated').textContent = this.barcodes.filter(b => b.created === today).length;
+            },
+            
+            renderPagination: function() {
+                const total = this.filteredBarcodes.length;
+                const totalPages = Math.ceil(total / this.pageSize) || 1;
+                document.getElementById('barcodeTotal').textContent = '共 ' + total + ' 条记录';
+                document.getElementById('barcodePageInfo').textContent = this.page + '/' + totalPages;
+            },
+            
+            generateBarcode: function() {
+                const product = prompt('输入关联商品名称：');
+                if (!product) return;
+                const code = '690' + String(Math.floor(Math.random() * 1000000000000)).padStart(12, '0');
+                const barcode = {
+                    id: 'BC-' + Date.now().toString().slice(-6),
+                    code: code,
+                    product: product,
+                    created: new Date().toISOString().slice(0, 10),
+                    status: 'unused'
+                };
+                this.barcodes.push(barcode);
+                this.filteredBarcodes = [...this.barcodes];
+                localStorage.setItem('barcode_data', JSON.stringify(this.barcodes));
+                this.render();
+                alert('条码已生成: ' + code);
+            },
+            
+            printBarcode: function() {
+                const unused = this.barcodes.filter(b => b.status === 'unused');
+                if (unused.length === 0) {
+                    alert('没有未使用的条码可打印');
+                    return;
+                }
+                alert('打印条码: ' + unused.length + ' 个条码');
+                window.print();
+            },
+            
+            search: function(query) {
+                if (!query || query.length < 2) {
+                    this.filteredBarcodes = [...this.barcodes];
+                } else {
+                    this.filteredBarcodes = this.barcodes.filter(b => 
+                        b.code.includes(query) || 
+                        (b.product && b.product.includes(query))
+                    );
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            filterByStatus: function(status) {
+                if (!status) {
+                    this.filteredBarcodes = [...this.barcodes];
+                } else {
+                    this.filteredBarcodes = this.barcodes.filter(b => b.status === status);
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            searchBarcodes: function() {
+                const query = document.getElementById('barcodeSearch').value;
+                this.search(query);
+            },
+            
+            viewBarcode: function(id) {
+                const barcode = this.barcodes.find(b => b.id === id);
+                if (barcode) {
+                    alert('条码详情:\n' +
+                          'ID: ' + barcode.id + '\n' +
+                          '条码: ' + barcode.code + '\n' +
+                          '商品: ' + (barcode.product || '-') + '\n' +
+                          '状态: ' + (barcode.status === 'used' ? '已使用' : '未使用') + '\n' +
+                          '生成时间: ' + barcode.created);
+                }
+            },
+            
+            useBarcode: function(id) {
+                if (confirm('确认使用该条码？')) {
+                    const barcode = this.barcodes.find(b => b.id === id);
+                    if (barcode) {
+                        barcode.status = 'used';
+                        localStorage.setItem('barcode_data', JSON.stringify(this.barcodes));
+                        this.render();
+                        alert('条码已使用');
+                    }
+                }
+            },
+            
+            deleteBarcode: function(id) {
+                if (confirm('确认删除该条码？')) {
+                    this.barcodes = this.barcodes.filter(b => b.id !== id);
+                    this.filteredBarcodes = [...this.barcodes];
+                    localStorage.setItem('barcode_data', JSON.stringify(this.barcodes));
+                    this.render();
+                    alert('条码已删除');
+                }
+            },
+            
+            prevPage: function() {
+                if (this.page > 1) {
+                    this.page--;
+                    this.render();
+                }
+            },
+            
+            nextPage: function() {
+                const totalPages = Math.ceil(this.filteredBarcodes.length / this.pageSize);
+                if (this.page < totalPages) {
+                    this.page++;
+                    this.render();
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.BarcodeModule.init();
+        });
+    })();
+</script>
