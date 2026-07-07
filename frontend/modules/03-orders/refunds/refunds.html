@@ -1,10 +1,13 @@
 <!-- 03-orders/refunds.html -->
 <div class="page-container" data-page="03-orders-refunds">
     <div class="page-header">
-        <h1>退款管理</h1>
+        <h1><i class="fas fa-undo-alt"></i> 退款管理</h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="alert('功能开发中...')">
-                <i class="fas fa-plus"></i> 新建
+            <button class="btn btn-primary" onclick="window.RefundModule.newRefund()">
+                <i class="fas fa-plus"></i> 新建退款
+            </button>
+            <button class="btn btn-success" onclick="window.RefundModule.processRefund()">
+                <i class="fas fa-check"></i> 处理退款
             </button>
             <button class="btn btn-outline" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> 刷新
@@ -12,43 +15,379 @@
         </div>
     </div>
     <div class="page-content">
-        <div class="content-placeholder">
-            <div class="placeholder-icon">
-                <i class="fas fa-clipboard-list"></i>
+        <div class="refund-container">
+            <!-- 统计卡片 -->
+            <div class="refund-stats">
+                <div class="stat-card">
+                    <span class="stat-label">待处理</span>
+                    <span class="stat-number" id="pendingRefunds">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">处理中</span>
+                    <span class="stat-number" id="processingRefunds">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已完成</span>
+                    <span class="stat-number" id="completedRefunds">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">退款总额</span>
+                    <span class="stat-number" id="totalRefundAmount">¥0.00</span>
+                </div>
             </div>
-            <h2>退款管理</h2>
-            <p class="placeholder-text">此页面正在开发中</p>
-            <p class="placeholder-sub">模块: Orders | 页面: refunds</p>
-            <div class="placeholder-features">
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 路由已注册</span>
-                <span class="feature-tag"><i class="fas fa-check-circle"></i> 权限控制</span>
-                <span class="feature-tag"><i class="fas fa-clock"></i> 功能开发中</span>
+
+            <!-- 搜索栏 -->
+            <div class="refund-search">
+                <input type="text" id="refundSearch" placeholder="搜索订单号或客户名称..." 
+                       oninput="window.RefundModule.search(this.value)" />
+                <select id="refundStatusFilter" onchange="window.RefundModule.filterByStatus(this.value)">
+                    <option value="">全部状态</option>
+                    <option value="pending">待处理</option>
+                    <option value="processing">处理中</option>
+                    <option value="completed">已完成</option>
+                    <option value="rejected">已拒绝</option>
+                </select>
+                <button class="btn btn-primary" onclick="window.RefundModule.searchRefunds()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+
+            <!-- 退款列表 -->
+            <div class="refund-list">
+                <table class="refund-table">
+                    <thead>
+                        <tr>
+                            <th>退款单号</th>
+                            <th>原订单</th>
+                            <th>客户</th>
+                            <th>退款金额</th>
+                            <th>退款方式</th>
+                            <th>状态</th>
+                            <th>申请时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refundTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:40px;color:#9CA3AF;">
+                                <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                暂无退款记录
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="refund-pagination" id="refundPagination">
+                <span id="refundTotal">共 0 条记录</span>
+                <div class="pagination-btns">
+                    <button onclick="window.RefundModule.prevPage()"><i class="fas fa-chevron-left"></i></button>
+                    <span id="refundPageInfo">1/1</span>
+                    <button onclick="window.RefundModule.nextPage()"><i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    .page-actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d2d2d7; background: #fff; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-primary:hover { background: #0066d9; }
-    .btn-outline { background: transparent; border-color: #d2d2d7; }
-    .btn-outline:hover { background: #f5f5f7; }
-    .page-content { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .content-placeholder { text-align: center; padding: 40px 20px; }
-    .placeholder-icon { font-size: 48px; color: #007aff; margin-bottom: 16px; }
-    .placeholder-text { color: #6e6e73; font-size: 16px; margin-bottom: 4px; }
-    .placeholder-sub { color: #8e8e93; font-size: 13px; margin-bottom: 16px; }
-    .placeholder-features { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: #f5f5f7; border-radius: 12px; font-size: 12px; color: #1d1d1f; }
-    .feature-tag i { color: #34c759; font-size: 12px; }
-    .feature-tag i.fa-clock { color: #ff9500; }
-    [data-theme="dark"] .page-content { background: #2c2c2e; }
-    [data-theme="dark"] .feature-tag { background: #3a3a3c; color: #f5f5f7; }
-    [data-theme="dark"] .btn-outline { color: #f5f5f7; border-color: #48484a; }
-    [data-theme="dark"] .btn-outline:hover { background: #3a3a3c; }
+    .refund-container { max-width: 1200px; margin: 0 auto; }
+    
+    .refund-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .stat-card:nth-child(1) .stat-number { color: #F59E0B; }
+    .stat-card:nth-child(2) .stat-number { color: #3B82F6; }
+    .stat-card:nth-child(3) .stat-number { color: #10B981; }
+    .stat-card:nth-child(4) .stat-number { color: #4F46E5; }
+    
+    .refund-search { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .refund-search input { flex: 1; padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; min-width: 200px; }
+    .refund-search input:focus { outline: none; border-color: #4F46E5; }
+    .refund-search select { padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; background: white; }
+    
+    .refund-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .refund-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .refund-table th { background: #F9FAFB; padding: 10px 14px; text-align: left; font-weight: 600; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
+    .refund-table td { padding: 10px 14px; border-bottom: 1px solid #F3F4F6; }
+    .refund-table tr:hover { background: #F9FAFB; }
+    
+    .badge-refund-pending { background: #FEF3C7; color: #92400E; }
+    .badge-refund-processing { background: #DBEAFE; color: #1E40AF; }
+    .badge-refund-completed { background: #D1FAE5; color: #065F46; }
+    .badge-refund-rejected { background: #FEE2E2; color: #991B1B; }
+    
+    .refund-pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 12px; margin-top: 16px; border: 1px solid #e5e7eb; }
+    .refund-pagination .pagination-btns { display: flex; gap: 4px; align-items: center; }
+    .refund-pagination button { padding: 4px 12px; border: 1px solid #D1D5DB; border-radius: 4px; background: white; cursor: pointer; }
+    .refund-pagination button:hover { background: #F3F4F6; }
+    
+    .btn-sm-refund { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-sm-refund-primary { background: #4F46E5; color: white; }
+    .btn-sm-refund-primary:hover { background: #4338CA; }
+    .btn-sm-refund-success { background: #10B981; color: white; }
+    .btn-sm-refund-success:hover { background: #059669; }
+    .btn-sm-refund-danger { background: #EF4444; color: white; }
+    .btn-sm-refund-danger:hover { background: #DC2626; }
+    
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .refund-list,
+    [data-theme="dark"] .refund-pagination { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .refund-table th { background: #3A3A3C; color: #9CA3AF; }
+    [data-theme="dark"] .refund-table td { border-color: #3A3A3C; }
+    [data-theme="dark"] .refund-table tr:hover { background: #3A3A3C; }
+    [data-theme="dark"] .refund-search input,
+    [data-theme="dark"] .refund-search select { background: #3A3A3C; border-color: #48484A; color: #F5F5F7; }
+    
+    @media (max-width: 768px) { .refund-stats { grid-template-columns: repeat(2, 1fr); } .refund-table { font-size: 12px; } }
 </style>
+
+<script>
+    (function() {
+        window.RefundModule = {
+            refunds: [],
+            filteredRefunds: [],
+            page: 1,
+            pageSize: 10,
+            
+            init: function() {
+                this.loadRefunds();
+                this.render();
+            },
+            
+            loadRefunds: function() {
+                // 从localStorage加载
+                const saved = localStorage.getItem('refund_data');
+                if (saved) {
+                    try {
+                        this.refunds = JSON.parse(saved);
+                    } catch (e) {
+                        this.refunds = this.getMockRefunds();
+                    }
+                } else {
+                    this.refunds = this.getMockRefunds();
+                    localStorage.setItem('refund_data', JSON.stringify(this.refunds));
+                }
+                this.filteredRefunds = [...this.refunds];
+            },
+            
+            getMockRefunds: function() {
+                return [
+                    { id: 'RF-001', orderId: 'ORD-001', customer: '张伟', amount: 68, method: '原路返回', status: 'pending', time: '2024-01-15 14:30' },
+                    { id: 'RF-002', orderId: 'ORD-003', customer: '李娜', amount: 388, method: '银行转账', status: 'processing', time: '2024-01-16 09:20' },
+                    { id: 'RF-003', orderId: 'ORD-005', customer: '王强', amount: 228, method: '微信支付', status: 'completed', time: '2024-01-17 16:45' },
+                    { id: 'RF-004', orderId: 'ORD-002', customer: '刘洋', amount: 128, method: '原路返回', status: 'rejected', time: '2024-01-18 11:00' },
+                    { id: 'RF-005', orderId: 'ORD-007', customer: '陈静', amount: 688, method: '支付宝', status: 'pending', time: '2024-01-19 13:15' }
+                ];
+            },
+            
+            render: function() {
+                const tbody = document.getElementById('refundTableBody');
+                const start = (this.page - 1) * this.pageSize;
+                const end = start + this.pageSize;
+                const pageData = this.filteredRefunds.slice(start, end);
+                
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:40px;color:#9CA3AF;">
+                                <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                暂无退款记录
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    const statusMap = {
+                        pending: '待处理',
+                        processing: '处理中',
+                        completed: '已完成',
+                        rejected: '已拒绝'
+                    };
+                    const statusClass = {
+                        pending: 'badge-refund-pending',
+                        processing: 'badge-refund-processing',
+                        completed: 'badge-refund-completed',
+                        rejected: 'badge-refund-rejected'
+                    };
+                    
+                    tbody.innerHTML = pageData.map(r => `
+                        <tr>
+                            <td><strong>${r.id}</strong></td>
+                            <td>${r.orderId}</td>
+                            <td>${r.customer}</td>
+                            <td><strong>¥${r.amount.toFixed(2)}</strong></td>
+                            <td>${r.method}</td>
+                            <td><span class="badge ${statusClass[r.status] || 'badge-refund-pending'}">${statusMap[r.status] || r.status}</span></td>
+                            <td style="font-size:13px;color:#6B7280;">${r.time}</td>
+                            <td>
+                                <div style="display:flex;gap:4px;">
+                                    <button class="btn-sm-refund btn-sm-refund-primary" onclick="window.RefundModule.viewRefund('${r.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${r.status === 'pending' ? `
+                                        <button class="btn-sm-refund btn-sm-refund-success" onclick="window.RefundModule.approveRefund('${r.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${r.status === 'pending' ? `
+                                        <button class="btn-sm-refund btn-sm-refund-danger" onclick="window.RefundModule.rejectRefund('${r.id}')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // 更新统计
+                this.updateStats();
+                
+                // 更新分页
+                this.renderPagination();
+            },
+            
+            updateStats: function() {
+                document.getElementById('pendingRefunds').textContent = this.refunds.filter(r => r.status === 'pending').length;
+                document.getElementById('processingRefunds').textContent = this.refunds.filter(r => r.status === 'processing').length;
+                document.getElementById('completedRefunds').textContent = this.refunds.filter(r => r.status === 'completed').length;
+                const total = this.refunds.reduce((sum, r) => sum + (r.status !== 'rejected' ? r.amount : 0), 0);
+                document.getElementById('totalRefundAmount').textContent = '¥' + total.toFixed(2);
+            },
+            
+            renderPagination: function() {
+                const total = this.filteredRefunds.length;
+                const totalPages = Math.ceil(total / this.pageSize) || 1;
+                document.getElementById('refundTotal').textContent = '共 ' + total + ' 条记录';
+                document.getElementById('refundPageInfo').textContent = this.page + '/' + totalPages;
+            },
+            
+            newRefund: function() {
+                const orderId = prompt('输入原订单号：');
+                if (!orderId) return;
+                const amount = parseFloat(prompt('输入退款金额：'));
+                if (isNaN(amount) || amount <= 0) return;
+                const method = prompt('退款方式 (原路返回/微信/支付宝/银行转账)：', '原路返回');
+                
+                const refund = {
+                    id: 'RF-' + Date.now().toString().slice(-6),
+                    orderId: orderId,
+                    customer: '客户',
+                    amount: amount,
+                    method: method || '原路返回',
+                    status: 'pending',
+                    time: new Date().toLocaleString()
+                };
+                this.refunds.push(refund);
+                this.filteredRefunds = [...this.refunds];
+                localStorage.setItem('refund_data', JSON.stringify(this.refunds));
+                this.render();
+                alert('退款申请已创建: ' + refund.id);
+            },
+            
+            processRefund: function() {
+                const pending = this.refunds.filter(r => r.status === 'pending');
+                if (pending.length === 0) {
+                    alert('没有待处理的退款');
+                    return;
+                }
+                const confirm = confirm('处理所有待退款申请？共 ' + pending.length + ' 条');
+                if (confirm) {
+                    pending.forEach(r => r.status = 'processing');
+                    localStorage.setItem('refund_data', JSON.stringify(this.refunds));
+                    this.render();
+                    alert('已处理 ' + pending.length + ' 条退款申请');
+                }
+            },
+            
+            search: function(query) {
+                if (!query || query.length < 2) {
+                    this.filteredRefunds = [...this.refunds];
+                } else {
+                    this.filteredRefunds = this.refunds.filter(r => 
+                        r.id.includes(query) || 
+                        r.orderId.includes(query) || 
+                        r.customer.includes(query)
+                    );
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            filterByStatus: function(status) {
+                if (!status) {
+                    this.filteredRefunds = [...this.refunds];
+                } else {
+                    this.filteredRefunds = this.refunds.filter(r => r.status === status);
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            searchRefunds: function() {
+                const query = document.getElementById('refundSearch').value;
+                this.search(query);
+            },
+            
+            viewRefund: function(id) {
+                const refund = this.refunds.find(r => r.id === id);
+                if (refund) {
+                    alert('退款详情:\n' +
+                          '单号: ' + refund.id + '\n' +
+                          '订单: ' + refund.orderId + '\n' +
+                          '客户: ' + refund.customer + '\n' +
+                          '金额: ¥' + refund.amount.toFixed(2) + '\n' +
+                          '方式: ' + refund.method + '\n' +
+                          '状态: ' + refund.status + '\n' +
+                          '时间: ' + refund.time);
+                }
+            },
+            
+            approveRefund: function(id) {
+                if (confirm('确认批准该退款？')) {
+                    const refund = this.refunds.find(r => r.id === id);
+                    if (refund) {
+                        refund.status = 'completed';
+                        localStorage.setItem('refund_data', JSON.stringify(this.refunds));
+                        this.render();
+                        alert('退款已批准');
+                    }
+                }
+            },
+            
+            rejectRefund: function(id) {
+                if (confirm('确认拒绝该退款？')) {
+                    const refund = this.refunds.find(r => r.id === id);
+                    if (refund) {
+                        refund.status = 'rejected';
+                        localStorage.setItem('refund_data', JSON.stringify(this.refunds));
+                        this.render();
+                        alert('退款已拒绝');
+                    }
+                }
+            },
+            
+            prevPage: function() {
+                if (this.page > 1) {
+                    this.page--;
+                    this.render();
+                }
+            },
+            
+            nextPage: function() {
+                const totalPages = Math.ceil(this.filteredRefunds.length / this.pageSize);
+                if (this.page < totalPages) {
+                    this.page++;
+                    this.render();
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.RefundModule.init();
+        });
+    })();
+</script>

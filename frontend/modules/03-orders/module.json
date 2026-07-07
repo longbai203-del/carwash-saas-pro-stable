@@ -1,5 +1,27 @@
-{{
+{
   "name": "Orders",
   "icon": "clipboard-list",
-  "order": 3
-}}
+  "order": 3,
+  "pages": [
+    {
+      "path": "list",
+      "name": "订单列表",
+      "icon": "list"
+    },
+    {
+      "path": "detail",
+      "name": "订单详情",
+      "icon": "clipboard-list"
+    },
+    {
+      "path": "refunds",
+      "name": "退款管理",
+      "icon": "undo-alt"
+    },
+    {
+      "path": "returns",
+      "name": "退货管理",
+      "icon": "undo"
+    }
+  ]
+}
