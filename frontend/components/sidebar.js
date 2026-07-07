@@ -21,30 +21,31 @@ window.SidebarComponent = {
         { module: 'settings', icon: 'fa-sliders-h', label: 'Settings' }
     ],
 
-    // Dashboard 子菜单
+    // Dashboard 子菜单（更新：添加 dashboard 作为默认页）
     _dashboardSubMenu: [
-        { module: 'sales', label: '📊 Sales', defaultPage: 'sales' },
-        { module: 'executive', label: '📈 Executive', defaultPage: 'executive' },
-        { module: 'ai', label: '🤖 AI', defaultPage: 'ai' },
-        { module: 'crm', label: '👥 CRM', defaultPage: 'crm' },
-        { module: 'finance', label: '💰 Finance', defaultPage: 'finance' },
-        { module: 'inventory', label: '📦 Inventory', defaultPage: 'inventory' },
-        { module: 'marketing', label: '📢 Marketing', defaultPage: 'marketing' },
-        { module: 'employee', label: '👤 Employee', defaultPage: 'employee' },
-        { module: 'vehicle-monitor', label: '🚗 Vehicle Monitor', defaultPage: 'vehicle-monitor' }
+        { module: 'dashboard', label: '📊 Dashboard' },
+        { module: 'executive', label: '📈 Executive' },
+        { module: 'ai', label: '🤖 AI' },
+        { module: 'crm', label: '👥 CRM' },
+        { module: 'finance', label: '💰 Finance' },
+        { module: 'inventory', label: '📦 Inventory' },
+        { module: 'marketing', label: '📢 Marketing' },
+        { module: 'employee', label: '👤 Employee' },
+        { module: 'vehicle-monitor', label: '🚗 Vehicle Monitor' }
     ],
 
     render: function(container) {
         var user = AppStore.get('currentUser');
         var perms = user ? AppConfig.permissions[user.role] || [] : [];
         var isMobile = window.innerWidth <= 768;
-        var currentHash = window.location.hash.replace('#', '') || '/dashboard/sales';
+        var currentHash = window.location.hash.replace('#', '') || '/dashboard/dashboard';
         var parts = currentHash.split('/').filter(function(p) { return p.length > 0; });
         var currentKey = parts[0] || 'dashboard';
-        var currentPage = parts[1] || 'sales';
+        var currentPage = parts[1] || 'dashboard';
 
-        // ✅ 判断当前是否在 Dashboard 子模块
-        var isDashboardSub = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'].indexOf(currentPage) !== -1;
+        // 判断当前是否在 Dashboard 子模块
+        var subModules = ['dashboard', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'];
+        var isDashboardSub = subModules.indexOf(currentPage) !== -1;
 
         var html = '<aside class="w-64 bg-white shadow-xl z-20 flex flex-col border-r border-gray-100 h-full">' +
             '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
@@ -78,17 +79,18 @@ window.SidebarComponent = {
                     isActive = (currentKey === item.module);
                 }
 
-                // ✅ 判断是否是 Dashboard（有子菜单）
+                // Dashboard 特殊处理（带子菜单）
                 if (item.module === 'dashboard') {
+                    // 判断是否展开：当前在 dashboard 或子模块
                     var isExpanded = (currentKey === 'dashboard' || isDashboardSub);
 
                     html += '<div class="sidebar-group' + (isExpanded ? ' open' : '') + '" style="margin-bottom:4px;">';
                     html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
                     html += '<i class="fas ' + item.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>';
                     html += '<span style="margin-left:12px;">' + item.label + '</span>';
-                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;"></i>';
+                    html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;' + (isExpanded ? 'transform:rotate(180deg);' : '') + '"></i>';
                     html += '</div>';
-                    html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;">';
+                    html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;' + (isExpanded ? 'max-height:500px;' : 'max-height:0;') + '">';
 
                     // 渲染 Dashboard 子菜单
                     for (var j = 0; j < this._dashboardSubMenu.length; j++) {
@@ -135,7 +137,7 @@ window.SidebarComponent = {
         if (container) {
             container.innerHTML = html;
 
-            // ✅ 绑定点击事件（使用事件委托）
+            // 绑定点击事件
             container.querySelectorAll('a[href^="#"]').forEach(function(link) {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -176,15 +178,13 @@ window.SidebarComponent = {
     },
 
     bindEvents: function(container) {
-        // 兼容旧的事件绑定方式（保留）
+        // 兼容旧的事件绑定方式
         var links = container.querySelectorAll('[data-module]');
         for (var i = 0; i < links.length; i++) {
             var el = links[i];
-            // 如果已经有 href，使用 href 跳转
             if (el.getAttribute('href')) {
                 // 已由事件委托处理
             } else {
-                // 没有 href 的旧方式
                 el.addEventListener('click', function(e) {
                     e.preventDefault();
                     var module = this.dataset.module;

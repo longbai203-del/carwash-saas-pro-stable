@@ -146,7 +146,7 @@
 
   // 模块映射：URL key → 实际文件夹
   var MODULE_MAP = {
-    'dashboard': { id: '01-dashboard', label: 'Dashboard', icon: 'chart-pie', defaultPage: 'sales' },
+    'dashboard': { id: '01-dashboard', label: 'Dashboard', icon: 'chart-pie', defaultPage: 'dashboard' }, // ✅ 改为 dashboard
     'pos': { id: '02-pos', label: 'POS', icon: 'cash-register', defaultPage: 'quick-sale' },
     'orders': { id: '03-orders', label: 'Orders', icon: 'clipboard-list', defaultPage: 'list' },
     'products': { id: '04-products', label: 'Products', icon: 'box', defaultPage: 'products' },
@@ -169,9 +169,9 @@
     FOLDER_TO_KEY[mod.id] = key;
   }
 
-  // 页面列表
+  // 页面列表 - ✅ 更新 01-dashboard 页面列表
   var PAGES = {
-    '01-dashboard': ['executive', 'sales', 'finance', 'inventory', 'crm', 'marketing', 'ai', 'employee', 'vehicle-monitor'],
+    '01-dashboard': ['dashboard', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'],
     '02-pos': ['quick-sale', 'touch-pos', 'returns', 'exchange', 'customer-display', 'receipt', 'kitchen-display', 'offline-pos', 'cash-register'],
     '03-orders': ['list', 'detail', 'returns', 'refunds'],
     '04-products': ['products', 'categories', 'brands', 'variants', 'barcodes', 'price-lists', 'modifiers', 'combos'],
@@ -230,24 +230,19 @@
       return;
     }
 
-    // ✅ 特殊处理：如果是 dashboard 子模块，保持 moduleKey 为 'dashboard'
-    // 但获取 folderId 时使用 'dashboard' → '01-dashboard'
-    var actualModuleKey = moduleKey;
-    var actualPage = page;
-
     // 获取文件夹ID
-    var folderId = getFolderId(actualModuleKey);
+    var folderId = getFolderId(moduleKey);
     if (!folderId) {
-      console.error('❌ 模块 "' + actualModuleKey + '" 不存在');
-      content.innerHTML = generateErrorPage('模块 "' + actualModuleKey + '" 不存在');
+      console.error('❌ 模块 "' + moduleKey + '" 不存在');
+      content.innerHTML = generateErrorPage('模块 "' + moduleKey + '" 不存在');
       return;
     }
 
     // 验证页面
     var pages = getPages(folderId);
-    if (pages.indexOf(actualPage) === -1) {
-      actualPage = getDefaultPage(actualModuleKey);
-      window.location.hash = '/' + actualModuleKey + '/' + actualPage;
+    if (pages.indexOf(page) === -1) {
+      page = getDefaultPage(moduleKey);
+      window.location.hash = '/' + moduleKey + '/' + page;
       return;
     }
 
@@ -265,7 +260,7 @@
     `;
 
     try {
-      var htmlPath = getHtmlPath(folderId, actualPage);
+      var htmlPath = getHtmlPath(folderId, page);
       console.log('📄 HTML:', htmlPath);
 
       var response = await fetch(htmlPath);
@@ -277,7 +272,7 @@
       console.log('✅ HTML 加载成功, 长度:', html.length);
 
       if (!html || html.trim().length < 10) {
-        content.innerHTML = generatePlaceholder(actualModuleKey, folderId, actualPage);
+        content.innerHTML = generatePlaceholder(moduleKey, folderId, page);
         return;
       }
 
@@ -285,7 +280,7 @@
 
       // 尝试加载JS
       try {
-        var jsPath = getJsPath(folderId, actualPage);
+        var jsPath = getJsPath(folderId, page);
         console.log('📄 JS:', jsPath);
 
         var module = await import(jsPath);
@@ -304,16 +299,16 @@
       }
 
       // 更新标题
-      var info = getModuleInfo(actualModuleKey);
+      var info = getModuleInfo(moduleKey);
       if (info) {
         document.title = info.label + ' - CarwashPro';
         var titleEl = document.getElementById('currentPageTitle');
         if (titleEl) {
-          titleEl.textContent = info.label + ' - ' + actualPage;
+          titleEl.textContent = info.label + ' - ' + page;
         }
       }
 
-      console.log('✅ 加载完成:', actualModuleKey, '/', actualPage);
+      console.log('✅ 加载完成:', moduleKey, '/', page);
 
     } catch (error) {
       console.error('❌ 加载失败:', error);
@@ -467,7 +462,7 @@
   // ============================================================
 
   function handleRoute() {
-    var hash = window.location.hash.replace('#', '') || '/dashboard/sales';
+    var hash = window.location.hash.replace('#', '') || '/dashboard/dashboard';
     if (!hash.startsWith('/')) hash = '/' + hash;
 
     var parts = hash.split('/').filter(function(p) { return p.length > 0; });
@@ -478,7 +473,7 @@
     var info = getModuleInfo(moduleKey);
     if (!info) {
       console.warn('未知模块:', moduleKey);
-      window.location.hash = '/dashboard/sales';
+      window.location.hash = '/dashboard/dashboard';
       return;
     }
 
@@ -505,13 +500,14 @@
       return;
     }
 
-    var currentHash = window.location.hash.replace('#', '') || '/dashboard/sales';
+    var currentHash = window.location.hash.replace('#', '') || '/dashboard/dashboard';
     var parts = currentHash.split('/').filter(function(p) { return p.length > 0; });
     var currentKey = parts[0] || 'dashboard';
-    var currentPage = parts[1] || 'sales';
+    var currentPage = parts[1] || 'dashboard';
 
-    // ✅ 判断当前是否在 Dashboard 子模块
-    var isDashboardSub = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'].indexOf(currentPage) !== -1;
+    // 判断当前是否在 Dashboard 子模块
+    var subModules = ['dashboard', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'];
+    var isDashboardSub = subModules.indexOf(currentPage) !== -1;
 
     var html = `
       <div style="padding:20px 16px;border-bottom:1px solid #E5E7EB;">
@@ -551,16 +547,16 @@
         html += '<div class="sidebar-group-label" onclick="this.parentElement.classList.toggle(\'open\')" style="display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;color:' + (isActive ? '#FFFFFF' : '#1F2937') + ';background:' + (isActive ? '#4F46E5' : 'transparent') + ';">';
         html += '<i class="fas fa-' + mod.icon + '" style="width:20px;text-align:center;color:' + (isActive ? '#FFFFFF' : '#6B7280') + ';"></i>';
         html += '<span style="margin-left:12px;">' + mod.label + '</span>';
-        html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;"></i>';
+        html += '<i class="fas fa-chevron-down toggle-icon ml-auto" style="transition:transform 0.3s;' + (isExpanded ? 'transform:rotate(180deg);' : '') + '"></i>';
         html += '</div>';
-        html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;">';
+        html += '<div class="sidebar-group-items" style="overflow:hidden;transition:max-height 0.3s ease;' + (isExpanded ? 'max-height:500px;' : 'max-height:0;') + '">';
 
         // Dashboard 子菜单
-        var subModules = ['sales', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'];
-        var subLabels = ['📊 Sales', '📈 Executive', '🤖 AI', '👥 CRM', '💰 Finance', '📦 Inventory', '📢 Marketing', '👤 Employee', '🚗 Vehicle Monitor'];
+        var subModulesList = ['dashboard', 'executive', 'ai', 'crm', 'finance', 'inventory', 'marketing', 'employee', 'vehicle-monitor'];
+        var subLabels = ['📊 Dashboard', '📈 Executive', '🤖 AI', '👥 CRM', '💰 Finance', '📦 Inventory', '📢 Marketing', '👤 Employee', '🚗 Vehicle Monitor'];
 
-        for (var j = 0; j < subModules.length; j++) {
-          var subKey = subModules[j];
+        for (var j = 0; j < subModulesList.length; j++) {
+          var subKey = subModulesList[j];
           var subLabel = subLabels[j];
           var isSubActive = (currentKey === 'dashboard' && currentPage === subKey);
           var href = '#/dashboard/' + subKey;
