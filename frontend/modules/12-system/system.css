@@ -1,0 +1,244 @@
+/**
+ * 12-system/system.css - System 模块样式
+ * @module system-styles
+ * @description 系统管理专用样式
+ */
+
+ .system-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.system-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.system-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #1f2937;
+}
+
+.system-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.system-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.system-stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    margin: 0 auto 12px;
+}
+
+.system-stat-card .stat-icon.users { background: #4f46e5; }
+.system-stat-card .stat-icon.roles { background: #8b5cf6; }
+.system-stat-card .stat-icon.logs { background: #f59e0b; }
+.system-stat-card .stat-icon.status { background: #10b981; }
+
+.system-stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.system-stat-card .stat-label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* 系统设置分组 */
+.settings-group {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.settings-group .group-header {
+    padding: 16px 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings-group .group-header h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.settings-group .group-body {
+    padding: 16px 20px;
+}
+
+.settings-group .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.settings-group .setting-item:last-child {
+    border-bottom: none;
+}
+
+.settings-group .setting-item .setting-label {
+    font-size: 14px;
+    color: #374151;
+}
+
+.settings-group .setting-item .setting-value {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* 审计日志 */
+.audit-log-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 13px;
+}
+
+.audit-log-item .log-time {
+    color: #6b7280;
+    flex-shrink: 0;
+    min-width: 150px;
+}
+
+.audit-log-item .log-user {
+    font-weight: 500;
+    color: #1f2937;
+    min-width: 100px;
+}
+
+.audit-log-item .log-action {
+    color: #4f46e5;
+}
+
+.audit-log-item .log-detail {
+    color: #6b7280;
+}
+
+/* ============================================================
+   深色主题
+   ============================================================ */
+
+[data-theme="dark"] .system-header h1 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .system-stat-card {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .system-stat-card .stat-value {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .settings-group {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .settings-group .group-header {
+    background: #3a3a3c;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .settings-group .group-header h4 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .settings-group .setting-item {
+    border-color: #3a3a3c;
+}
+
+[data-theme="dark"] .settings-group .setting-item .setting-label {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .audit-log-item {
+    border-color: #3a3a3c;
+}
+
+[data-theme="dark"] .audit-log-item .log-user {
+    color: #f5f5f7;
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .system-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .system-container {
+        padding: 12px;
+    }
+
+    .system-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .system-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .settings-group .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .system-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .audit-log-item {
+        flex-wrap: wrap;
+    }
+
+    .audit-log-item .log-time {
+        min-width: auto;
+        width: 100%;
+    }
+}

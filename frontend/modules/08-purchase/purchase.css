@@ -1,0 +1,117 @@
+/**
+ * 08-purchase/purchase.css - Purchasing 模块样式
+ * @module purchase-styles
+ * @description 采购管理专用样式
+ */
+
+ .purchase-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.purchase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.purchase-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #1f2937;
+}
+
+.purchase-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.purchase-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.purchase-stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.purchase-stat-card .stat-label {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.purchase-stat-card:nth-child(1) .stat-value { color: #4f46e5; }
+.purchase-stat-card:nth-child(2) .stat-value { color: #10b981; }
+.purchase-stat-card:nth-child(3) .stat-value { color: #f59e0b; }
+.purchase-stat-card:nth-child(4) .stat-value { color: #ef4444; }
+
+/* 采购状态徽章 */
+.purchase-status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.purchase-status-draft {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.purchase-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.purchase-status-approved {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.purchase-status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.purchase-status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+[data-theme="dark"] .purchase-header h1 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .purchase-stat-card {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .purchase-stat-card .stat-value {
+    color: #f5f5f7;
+}
+
+@media (max-width: 768px) {
+    .purchase-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .purchase-stats {
+        grid-template-columns: 1fr;
+    }
+}

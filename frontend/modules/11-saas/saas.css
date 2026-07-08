@@ -1,0 +1,227 @@
+/**
+ * 11-saas/saas.css - SaaS 模块样式
+ * @module saas-styles
+ * @description SaaS多租户管理专用样式
+ */
+
+ .saas-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.saas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.saas-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #1f2937;
+}
+
+.saas-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.saas-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.saas-stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    margin: 0 auto 12px;
+}
+
+.saas-stat-card .stat-icon.tenants { background: #4f46e5; }
+.saas-stat-card .stat-icon.subscriptions { background: #10b981; }
+.saas-stat-card .stat-icon.active { background: #8b5cf6; }
+.saas-stat-card .stat-icon.revenue { background: #f59e0b; }
+
+.saas-stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.saas-stat-card .stat-label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* 租户卡片 */
+.tenant-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s;
+}
+
+.tenant-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.tenant-card .tenant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tenant-card .tenant-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.tenant-card .tenant-domain {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.tenant-card .tenant-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.tenant-card .tenant-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: flex-end;
+}
+
+/* 订阅状态 */
+.subscription-status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.subscription-status.active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.subscription-status.trial {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.subscription-status.expired {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.subscription-status.cancelled {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* ============================================================
+   租户网格
+   ============================================================ */
+
+.tenant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+/* ============================================================
+   深色主题
+   ============================================================ */
+
+[data-theme="dark"] .saas-header h1 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .saas-stat-card {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .saas-stat-card .stat-value {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .tenant-card {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .tenant-card .tenant-name {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .tenant-card .tenant-meta {
+    border-color: #48484a;
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .saas-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .saas-container {
+        padding: 12px;
+    }
+
+    .saas-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .saas-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tenant-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .saas-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .tenant-card {
+        padding: 16px;
+    }
+}
