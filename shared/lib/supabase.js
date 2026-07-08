@@ -257,3 +257,82 @@ export default {
     del,
     count
 };
+// ============================================================
+// 扩展工具函数
+// ============================================================
+
+/**
+ * 根据用户ID获取用户信息
+ * @param {string} userId - 用户ID
+ * @returns {Promise<Object>} 用户对象
+ */
+
+
+/**
+ * 安全查询包装器 - 捕获异常并返回默认值
+ * @param {Function} queryFn - 查询函数
+ * @param {any} defaultValue - 默认返回值（默认为 null）
+ * @returns {Promise<any>}
+ */
+
+
+// ============================================================
+// 扩展工具函数
+// ============================================================
+
+/**
+ * 根据用户ID获取用户信息
+ * @param {string} userId - 用户ID
+ * @returns {Promise<Object>} 用户对象
+ */
+
+
+/**
+ * 安全查询包装器 - 捕获异常并返回默认值
+ * @param {Function} queryFn - 查询函数
+ * @param {any} defaultValue - 默认返回值（默认为 null）
+ * @returns {Promise<any>}
+ */
+// ============================================================
+// 扩展工具函数
+// ============================================================
+
+export async function getUserById(userId) {
+    const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+    
+    if (error) {
+        console.error('[getUserById] Error:', error);
+        throw error;
+    }
+    return data;
+}
+
+export async function safeQuery(queryFn, defaultValue = null) {
+    try {
+        const result = await queryFn();
+        return result !== undefined && result !== null ? result : defaultValue;
+    } catch (error) {
+        console.error('[safeQuery] Error:', error);
+        return defaultValue;
+    }
+}// ============================================================
+// 分页工具函数
+// ============================================================
+
+export function getPagination(page = 1, pageSize = 20) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const size = Math.max(1, parseInt(pageSize) || 20);
+    const from = (pageNum - 1) * size;
+    const to = from + size - 1;
+    
+    return {
+        from,
+        to,
+        limit: size,
+        offset: from
+    };
+}

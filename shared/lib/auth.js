@@ -1,44 +1,18 @@
 /**
  * shared/lib/auth.js - JWT认证中间件
- * @module auth
- * @description 提供JWT令牌验证、用户认证、权限检查
- * 
- * @example
- * import { authenticate, requireRole } from './auth.js';
- * app.get('/api/orders', authenticate, (req, res) => { ... });
- * app.post('/api/orders', authenticate, requireRole(['admin']), (req, res) => { ... });
  */
 
 import jwt from 'jsonwebtoken';
 import { supabase } from './supabase.js';
 
-// ============================================================
-// 配置
-// ============================================================
-
 const JWT_SECRET = process.env.JWT_SECRET || 'carwash-saas-pro-secret-key-2024';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
-/**
- * 生成JWT令牌
- * @param {Object} payload - 令牌载荷
- * @param {string} payload.id - 用户ID
- * @param {string} payload.email - 用户邮箱
- * @param {string} payload.role - 用户角色
- * @param {Object} options - 选项
- * @param {string} options.expiresIn - 过期时间
- * @returns {string} JWT令牌
- */
 export function generateToken(payload, options = {}) {
     const expiresIn = options.expiresIn || JWT_EXPIRES_IN;
     return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 
-/**
- * 验证JWT令牌
- * @param {string} token - JWT令牌
- * @returns {Object|null} 解码后的载荷或null
- */
 export function verifyToken(token) {
     try {
         return jwt.verify(token, JWT_SECRET);
@@ -48,16 +22,8 @@ export function verifyToken(token) {
     }
 }
 
-/**
- * 认证中间件 - 验证请求中的JWT令牌
- * @param {Object} req - Express请求对象
- * @param {Object} res - Express响应对象
- * @param {Function} next - 下一个中间件
- * @returns {void}
- */
-export async function authenticate(req, res, next) {
+export function authenticate(req, res, next) {
     try {
-        // 从Authorization头获取令牌
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
@@ -76,33 +42,38 @@ export async function authenticate(req, res, next) {
             });
         }
 
-        // 验证用户是否存在
-        const { data: user, error } = await supabase
+        supabase
             .from('users')
             .select('id, email, name, role, status')
             .eq('id', decoded.id)
-            .single();
+            .single()
+            .then(({ data: user, error }) => {
+                if (error || !user) {
+                    return res.status(401).json({
+                        code: 401,
+                        message: '用户不存在或已被禁用'
+                    });
+                }
 
-        if (error || !user) {
-            return res.status(401).json({
-                code: 401,
-                message: '用户不存在或已被禁用'
+                if (user.status !== 'active') {
+                    return res.status(403).json({
+                        code: 403,
+                        message: '用户账户已被禁用'
+                    });
+                }
+
+                req.user = user;
+                req.token = token;
+                req.tokenPayload = decoded;
+                next();
+            })
+            .catch((error) => {
+                console.error('[Auth] 认证中间件错误:', error);
+                return res.status(500).json({
+                    code: 500,
+                    message: '认证服务错误'
+                });
             });
-        }
-
-        if (user.status !== 'active') {
-            return res.status(403).json({
-                code: 403,
-                message: '用户账户已被禁用'
-            });
-        }
-
-        // 将用户信息附加到请求对象
-        req.user = user;
-        req.token = token;
-        req.tokenPayload = decoded;
-
-        next();
 
     } catch (error) {
         console.error('[Auth] 认证中间件错误:', error);
@@ -113,13 +84,8 @@ export async function authenticate(req, res, next) {
     }
 }
 
-/**
- * 角色权限检查中间件
- * @param {Array<string>} roles - 允许的角色列表
- * @returns {Function} Express中间件
- */
 export function requireRole(roles) {
-    return (req, res, next) => {
+    return function(req, res, next) {
         if (!req.user) {
             return res.status(401).json({
                 code: 401,
@@ -130,7 +96,7 @@ export function requireRole(roles) {
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
                 code: 403,
-                message: `需要以下角色之一: ${roles.join(', ')}`
+                message: '需要以下角色之一: ' + roles.join(', ')
             });
         }
 
@@ -138,13 +104,8 @@ export function requireRole(roles) {
     };
 }
 
-/**
- * 权限检查中间件（基于权限字符串）
- * @param {Array<string>} permissions - 需要的权限列表
- * @returns {Function} Express中间件
- */
 export function requirePermission(permissions) {
-    return async (req, res, next) => {
+    return function(req, res, next) {
         if (!req.user) {
             return res.status(401).json({
                 code: 401,
@@ -152,55 +113,48 @@ export function requirePermission(permissions) {
             });
         }
 
-        try {
-            // 查询用户权限
-            const { data: userPermissions, error } = await supabase
-                .from('user_permissions')
-                .select('permission')
-                .eq('user_id', req.user.id);
+        supabase
+            .from('user_permissions')
+            .select('permission')
+            .eq('user_id', req.user.id)
+            .then(({ data: userPermissions, error }) => {
+                if (error) {
+                    console.error('[Auth] 查询权限失败:', error);
+                    return res.status(500).json({
+                        code: 500,
+                        message: '权限查询失败'
+                    });
+                }
 
-            if (error) {
-                console.error('[Auth] 查询权限失败:', error);
+                const userPerms = userPermissions.map(p => p.permission);
+                const hasPermission = permissions.some(p => userPerms.includes(p));
+
+                if (!hasPermission && req.user.role !== 'admin') {
+                    return res.status(403).json({
+                        code: 403,
+                        message: '需要以下权限之一: ' + permissions.join(', ')
+                    });
+                }
+
+                next();
+            })
+            .catch((error) => {
+                console.error('[Auth] 权限检查错误:', error);
                 return res.status(500).json({
                     code: 500,
-                    message: '权限查询失败'
+                    message: '权限检查失败'
                 });
-            }
-
-            const userPerms = userPermissions.map(p => p.permission);
-            const hasPermission = permissions.some(p => userPerms.includes(p));
-
-            if (!hasPermission && req.user.role !== 'admin') {
-                return res.status(403).json({
-                    code: 403,
-                    message: `需要以下权限之一: ${permissions.join(', ')}`
-                });
-            }
-
-            next();
-
-        } catch (error) {
-            console.error('[Auth] 权限检查错误:', error);
-            return res.status(500).json({
-                code: 500,
-                message: '权限检查失败'
             });
-        }
     };
 }
 
-/**
- * 获取当前用户信息（从请求中）
- * @param {Object} req - Express请求对象
- * @returns {Object|null} 用户信息或null
- */
 export function getCurrentUser(req) {
     return req.user || null;
 }
 
-// ============================================================
-// 导出
-// ============================================================
+// 别名导出 - 供其他文件使用
+export const authMiddleware = authenticate;
+export const roleMiddleware = requireRole;
 
 export default {
     generateToken,
@@ -208,5 +162,7 @@ export default {
     authenticate,
     requireRole,
     requirePermission,
-    getCurrentUser
+    getCurrentUser,
+    authMiddleware: authenticate,
+    roleMiddleware: requireRole
 };
