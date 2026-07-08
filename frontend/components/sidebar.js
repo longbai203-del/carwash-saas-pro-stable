@@ -6,8 +6,6 @@
  * @example
  * import { SidebarComponent } from './components/sidebar.js';
  * const sidebar = document.getElementById('sidebar');
- * SidebarComponent.render(sidebar);
- * // 或使用便捷方法
  * SidebarComponent.init(sidebar);
  */
 
@@ -49,9 +47,9 @@ export const SidebarComponent = {
         this.bindEvents();
 
         // 监听路由变化
-        document.addEventListener('menu:activate', (e) => {
-            if (e.detail && e.detail.path) {
-                this.setActive(e.detail.path);
+        document.addEventListener('route:change', (e) => {
+            if (e.detail && e.detail.to) {
+                this.setActive(e.detail.to);
             }
         });
 

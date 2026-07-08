@@ -83,7 +83,7 @@ class App {
      */
     setupContainers() {
         this.sidebarContainer = document.getElementById('sidebar');
-        this.contentContainer = document.getElementById('page-content');
+        this.contentContainer = document.getElementById('content');
 
         if (!this.sidebarContainer) {
             console.warn('[App] ⚠️ 找不到 #sidebar 元素，创建默认容器');
@@ -93,13 +93,12 @@ class App {
         }
 
         if (!this.contentContainer) {
-            console.warn('[App] ⚠️ 找不到 #page-content 元素，创建默认容器');
+            console.warn('[App] ⚠️ 找不到 #content 元素，创建默认容器');
             this.contentContainer = document.createElement('div');
-            this.contentContainer.id = 'page-content';
-            this.contentContainer.className = 'page-content';
-            const mainContent = document.querySelector('.main-content');
-            if (mainContent) {
-                mainContent.appendChild(this.contentContainer);
+            this.contentContainer.id = 'content';
+            const mainWrap = document.querySelector('.main-wrap');
+            if (mainWrap) {
+                mainWrap.appendChild(this.contentContainer);
             } else {
                 document.body.appendChild(this.contentContainer);
             }
@@ -125,20 +124,7 @@ class App {
             // 从Store获取用户
             let user = appStore.get('user');
 
-            // 如果没有用户，尝试从API获取
-            if (!user) {
-                try {
-                    const response = await apiClient.getCurrentUser();
-                    if (response && response.code === 200) {
-                        user = response.data;
-                        appStore.set('user', user);
-                    }
-                } catch (apiError) {
-                    console.warn('[App] API获取用户失败:', apiError);
-                }
-            }
-
-            // 如果还是没有用户，使用默认用户（开发阶段）
+            // 如果没有用户，使用默认用户（开发阶段）
             if (!user) {
                 user = {
                     id: 'U001',
@@ -160,7 +146,6 @@ class App {
 
         } catch (error) {
             console.warn('[App] ⚠️ 加载用户失败:', error);
-            // 使用默认用户
             const defaultUser = {
                 id: 'U001',
                 name: '管理员',
@@ -196,12 +181,12 @@ class App {
      */
     setupResponsive() {
         // 移动端侧边栏切换
-        const toggleBtn = document.getElementById('sidebarToggle');
+        const toggleBtn = document.getElementById('menuToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 const sidebar = this.sidebarContainer;
                 if (sidebar) {
-                    sidebar.classList.toggle('mobile-open');
+                    sidebar.classList.toggle('open');
                 }
             });
         }
@@ -210,7 +195,7 @@ class App {
         window.addEventListener('resize', () => {
             const isMobile = window.innerWidth <= 768;
             if (!isMobile && this.sidebarContainer) {
-                this.sidebarContainer.classList.remove('mobile-open');
+                this.sidebarContainer.classList.remove('open');
             }
         });
     }
