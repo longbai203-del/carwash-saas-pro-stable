@@ -20,11 +20,5 @@
     "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzE2MTc5NCwiZXhwIjoyMDk4NzM3Nzk0fQ.0yJZmV5hSNlAMV1gKzCSQLNq7Wp0xKUYP0DUowkQ7gQ",
     "JWT_SECRET": "1d199fa23059d91fa54fb4c6ced0ec224f7eb1320786e1c0602d319d8a37e279",
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
   }
 }
