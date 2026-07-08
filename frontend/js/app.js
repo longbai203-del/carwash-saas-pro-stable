@@ -19,6 +19,8 @@ import { SidebarComponent } from '../components/sidebar.js';
 
 /**
  * 应用主类
+ * @class App
+ * @description 应用主类，负责初始化所有核心模块
  */
 class App {
     constructor() {
@@ -67,6 +69,10 @@ class App {
 
             // 7. 监听窗口大小变化
             this.setupResponsive();
+
+            // 8. 加载默认页面
+            const hash = window.location.hash || '#/dashboard';
+            router.navigate(hash.replace('#', '') || '/dashboard');
 
             this.initialized = true;
             console.log('✅ Carwash Pro 应用启动完成');
@@ -124,13 +130,27 @@ class App {
             // 从Store获取用户
             let user = appStore.get('user');
 
-            // 如果没有用户，使用默认用户（开发阶段）
+            // 如果没有用户，尝试从API获取
+            if (!user) {
+                try {
+                    const response = await apiClient.getCurrentUser();
+                    if (response && response.code === 200) {
+                        user = response.data;
+                        appStore.set('user', user);
+                    }
+                } catch (apiError) {
+                    console.warn('[App] API获取用户失败:', apiError);
+                }
+            }
+
+            // 如果还是没有用户，使用默认用户（开发阶段）
             if (!user) {
                 user = {
                     id: 'U001',
                     name: '管理员',
                     role: 'admin',
-                    email: 'admin@carwash.com'
+                    email: 'admin@carwash.com',
+                    status: 'active'
                 };
                 appStore.set('user', user);
                 console.log('[App] ℹ️ 使用默认用户 (开发模式)');
@@ -146,11 +166,13 @@ class App {
 
         } catch (error) {
             console.warn('[App] ⚠️ 加载用户失败:', error);
+            // 使用默认用户
             const defaultUser = {
                 id: 'U001',
                 name: '管理员',
                 role: 'admin',
-                email: 'admin@carwash.com'
+                email: 'admin@carwash.com',
+                status: 'active'
             };
             appStore.set('user', defaultUser);
             return defaultUser;
@@ -253,7 +275,13 @@ class App {
     }
 }
 
+// ============================================================
 // 启动应用
+// ============================================================
+
+/**
+ * 页面加载完成后启动应用
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
     app.init();
@@ -262,3 +290,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('📦 app.js 已加载 (重构版 V2)');
+
+// ============================================================
+// 导出
+// ============================================================
+
+export default App;
