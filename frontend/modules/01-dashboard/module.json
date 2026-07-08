@@ -1,0 +1,17 @@
+{
+    "name": "Dashboard",
+    "icon": "chart-pie",
+    "order": 1,
+    "defaultPage": "dashboard",
+    "pages": [
+      { "path": "dashboard", "name": "总览", "icon": "chart-pie" },
+      { "path": "executive", "name": "高管视图", "icon": "chart-line" },
+      { "path": "ai", "name": "AI分析", "icon": "brain" },
+      { "path": "crm", "name": "CRM", "icon": "users" },
+      { "path": "finance", "name": "财务", "icon": "coins" },
+      { "path": "inventory", "name": "库存", "icon": "warehouse" },
+      { "path": "marketing", "name": "营销", "icon": "megaphone" },
+      { "path": "employee", "name": "员工", "icon": "user-tie" },
+      { "path": "vehicle-monitor", "name": "车辆监控", "icon": "car" }
+    ]
+  }
