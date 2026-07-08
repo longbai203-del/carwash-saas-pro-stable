@@ -5,18 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Carwash Pro - 洗车店管理系统</title>
 
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <!-- 项目 CSS -->
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/css/design-system.css" />
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+
+    <!-- Supabase 配置 -->
     <script>
         window.SUPABASE_CONFIG = {
             url: 'https://ukqhdzvegqlkimxzkfcp.supabase.co',
             anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjE3OTQsImV4cCI6MjA5ODczNzc5NH0.YuEB1rzpqc8kynZukXU4ANKnVtpIC3JJ9IEacQ2fcQE'
         };
         console.log('✅ Supabase 配置已加载');
+        console.log('📌 Supabase URL:', window.SUPABASE_CONFIG.url);
     </script>
 
     <style>
@@ -44,10 +52,12 @@
             #content { padding: 16px; }
             .menu-toggle { display: flex !important; }
         }
+        .text-muted { color: #64748b; }
     </style>
 </head>
 <body>
 
+    <!-- ====== HTML 结构 ====== -->
     <div id="app">
         <aside id="sidebar"></aside>
         <div class="main-wrap">
@@ -66,10 +76,16 @@
                     <div class="avatar"><i class="fas fa-user" style="font-size:15px;"></i></div>
                 </div>
             </header>
-            <main id="content"></main>
+            <main id="content">
+                <div style="text-align:center;padding:60px 20px;">
+                    <h2 style="color:#1e293b;margin-bottom:16px;">🚗 Carwash Pro</h2>
+                    <p style="color:#64748b;">正在加载系统...</p>
+                </div>
+            </main>
         </div>
     </div>
 
+    <!-- ====== 移动端侧边栏切换 ====== -->
     <script>
         (function() {
             var sidebar = document.getElementById('sidebar');
@@ -88,11 +104,10 @@
         })();
     </script>
 
-    <!-- ============================================================ -->
-    <!-- 使用 type="module" 加载应用 -->
-    <!-- ============================================================ -->
+    <!-- ====== 应用脚本 (V2) ====== -->
     <script type="module" src="/js/app.js"></script>
 
+    <!-- ====== 全局工具函数 ====== -->
     <script>
         window.testAPI = function() {
             fetch('/api/health')
