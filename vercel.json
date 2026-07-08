@@ -1,20 +1,6 @@
 {
   "version": 2,
   "name": "carwash-saas-pro",
-  "builds": [
-    {
-      "src": "frontend/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -56,7 +42,6 @@
     "JWT_SECRET": "@jwt_secret",
     "NODE_ENV": "production"
   },
-  "regions": ["hnd1"],
   "functions": {
     "api/**/*.js": {
       "memory": 1024,

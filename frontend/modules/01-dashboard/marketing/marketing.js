@@ -1,6 +1,7 @@
 /**
- * modules/01-dashboard/marketing/marketing.js
- * 营销概览 - 完整数据渲染
+ * modules/01-dashboard/marketing/marketing.js - 营销概览
+ * @module marketing
+ * @description 营销活动数据总览
  */
 
 // ============================================================
@@ -61,19 +62,59 @@ function showToast(message, type) {
 
 function renderStats() {
     var stats = MARKETING_DATA.stats;
-    var cards = document.querySelectorAll('.marketing-card .value');
-
-    if (cards.length >= 4) {
-        cards[0].textContent = stats.activeCampaigns;
-        cards[1].textContent = stats.conversionRate + '%';
-        cards[2].textContent = stats.newCustomers;
-        cards[3].textContent = '¥' + formatCurrency(stats.revenue);
+    
+    // 尝试多种选择器策略
+    var cards = document.querySelectorAll('.marketing-card');
+    var values = cards.length > 0 ? cards.querySelectorAll('.value') : [];
+    
+    if (values.length >= 4) {
+        values[0].textContent = stats.activeCampaigns;
+        values[1].textContent = stats.conversionRate + '%';
+        values[2].textContent = stats.newCustomers;
+        values[3].textContent = '¥' + formatCurrency(stats.revenue);
+    } else {
+        // 备用：通过ID查找
+        var idMap = {
+            'mktActive': stats.activeCampaigns,
+            'mktConversion': stats.conversionRate + '%',
+            'mktNewCustomers': stats.newCustomers,
+            'mktRevenue': '¥' + formatCurrency(stats.revenue)
+        };
+        Object.keys(idMap).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = idMap[id];
+        });
+        
+        // 再尝试通过卡片内部的元素查找
+        var allCards = document.querySelectorAll('.marketing-card, .stat-card, .card');
+        allCards.forEach(function(card, index) {
+            var valEl = card.querySelector('.value, .stat-value, .number');
+            if (valEl) {
+                var keys = ['activeCampaigns', 'conversionRate', 'newCustomers', 'revenue'];
+                if (index < keys.length) {
+                    var key = keys[index];
+                    if (key === 'conversionRate') {
+                        valEl.textContent = stats.conversionRate + '%';
+                    } else if (key === 'revenue') {
+                        valEl.textContent = '¥' + formatCurrency(stats.revenue);
+                    } else {
+                        valEl.textContent = stats[key];
+                    }
+                }
+            }
+        });
     }
 }
 
 function renderPromotions() {
-    var tbody = document.querySelector('.table tbody');
-    if (!tbody) return;
+    var tbody = document.querySelector('.table tbody') || 
+                document.querySelector('#promotionTable tbody') ||
+                document.querySelector('[data-promotion-table] tbody');
+    
+    if (!tbody) {
+        console.warn('⚠️ 找不到促销表格');
+        return;
+    }
 
     var statusMap = {
         '进行中': 'badge-success',
@@ -107,10 +148,12 @@ export function init() {
         return;
     }
 
-    renderStats();
-    renderPromotions();
+    setTimeout(function() {
+        renderStats();
+        renderPromotions();
+    }, 100);
 
-    var refreshBtn = document.querySelector('.page-header .btn-secondary');
+    var refreshBtn = document.querySelector('.page-header .btn-secondary, #refreshMarketingBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
             var icon = this.querySelector('i');
@@ -129,10 +172,16 @@ export function init() {
     console.log('✅ Marketing Dashboard 初始化完成');
 }
 
+// ============================================================
+// 5. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(init, 200);
+    });
 } else {
-    setTimeout(init, 100);
+    setTimeout(init, 200);
 }
 
 console.log('✅ Marketing 模块加载完成');
