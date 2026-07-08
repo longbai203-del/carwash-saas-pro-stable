@@ -101,11 +101,11 @@
     </script>
 
     <!-- ============================================================ -->
-    <!-- 所有 JS 模块内联（解决 Vercel 无法提供 JS 文件的问题） -->
+    <!-- 所有 JS 模块内联 -->
     <!-- ============================================================ -->
     <script type="module">
         // ============================================================
-        // 1. Store 模块 - 状态管理
+        // 1. Store 模块
         // ============================================================
         /**
  * core/store.js - 统一状态管理 (V2)
@@ -303,7 +303,7 @@ class Store {
 export const appStore = new Store();
 
         // ============================================================
-        // 2. Router 模块 - 路由管理
+        // 2. Router 模块
         // ============================================================
         /**
  * core/router.js - 统一路由管理
@@ -645,7 +645,7 @@ export const router = new Router();
  * const newOrder = await apiClient.createOrder({ customer: '张伟', total: 680 });
  */
 
-import { appStore } from '../core/store.js';
+
 
 /**
  * API响应格式
@@ -1067,8 +1067,8 @@ export const apiClient = new ApiClient();
  * SidebarComponent.init(sidebar);
  */
 
-import { appStore } from '../js/core/store.js';
-import { router } from '../js/core/router.js';
+
+
 
 /**
  * 侧边栏组件对象
@@ -1593,10 +1593,10 @@ export default SidebarComponent;
  * 6. 监听全局事件
  */
 
-import { appStore } from './core/store.js';
-import { router } from './core/router.js';
-import { apiClient } from './api/api-client.js';
-import { SidebarComponent } from '../components/sidebar.js';
+
+
+
+
 
 /**
  * 应用主类
@@ -1843,11 +1843,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('📦 app.js 已加载 (重构版 V2)');
+
+        // ============================================================
+        // 6. 手动启动应用
+        // ============================================================
+        console.log('🚀 正在启动应用...');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var app = new App();
+                app.init();
+                window.__APP__ = app;
+                console.log('✅ 应用启动成功');
+            } catch (error) {
+                console.error('❌ 应用启动失败:', error);
+                // 显示友好的错误信息
+                var content = document.getElementById('content');
+                if (content) {
+                    content.innerHTML = '<div style="text-align:center;padding:60px 20px;"><h2 style="color:#EF4444;">应用启动失败</h2><p style="color:#6B7280;">' + error.message + '</p><button onclick="location.reload()" style="padding:8px 24px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">重新加载</button></div>';
+                }
+            }
+        });
     </script>
 
     <!-- ====== 全局工具函数 ====== -->
     <script>
-        // 测试 API 函数
         window.testAPI = function() {
             fetch('/api/health')
                 .then(res => res.json())
@@ -1863,4 +1883,3 @@ console.log('📦 app.js 已加载 (重构版 V2)');
 
 </body>
 </html>
-
