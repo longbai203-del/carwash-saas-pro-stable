@@ -1,6 +1,7 @@
 /**
- * modules/01-dashboard/crm/crm.js
- * CRM 概览 - 完整数据渲染
+ * modules/01-dashboard/crm/crm.js - CRM 概览
+ * @module crm
+ * @description 客户关系管理数据总览
  */
 
 // ============================================================
@@ -69,26 +70,56 @@ function showToast(message, type) {
 
 function renderStats() {
     var stats = CRM_DATA.stats;
-
-    // 更新统计卡片
-    var totalEl = document.querySelector('.crm-card .value');
-    var allCards = document.querySelectorAll('.crm-card');
-
-    if (allCards.length >= 4) {
-        // 总客户
-        var valueEls = document.querySelectorAll('.crm-card .value');
-        if (valueEls.length >= 4) {
-            valueEls[0].textContent = stats.total;
-            valueEls[1].textContent = stats.vip;
-            valueEls[2].textContent = stats.gold;
-            valueEls[3].textContent = '¥' + formatCurrency(stats.totalSpent);
-        }
+    
+    var cards = document.querySelectorAll('.crm-card');
+    var values = cards.length > 0 ? cards.querySelectorAll('.value') : [];
+    
+    if (values.length >= 4) {
+        values[0].textContent = stats.total;
+        values[1].textContent = stats.vip;
+        values[2].textContent = stats.gold;
+        values[3].textContent = '¥' + formatCurrency(stats.totalSpent);
+    } else {
+        // 备用：通过ID查找
+        var idMap = {
+            'crmTotal': stats.total,
+            'crmVip': stats.vip,
+            'crmGold': stats.gold,
+            'crmTotalSpent': '¥' + formatCurrency(stats.totalSpent)
+        };
+        Object.keys(idMap).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = idMap[id];
+        });
+        
+        // 再尝试通过卡片内部的元素查找
+        var allCards = document.querySelectorAll('.crm-card, .stat-card, .card');
+        allCards.forEach(function(card, index) {
+            var valEl = card.querySelector('.value, .stat-value, .number');
+            if (valEl) {
+                var keys = ['total', 'vip', 'gold', 'totalSpent'];
+                if (index < keys.length) {
+                    var key = keys[index];
+                    if (key === 'totalSpent') {
+                        valEl.textContent = '¥' + formatCurrency(stats.totalSpent);
+                    } else {
+                        valEl.textContent = stats[key];
+                    }
+                }
+            }
+        });
     }
 }
 
 function renderRecentCustomers() {
-    var tbody = document.querySelector('.table tbody');
-    if (!tbody) return;
+    var tbody = document.querySelector('.table tbody') || 
+                document.querySelector('#customerTable tbody') ||
+                document.querySelector('[data-customer-table] tbody');
+    
+    if (!tbody) {
+        console.warn('⚠️ 找不到客户表格');
+        return;
+    }
 
     var html = '';
     for (var i = 0; i < CRM_DATA.recentCustomers.length; i++) {
@@ -116,12 +147,12 @@ export function init() {
         return;
     }
 
-    // 渲染数据
-    renderStats();
-    renderRecentCustomers();
+    setTimeout(function() {
+        renderStats();
+        renderRecentCustomers();
+    }, 100);
 
-    // 刷新功能
-    var refreshBtn = document.querySelector('.page-header .btn-secondary');
+    var refreshBtn = document.querySelector('.page-header .btn-secondary, #refreshCrmBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
             var icon = this.querySelector('i');
@@ -132,7 +163,6 @@ export function init() {
                     showToast('CRM 数据已刷新', 'success');
                 }, 1000);
             }
-            // 重新渲染
             renderStats();
             renderRecentCustomers();
         });
@@ -141,10 +171,16 @@ export function init() {
     console.log('✅ CRM Dashboard 初始化完成');
 }
 
+// ============================================================
+// 5. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(init, 200);
+    });
 } else {
-    setTimeout(init, 100);
+    setTimeout(init, 200);
 }
 
 console.log('✅ CRM 模块加载完成');

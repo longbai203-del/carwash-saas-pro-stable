@@ -1,45 +1,110 @@
 /**
  * vehicle-monitor.js - 车辆监控模块
- * 功能：车辆进出记录、停留时间追踪、实时计数、车牌智能识别
- * 权限：仅老板(owner)和系统管理员(admin)可访问
- * 
- * 注意：此模块完全独立，不修改任何原有框架代码
+ * @module vehicle-monitor
+ * @description 车辆进出记录、停留时间追踪、实时计数、车牌智能识别
  */
+
 (function() {
     'use strict';
 
-    // ===== 权限检查 =====
+    // ============================================================
+    // 1. 安全工具函数
+    // ============================================================
+
+    /** 安全获取 AppStore */
+    function safeGetStore() {
+        if (typeof window.AppStore !== 'undefined') {
+            return window.AppStore;
+        }
+        // 创建模拟 Store
+        return {
+            get: function(key) {
+                try {
+                    var data = localStorage.getItem('store_' + key);
+                    return data ? JSON.parse(data) : null;
+                } catch (e) {
+                    return null;
+                }
+            },
+            set: function(key, value) {
+                try {
+                    localStorage.setItem('store_' + key, JSON.stringify(value));
+                } catch (e) {}
+            }
+        };
+    }
+
+    var AppStore = safeGetStore();
+
+    /** 安全获取 ModuleBase */
+    var ModuleBase = window.ModuleBase || {
+        toast: function(msg, type) {
+            var colors = {
+                success: '#10B981',
+                error: '#EF4444',
+                warning: '#F59E0B',
+                info: '#3B82F6'
+            };
+            var toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px;
+                padding: 12px 24px;
+                background: ${colors[type] || '#4F46E5'};
+                color: white;
+                border-radius: 8px;
+                z-index: 99999;
+                font-size: 14px;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+        },
+        getEl: function(id) { return document.getElementById(id); }
+    };
+
+    // ============================================================
+    // 2. 权限检查
+    // ============================================================
+
     function checkPermission() {
         var user = AppStore.get('currentUser');
         if (!user) return false;
         return user.role === 'owner' || user.role === 'admin';
     }
 
-    // ===== 模块定义 =====
+    // ============================================================
+    // 3. 模块定义
+    // ============================================================
+
     window.VehicleMonitorModule = Object.create(ModuleBase);
     window.VehicleMonitorModule.moduleName = 'vehicle-monitor';
 
-    // ===== 状态 =====
+    // ============================================================
+    // 4. 状态
+    // ============================================================
+
     window.VehicleMonitorModule.activeVehicles = [];
     window.VehicleMonitorModule.records = [];
     window.VehicleMonitorModule.autoUpdateInterval = null;
-
-    // ===== 识别状态 =====
     window.VehicleMonitorModule._lastRecognition = null;
     window.VehicleMonitorModule._isEditMode = false;
 
-    // ===== 缓存 DOM =====
+    // ============================================================
+    // 5. 缓存 DOM
+    // ============================================================
+
     window.VehicleMonitorModule.cacheDom = function() {
-        // 权限检查 - 无权限时显示提示
         if (!checkPermission()) {
             var container = document.getElementById('moduleContent');
             if (container) {
                 container.innerHTML = `
-                    <div class="glass-card p-12 text-center">
-                        <div class="text-6xl mb-4">🔒</div>
-                        <h2 class="text-2xl font-bold text-red-600">权限不足</h2>
-                        <p class="text-gray-400 mt-2">此页面仅限老板和系统管理员访问</p>
-                        <button onclick="AppRouter.navigate('dashboard')" class="btn-primary mt-4 px-6 py-2 rounded-lg">
+                    <div style="padding:40px;text-align:center;">
+                        <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+                        <h2 style="color:#EF4444;">权限不足</h2>
+                        <p style="color:#6B7280;">此页面仅限老板和系统管理员访问</p>
+                        <button onclick="window.location.hash='#/dashboard'" style="margin-top:16px;padding:8px 24px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">
                             返回仪表板
                         </button>
                     </div>
@@ -56,7 +121,6 @@
             avgStayTime: this.getEl('vmAvgStayTime'),
             todayInRate: this.getEl('vmTodayInRate'),
             todayOutRate: this.getEl('vmTodayOutRate'),
-            statusDot: this.getEl('vmStatusDot'),
             statusText: this.getEl('vmStatusText'),
             recordCount: this.getEl('vmRecordCount'),
             plateInput: this.getEl('vmPlateInput'),
@@ -68,23 +132,20 @@
             searchFilter: this.getEl('vmSearchFilter'),
             detailModal: this.getEl('vmDetailModal'),
             detailContent: this.getEl('vmDetailContent'),
-            // ===== 新增：识别相关 DOM =====
-            uploadPlaceholder: this.getEl('uploadPlaceholder'),
-            cameraInput: this.getEl('cameraInput'),
-            uploadInput: this.getEl('uploadInput'),
-            imagePreviewContainer: this.getEl('imagePreviewContainer'),
-            imagePreview: this.getEl('imagePreview'),
-            recognizeLoading: this.getEl('recognizeLoading'),
-            recogPlate: this.getEl('recogPlate'),
-            recogPlateColor: this.getEl('recogPlateColor'),
-            recogBrand: this.getEl('recogBrand'),
-            recogModel: this.getEl('recogModel'),
-            recogColor: this.getEl('recogColor'),
-            recogConfidence: this.getEl('recogConfidence'),
-            recogConfidenceBar: this.getEl('recogConfidenceBar'),
-            recogStatus: this.getEl('recogStatus'),
-            recogHint: this.getEl('recogHint'),
-            saveRecogBtn: this.getEl('saveRecogBtn')
+            uploadArea: this.getEl('vmUploadArea'),
+            previewContainer: this.getEl('vmPreviewContainer'),
+            previewImg: this.getEl('vmPreviewImg'),
+            loading: this.getEl('vmLoading'),
+            recogStatus: this.getEl('vmRecogStatus'),
+            recogPlate: this.getEl('vmRecogPlate'),
+            recogPlateColor: this.getEl('vmRecogPlateColor'),
+            recogBrand: this.getEl('vmRecogBrand'),
+            recogModel: this.getEl('vmRecogModel'),
+            recogColor: this.getEl('vmRecogColor'),
+            recogConfidence: this.getEl('vmRecogConfidence'),
+            recogConfidenceBar: this.getEl('vmRecogConfidenceBar'),
+            recogHint: this.getEl('vmRecogHint'),
+            saveRecogBtn: this.getEl('vmSaveRecogBtn')
         };
 
         if (this.el.dateFilter) {
@@ -92,7 +153,10 @@
         }
     };
 
-    // ===== 绑定事件 =====
+    // ============================================================
+    // 6. 绑定事件
+    // ============================================================
+
     window.VehicleMonitorModule.bindEvents = function() {
         var self = this;
 
@@ -126,95 +190,48 @@
             });
         }
 
-        // ===== 新增：拖拽上传 =====
-        var placeholder = this.el.uploadPlaceholder;
+        var placeholder = this.el.uploadArea;
         if (placeholder) {
             placeholder.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                this.classList.add('border-blue-500', 'bg-blue-100');
+                this.style.borderColor = '#4F46E5';
+                this.style.background = '#EEF2FF';
             });
             placeholder.addEventListener('dragleave', function(e) {
                 e.preventDefault();
-                this.classList.remove('border-blue-500', 'bg-blue-100');
+                this.style.borderColor = '#D1D5DB';
+                this.style.background = '#F9FAFB';
             });
             placeholder.addEventListener('drop', function(e) {
                 e.preventDefault();
-                this.classList.remove('border-blue-500', 'bg-blue-100');
+                this.style.borderColor = '#D1D5DB';
+                this.style.background = '#F9FAFB';
                 var files = e.dataTransfer.files;
                 if (files && files.length > 0) {
                     self.processImage(files[0]);
                 }
             });
+            placeholder.addEventListener('click', function() {
+                var input = document.getElementById('vmUploadInput');
+                if (input) input.click();
+            });
         }
     };
 
-    // ===== 加载数据 =====
+    // ============================================================
+    // 7. 数据加载（使用 localStorage 降级）
+    // ============================================================
+
     window.VehicleMonitorModule.loadData = function() {
         if (!checkPermission()) return;
         this.loadRecords();
         this.loadActiveVehicles();
         this.updateStats();
         this.startAutoUpdate();
-        // ===== 新增：重置识别状态 =====
         this.clearRecognition();
     };
 
-    // ===== 销毁 =====
-    window.VehicleMonitorModule.destroy = function() {
-        if (this.autoUpdateInterval) {
-            clearInterval(this.autoUpdateInterval);
-            this.autoUpdateInterval = null;
-        }
-        this.initialized = false;
-    };
-
-    // ===== 加载记录 =====
     window.VehicleMonitorModule.loadRecords = function() {
-        var self = this;
-        var today = new Date().toISOString().split('T')[0];
-
-        if (window.AppApi && AppApi.query) {
-            AppApi.query('vehicle_records', {
-                filter: { date: today },
-                order: { by: 'entry_time', ascending: false },
-                limit: 200
-            }).then(function(data) {
-                self.records = data || [];
-                self.renderRecords(data || []);
-                if (self.el.recordCount) {
-                    self.el.recordCount.textContent = (data || []).length;
-                }
-                self.updateStats();
-            }).catch(function() {
-                self.loadLocalRecords();
-            });
-        } else {
-            self.loadLocalRecords();
-        }
-    };
-
-    // ===== 加载当前在场车辆 =====
-    window.VehicleMonitorModule.loadActiveVehicles = function() {
-        var self = this;
-        var today = new Date().toISOString().split('T')[0];
-
-        if (window.AppApi && AppApi.query) {
-            AppApi.query('vehicle_records', {
-                filter: { date: today, exit_time: null },
-                order: { by: 'entry_time', ascending: false }
-            }).then(function(data) {
-                self.activeVehicles = data || [];
-                self.renderActiveVehicles(data || []);
-            }).catch(function() {
-                self.loadLocalActiveVehicles();
-            });
-        } else {
-            self.loadLocalActiveVehicles();
-        }
-    };
-
-    // ===== 本地存储（备用方案）=====
-    window.VehicleMonitorModule.loadLocalRecords = function() {
         var today = new Date().toISOString().split('T')[0];
         var all = JSON.parse(localStorage.getItem('vehicle_records') || '[]');
         this.records = all.filter(function(r) { return r.date === today; });
@@ -225,7 +242,7 @@
         this.updateStats();
     };
 
-    window.VehicleMonitorModule.loadLocalActiveVehicles = function() {
+    window.VehicleMonitorModule.loadActiveVehicles = function() {
         var today = new Date().toISOString().split('T')[0];
         var all = JSON.parse(localStorage.getItem('vehicle_records') || '[]');
         this.activeVehicles = all.filter(function(r) {
@@ -234,27 +251,16 @@
         this.renderActiveVehicles(this.activeVehicles);
     };
 
-    // ===== 保存到本地 =====
-    window.VehicleMonitorModule.saveToLocal = function() {
-        var all = JSON.parse(localStorage.getItem('vehicle_records') || '[]');
-        this.records.forEach(function(r) {
-            var existing = all.findIndex(function(a) { return a.id === r.id; });
-            if (existing >= 0) {
-                all[existing] = r;
-            } else {
-                all.push(r);
-            }
-        });
-        localStorage.setItem('vehicle_records', JSON.stringify(all));
-    };
+    // ============================================================
+    // 8. 渲染函数
+    // ============================================================
 
-    // ===== 渲染当前在场车辆 =====
     window.VehicleMonitorModule.renderActiveVehicles = function(vehicles) {
         var list = this.el.currentlyInsideList;
         if (!list) return;
 
         if (!vehicles || vehicles.length === 0) {
-            list.innerHTML = '<tr><td colspan="7" class="text-center text-gray-400 py-4">暂无车辆在场</td></tr>';
+            list.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#9CA3AF;">暂无车辆在场</td></tr>';
             if (this.el.currentlyInside) {
                 this.el.currentlyInside.textContent = '0';
             }
@@ -276,17 +282,17 @@
                 motorcycle: '🏍️ 摩托车'
             };
 
-            html += '<tr class="border-b hover:bg-gray-50">';
-            html += '<td class="p-2">' + (index + 1) + '</td>';
-            html += '<td class="p-2 font-medium">' + (v.plate || 'N/A') + '</td>';
-            html += '<td class="p-2">' + (typeLabels[v.vehicle_type] || '🚗 轿车') + '</td>';
-            html += '<td class="p-2 text-sm">' + entryTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + '</td>';
-            html += '<td class="p-2 font-bold text-amber-600">' + self.formatDuration(duration) + '</td>';
-            html += '<td class="p-2 text-sm text-gray-400">' + (v.note || '') + '</td>';
-            html += '<td class="p-2">';
-            html += '<button onclick="VehicleMonitorModule.quickExit(\'' + v.plate + '\')" class="text-red-500 hover:text-red-700 text-xs">离开</button>';
+            html += '<tr style="border-bottom:1px solid #F3F4F6;">';
+            html += '<td style="padding:8px 12px;">' + (index + 1) + '</td>';
+            html += '<td style="padding:8px 12px;font-weight:600;">' + (v.plate || 'N/A') + '</td>';
+            html += '<td style="padding:8px 12px;">' + (typeLabels[v.vehicle_type] || '🚗 轿车') + '</td>';
+            html += '<td style="padding:8px 12px;font-size:13px;">' + entryTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + '</td>';
+            html += '<td style="padding:8px 12px;font-weight:700;color:#F59E0B;">' + self.formatDuration(duration) + '</td>';
+            html += '<td style="padding:8px 12px;font-size:13px;color:#6B7280;">' + (v.note || '') + '</td>';
+            html += '<td style="padding:8px 12px;">';
+            html += '<button onclick="VehicleMonitorModule.quickExit(\'' + v.plate + '\')" style="color:#EF4444;cursor:pointer;border:none;background:transparent;font-size:13px;">离开</button>';
             html += ' | ';
-            html += '<button onclick="VehicleMonitorModule.showDetail(\'' + v.id + '\')" class="text-blue-500 hover:text-blue-700 text-xs">详情</button>';
+            html += '<button onclick="VehicleMonitorModule.showDetail(\'' + v.id + '\')" style="color:#4F46E5;cursor:pointer;border:none;background:transparent;font-size:13px;">详情</button>';
             html += '</td>';
             html += '</tr>';
         });
@@ -298,13 +304,12 @@
         }
     };
 
-    // ===== 渲染今日记录 =====
     window.VehicleMonitorModule.renderRecords = function(records) {
         var list = this.el.recordsList;
         if (!list) return;
 
         if (!records || records.length === 0) {
-            list.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-4">暂无记录</td></tr>';
+            list.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#9CA3AF;">暂无记录</td></tr>';
             return;
         }
 
@@ -313,8 +318,8 @@
             out: '📤 离开'
         };
         var directionColors = {
-            in: 'text-green-600',
-            out: 'text-red-600'
+            in: 'color:#10B981;',
+            out: 'color:#EF4444;'
         };
         var typeLabels = {
             sedan: '🚗 轿车',
@@ -325,22 +330,26 @@
         };
 
         var html = '';
+        var self = this;
         records.slice(0, 50).forEach(function(r) {
             var time = r.entry_time ? new Date(r.entry_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '-';
-            html += '<tr class="border-b hover:bg-gray-50">';
-            html += '<td class="p-2 text-sm">' + time + '</td>';
-            html += '<td class="p-2 font-medium">' + (r.plate || 'N/A') + '</td>';
-            html += '<td class="p-2">' + (typeLabels[r.vehicle_type] || '🚗 轿车') + '</td>';
-            html += '<td class="p-2 ' + (directionColors[r.direction] || '') + '">' + (directionLabels[r.direction] || r.direction) + '</td>';
-            html += '<td class="p-2">' + (r.direction === 'out' ? this.formatDuration(r.duration_minutes) : '-') + '</td>';
-            html += '<td class="p-2 text-sm text-gray-400">' + (r.note || '') + '</td>';
+            html += '<tr style="border-bottom:1px solid #F3F4F6;">';
+            html += '<td style="padding:8px 12px;font-size:13px;">' + time + '</td>';
+            html += '<td style="padding:8px 12px;font-weight:600;">' + (r.plate || 'N/A') + '</td>';
+            html += '<td style="padding:8px 12px;">' + (typeLabels[r.vehicle_type] || '🚗 轿车') + '</td>';
+            html += '<td style="padding:8px 12px;' + (directionColors[r.direction] || '') + '">' + (directionLabels[r.direction] || r.direction) + '</td>';
+            html += '<td style="padding:8px 12px;">' + (r.direction === 'out' ? self.formatDuration(r.duration_minutes) : '-') + '</td>';
+            html += '<td style="padding:8px 12px;font-size:13px;color:#6B7280;">' + (r.note || '') + '</td>';
             html += '</tr>';
-        }.bind(this));
+        });
 
         list.innerHTML = html;
     };
 
-    // ===== 更新统计 =====
+    // ============================================================
+    // 9. 统计更新
+    // ============================================================
+
     window.VehicleMonitorModule.updateStats = function() {
         var records = this.records || [];
         var totalIn = records.filter(function(r) { return r.direction === 'in'; }).length;
@@ -369,7 +378,10 @@
         if (this.el.todayOutRate) this.el.todayOutRate.textContent = outRate + '%';
     };
 
-    // ===== 格式化停留时间 =====
+    // ============================================================
+    // 10. 工具函数
+    // ============================================================
+
     window.VehicleMonitorModule.formatDuration = function(minutes) {
         if (!minutes || minutes < 0) return '0分钟';
         if (minutes < 60) return minutes + '分钟';
@@ -379,24 +391,33 @@
         return hours + '小时' + mins + '分钟';
     };
 
-    // ===== 记录车辆进入 =====
-    window.VehicleMonitorModule.addEntry = function() {
-        var plate = this.el.plateInput ? this.el.plateInput.value.trim().toUpperCase() : '';
-        if (!plate) {
-            this.toast('请输入车牌号', 'error');
-            return;
-        }
-
-        var existing = this.activeVehicles.find(function(v) {
-            return v.plate === plate && !v.exit_time;
-        });
-        if (existing) {
-            this.toast('⚠️ 车辆 ' + plate + ' 已在场内', 'warning');
-            return;
-        }
-
-        this.quickEntry(plate);
+    window.VehicleMonitorModule.toast = function(message, type) {
+        var colors = {
+            success: '#10B981',
+            error: '#EF4444',
+            warning: '#F59E0B',
+            info: '#3B82F6'
+        };
+        var toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px;
+            padding: 12px 24px;
+            background: ${colors[type] || '#4F46E5'};
+            color: white;
+            border-radius: 8px;
+            z-index: 99999;
+            font-size: 14px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
     };
+
+    // ============================================================
+    // 11. 快捷操作
+    // ============================================================
 
     window.VehicleMonitorModule.quickEntry = function(plate) {
         var self = this;
@@ -408,7 +429,7 @@
 
         var record = {
             id: id,
-            plate: plate || this.el.plateInput?.value.trim().toUpperCase() || 'UNKNOWN',
+            plate: plate || 'UNKNOWN',
             vehicle_type: vehicleType,
             direction: 'in',
             date: today,
@@ -423,10 +444,6 @@
         this.activeVehicles.push(record);
         this.saveToLocal();
 
-        if (window.AppApi && AppApi.insert) {
-            AppApi.insert('vehicle_records', record).catch(function() {});
-        }
-
         this.toast('📥 车辆 ' + (record.plate) + ' 已进入', 'success');
 
         if (this.el.plateInput) this.el.plateInput.value = '';
@@ -434,17 +451,6 @@
         if (this.el.vehicleType) this.el.vehicleType.value = 'sedan';
 
         this.refresh();
-    };
-
-    // ===== 记录车辆离开 =====
-    window.VehicleMonitorModule.addExit = function() {
-        var plate = this.el.plateInput ? this.el.plateInput.value.trim().toUpperCase() : '';
-        if (!plate) {
-            this.toast('请输入车牌号', 'error');
-            return;
-        }
-
-        this.quickExit(plate);
     };
 
     window.VehicleMonitorModule.quickExit = function(plate) {
@@ -476,13 +482,6 @@
 
         this.saveToLocal();
 
-        if (window.AppApi && AppApi.update) {
-            AppApi.update('vehicle_records', vehicle.id, {
-                exit_time: vehicle.exit_time,
-                duration_minutes: duration
-            }).catch(function() {});
-        }
-
         this.toast('📤 车辆 ' + plate + ' 已离开，停留 ' + this.formatDuration(duration), 'success');
 
         if (this.el.plateInput) this.el.plateInput.value = '';
@@ -490,27 +489,255 @@
         this.refresh();
     };
 
-    // ===== 筛选记录 =====
-    window.VehicleMonitorModule.filterRecords = function() {
-        var date = this.el.dateFilter ? this.el.dateFilter.value : '';
-        var search = this.el.searchFilter ? this.el.searchFilter.value.trim().toLowerCase() : '';
+    // ============================================================
+    // 12. 保存到本地
+    // ============================================================
 
-        var filtered = this.records;
-
-        if (date) {
-            filtered = filtered.filter(function(r) { return r.date === date; });
-        }
-
-        if (search) {
-            filtered = filtered.filter(function(r) {
-                return (r.plate || '').toLowerCase().includes(search);
-            });
-        }
-
-        this.renderRecords(filtered);
+    window.VehicleMonitorModule.saveToLocal = function() {
+        var all = JSON.parse(localStorage.getItem('vehicle_records') || '[]');
+        this.records.forEach(function(r) {
+            var existing = all.findIndex(function(a) { return a.id === r.id; });
+            if (existing >= 0) {
+                all[existing] = r;
+            } else {
+                all.push(r);
+            }
+        });
+        localStorage.setItem('vehicle_records', JSON.stringify(all));
     };
 
-    // ===== 显示详情 =====
+    // ============================================================
+    // 13. 图片识别（模拟）
+    // ============================================================
+
+    window.VehicleMonitorModule.processImage = function(file) {
+        if (!file.type.startsWith('image/')) {
+            this.toast('❌ 请上传图片文件', 'error');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            this.toast('❌ 图片大小不能超过10MB', 'error');
+            return;
+        }
+
+        var self = this;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var imageData = e.target.result;
+            self.showPreview(imageData);
+            self.callRecognizeAPI(imageData);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.VehicleMonitorModule.showPreview = function(imageData) {
+        if (this.el.previewImg) {
+            this.el.previewImg.src = imageData;
+        }
+        if (this.el.previewContainer) {
+            this.el.previewContainer.style.display = 'block';
+        }
+        if (this.el.uploadArea) {
+            this.el.uploadArea.style.display = 'none';
+        }
+        if (this.el.loading) {
+            this.el.loading.style.display = 'block';
+        }
+        if (this.el.recogStatus) {
+            this.el.recogStatus.textContent = '⏳ AI识别中...';
+            this.el.recogStatus.className = 'vm-result-status';
+            this.el.recogStatus.style.color = '#3B82F6';
+        }
+    };
+
+    window.VehicleMonitorModule.callRecognizeAPI = function(imageData) {
+        var self = this;
+        setTimeout(function() {
+            var mockResults = [
+                { plate: 'ABC 1234', plateColor: '白色', brand: 'Toyota', model: 'Camry', color: '白色', confidence: 0.96 },
+                { plate: 'XYZ 5678', plateColor: '黄色', brand: 'Honda', model: 'Accord', color: '黑色', confidence: 0.94 },
+                { plate: 'DEF 9012', plateColor: '蓝色', brand: 'Nissan', model: 'Altima', color: '银色', confidence: 0.92 },
+                { plate: 'GHI 3456', plateColor: '白色', brand: 'Hyundai', model: 'Sonata', color: '白色', confidence: 0.95 },
+                { plate: 'JKL 7890', plateColor: '绿色', brand: 'Mercedes', model: 'E-Class', color: '黑色', confidence: 0.93 }
+            ];
+
+            var randomIndex = Math.floor(Math.random() * mockResults.length);
+            var result = mockResults[randomIndex];
+            result.confidence = 0.85 + Math.random() * 0.14;
+
+            self.displayRecognitionResult(result);
+        }, 1500 + Math.random() * 1000);
+    };
+
+    window.VehicleMonitorModule.displayRecognitionResult = function(result) {
+        if (this.el.loading) {
+            this.el.loading.style.display = 'none';
+        }
+        if (this.el.recogStatus) {
+            this.el.recogStatus.textContent = '✅ 识别完成，请确认信息';
+            this.el.recogStatus.className = 'vm-result-status';
+            this.el.recogStatus.style.color = '#10B981';
+        }
+
+        if (this.el.recogPlate) this.el.recogPlate.value = result.plate || '';
+        if (this.el.recogPlateColor) this.el.recogPlateColor.value = result.plateColor || '';
+        if (this.el.recogBrand) this.el.recogBrand.value = result.brand || '';
+        if (this.el.recogModel) this.el.recogModel.value = result.model || '';
+        if (this.el.recogColor) this.el.recogColor.value = result.color || '';
+
+        var confidence = Math.round((result.confidence || 0) * 100);
+        if (this.el.recogConfidence) {
+            this.el.recogConfidence.textContent = confidence + '%';
+        }
+        if (this.el.recogConfidenceBar) {
+            this.el.recogConfidenceBar.style.width = Math.min(confidence, 100) + '%';
+        }
+
+        if (this.el.recogHint) {
+            if (confidence >= 90) {
+                this.el.recogHint.textContent = '✅ 置信度较高，建议直接保存';
+                this.el.recogHint.style.color = '#10B981';
+            } else if (confidence >= 70) {
+                this.el.recogHint.textContent = '⚠️ 置信度一般，建议核对后保存';
+                this.el.recogHint.style.color = '#F59E0B';
+            } else {
+                this.el.recogHint.textContent = '❌ 置信度较低，建议修正后保存';
+                this.el.recogHint.style.color = '#EF4444';
+            }
+        }
+
+        if (this.el.saveRecogBtn) {
+            this.el.saveRecogBtn.disabled = false;
+        }
+        this._lastRecognition = result;
+        this._isEditMode = false;
+    };
+
+    window.VehicleMonitorModule.enableEdit = function() {
+        this._isEditMode = true;
+        var inputs = ['recogPlate', 'recogBrand', 'recogModel', 'recogColor'];
+        inputs.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.readOnly = false;
+                el.disabled = false;
+                el.style.borderColor = '#93C5FD';
+                el.style.background = 'white';
+            }
+        });
+        var select = document.getElementById('recogPlateColor');
+        if (select) {
+            select.disabled = false;
+            select.style.borderColor = '#93C5FD';
+            select.style.background = 'white';
+        }
+
+        if (this.el.recogStatus) {
+            this.el.recogStatus.textContent = '✏️ 手动修正模式，修改后点击保存';
+            this.el.recogStatus.style.color = '#F59E0B';
+        }
+        if (this.el.recogHint) {
+            this.el.recogHint.textContent = '✏️ 请修正识别结果后点击保存';
+            this.el.recogHint.style.color = '#F59E0B';
+        }
+        this.toast('✏️ 已进入修正模式，请修改后保存', 'info');
+    };
+
+    window.VehicleMonitorModule.saveRecognizedVehicle = function() {
+        var plate = this.el.recogPlate ? this.el.recogPlate.value.trim().toUpperCase() : '';
+        if (!plate) {
+            this.toast('❌ 车牌号码不能为空', 'error');
+            return;
+        }
+
+        var existing = this.activeVehicles.find(function(v) {
+            return v.plate === plate && !v.exit_time;
+        });
+        if (existing) {
+            this.toast('⚠️ 车辆 ' + plate + ' 已在场内，无需重复录入', 'warning');
+            return;
+        }
+
+        var note = this._isEditMode ? '已手动修正' : 'AI识别';
+        var now = new Date();
+        var today = now.toISOString().split('T')[0];
+
+        var record = {
+            id: 'veh_' + Date.now(),
+            plate: plate,
+            vehicle_type: 'sedan',
+            direction: 'in',
+            date: today,
+            entry_time: now.toISOString(),
+            exit_time: null,
+            duration_minutes: null,
+            note: note,
+            created_at: now.toISOString()
+        };
+
+        this.records.push(record);
+        this.activeVehicles.push(record);
+        this.saveToLocal();
+
+        this.toast('✅ 车辆记录已保存', 'success');
+        this.clearRecognition();
+        this.refresh();
+    };
+
+    window.VehicleMonitorModule.clearRecognition = function() {
+        if (this.el.previewContainer) {
+            this.el.previewContainer.style.display = 'none';
+        }
+        if (this.el.uploadArea) {
+            this.el.uploadArea.style.display = 'flex';
+        }
+        if (this.el.loading) {
+            this.el.loading.style.display = 'none';
+        }
+        if (this.el.recogPlate) this.el.recogPlate.value = '';
+        if (this.el.recogPlateColor) this.el.recogPlateColor.value = '';
+        if (this.el.recogBrand) this.el.recogBrand.value = '';
+        if (this.el.recogModel) this.el.recogModel.value = '';
+        if (this.el.recogColor) this.el.recogColor.value = '';
+        if (this.el.recogConfidence) this.el.recogConfidence.textContent = '--%';
+        if (this.el.recogConfidenceBar) this.el.recogConfidenceBar.style.width = '0%';
+        if (this.el.recogStatus) {
+            this.el.recogStatus.textContent = '等待识别...';
+            this.el.recogStatus.style.color = '#6B7280';
+        }
+        if (this.el.recogHint) {
+            this.el.recogHint.textContent = '';
+        }
+        if (this.el.saveRecogBtn) {
+            this.el.saveRecogBtn.disabled = true;
+        }
+
+        var inputs = ['recogPlate', 'recogBrand', 'recogModel', 'recogColor'];
+        inputs.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.readOnly = true;
+                el.disabled = true;
+                el.style.borderColor = '#D1D5DB';
+                el.style.background = '#F9FAFB';
+            }
+        });
+        var select = document.getElementById('recogPlateColor');
+        if (select) {
+            select.disabled = true;
+            select.style.borderColor = '#D1D5DB';
+            select.style.background = '#F9FAFB';
+        }
+
+        this._lastRecognition = null;
+        this._isEditMode = false;
+    };
+
+    // ============================================================
+    // 14. 其他功能
+    // ============================================================
+
     window.VehicleMonitorModule.showDetail = function(recordId) {
         var record = this.records.find(function(r) { return r.id === recordId; });
         if (!record) {
@@ -529,34 +756,48 @@
             bus: '🚌 客车',
             motorcycle: '🏍️ 摩托车'
         };
-
         var directionLabels = {
             in: '📥 进入',
             out: '📤 离开'
         };
 
         var html = '';
-        html += '<div class="grid grid-cols-2 gap-2 p-3 bg-gray-50 rounded-lg">';
-        html += '<div><span class="text-gray-500">车牌</span><br><span class="font-bold">' + (record.plate || 'N/A') + '</span></div>';
-        html += '<div><span class="text-gray-500">类型</span><br><span>' + (typeLabels[record.vehicle_type] || '🚗 轿车') + '</span></div>';
-        html += '<div><span class="text-gray-500">方向</span><br><span class="' + (record.direction === 'in' ? 'text-green-600' : 'text-red-600') + '">' + (directionLabels[record.direction] || record.direction) + '</span></div>';
-        html += '<div><span class="text-gray-500">日期</span><br><span>' + (record.date || '-') + '</span></div>';
-        html += '<div><span class="text-gray-500">进入时间</span><br><span>' + (record.entry_time ? new Date(record.entry_time).toLocaleString('zh-CN') : '-') + '</span></div>';
-        html += '<div><span class="text-gray-500">离开时间</span><br><span>' + (record.exit_time ? new Date(record.exit_time).toLocaleString('zh-CN') : '🟢 仍在场内') + '</span></div>';
-        html += '<div class="col-span-2"><span class="text-gray-500">停留时长</span><br><span class="font-bold text-amber-600">' + (record.duration_minutes ? this.formatDuration(record.duration_minutes) : '计算中...') + '</span></div>';
-        html += '<div class="col-span-2"><span class="text-gray-500">备注</span><br><span>' + (record.note || '无') + '</span></div>';
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:#F9FAFB;border-radius:8px;">';
+        html += '<div><span style="color:#6B7280;">车牌</span><br><span style="font-weight:700;">' + (record.plate || 'N/A') + '</span></div>';
+        html += '<div><span style="color:#6B7280;">类型</span><br><span>' + (typeLabels[record.vehicle_type] || '🚗 轿车') + '</span></div>';
+        html += '<div><span style="color:#6B7280;">方向</span><br><span style="' + (record.direction === 'in' ? 'color:#10B981;' : 'color:#EF4444;') + '">' + (directionLabels[record.direction] || record.direction) + '</span></div>';
+        html += '<div><span style="color:#6B7280;">日期</span><br><span>' + (record.date || '-') + '</span></div>';
+        html += '<div><span style="color:#6B7280;">进入时间</span><br><span>' + (record.entry_time ? new Date(record.entry_time).toLocaleString('zh-CN') : '-') + '</span></div>';
+        html += '<div><span style="color:#6B7280;">离开时间</span><br><span>' + (record.exit_time ? new Date(record.exit_time).toLocaleString('zh-CN') : '🟢 仍在场内') + '</span></div>';
+        html += '<div style="grid-column:span 2;"><span style="color:#6B7280;">停留时长</span><br><span style="font-weight:700;color:#F59E0B;">' + (record.duration_minutes ? this.formatDuration(record.duration_minutes) : '计算中...') + '</span></div>';
+        html += '<div style="grid-column:span 2;"><span style="color:#6B7280;">备注</span><br><span>' + (record.note || '无') + '</span></div>';
         html += '</div>';
 
         content.innerHTML = html;
-        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
     };
 
     window.VehicleMonitorModule.closeDetail = function() {
         var modal = this.el.detailModal;
-        if (modal) modal.classList.add('hidden');
+        if (modal) modal.style.display = 'none';
     };
 
-    // ===== 导出数据 =====
+    window.VehicleMonitorModule.filterRecords = function() {
+        var date = this.el.dateFilter ? this.el.dateFilter.value : '';
+        var search = this.el.searchFilter ? this.el.searchFilter.value.trim().toLowerCase() : '';
+
+        var filtered = this.records;
+        if (date) {
+            filtered = filtered.filter(function(r) { return r.date === date; });
+        }
+        if (search) {
+            filtered = filtered.filter(function(r) {
+                return (r.plate || '').toLowerCase().includes(search);
+            });
+        }
+        this.renderRecords(filtered);
+    };
+
     window.VehicleMonitorModule.exportData = function() {
         var records = this.records || [];
         if (records.length === 0) {
@@ -589,19 +830,19 @@
             ]);
         });
 
-        try {
-            var ws = XLSX.utils.aoa_to_sheet(data);
-            var wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '车辆监控数据');
-            var today = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, '车辆监控_' + today + '.xlsx');
-            this.toast('✅ 数据已导出', 'success');
-        } catch(e) {
-            this.toast('❌ 导出失败: ' + e.message, 'error');
-        }
+        var csvContent = data.map(function(row) {
+            return row.join(',');
+        }).join('\n');
+
+        var blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        var today = new Date().toISOString().split('T')[0];
+        link.download = '车辆监控_' + today + '.csv';
+        link.click();
+        this.toast('✅ 数据已导出', 'success');
     };
 
-    // ===== 刷新 =====
     window.VehicleMonitorModule.refresh = function() {
         this.loadRecords();
         this.loadActiveVehicles();
@@ -609,7 +850,10 @@
         this.toast('✅ 数据已刷新', 'success');
     };
 
-    // ===== 自动更新 =====
+    // ============================================================
+    // 15. 自动更新
+    // ============================================================
+
     window.VehicleMonitorModule.startAutoUpdate = function() {
         if (this.autoUpdateInterval) {
             clearInterval(this.autoUpdateInterval);
@@ -620,15 +864,21 @@
         }.bind(this), 30000);
     };
 
-    // ================================================================
-    // ===== 新增：车牌智能识别功能 =====
-    // ================================================================
+    window.VehicleMonitorModule.destroy = function() {
+        if (this.autoUpdateInterval) {
+            clearInterval(this.autoUpdateInterval);
+            this.autoUpdateInterval = null;
+        }
+        this.initialized = false;
+    };
 
-    // ===== 拍照（触发相机） =====
+    // ============================================================
+    // 16. 拍照/上传
+    // ============================================================
+
     window.VehicleMonitorModule.takePhoto = function() {
-        var input = document.getElementById('cameraInput');
+        var input = document.getElementById('vmCameraInput');
         if (input) {
-            // 检测是否为移动设备
             var isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Opera Mini|IEMobile/i.test(navigator.userAgent);
             if (isMobile) {
                 input.setAttribute('capture', 'environment');
@@ -641,9 +891,8 @@
         }
     };
 
-    // ===== 上传照片 =====
     window.VehicleMonitorModule.uploadPhoto = function() {
-        var input = document.getElementById('uploadInput');
+        var input = document.getElementById('vmUploadInput');
         if (input) {
             input.click();
         } else {
@@ -651,7 +900,6 @@
         }
     };
 
-    // ===== 处理相机拍照 =====
     window.VehicleMonitorModule.handleCameraCapture = function(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -659,7 +907,6 @@
         event.target.value = '';
     };
 
-    // ===== 处理上传选择 =====
     window.VehicleMonitorModule.handleUploadSelect = function(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -667,245 +914,34 @@
         event.target.value = '';
     };
 
-    // ===== 处理图片 =====
-    window.VehicleMonitorModule.processImage = function(file) {
-        var self = this;
+    // ============================================================
+    // 17. 初始化
+    // ============================================================
 
-        if (!file.type.startsWith('image/')) {
-            this.toast('❌ 请上传图片文件', 'error');
-            return;
-        }
+    var initialized = false;
 
-        if (file.size > 10 * 1024 * 1024) {
-            this.toast('❌ 图片大小不能超过10MB', 'error');
-            return;
-        }
+    function initModule() {
+        if (initialized) return;
+        initialized = true;
 
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var imageData = e.target.result;
-            self.showPreview(imageData);
-            self.callRecognizeAPI(imageData);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    // ===== 显示预览 =====
-    window.VehicleMonitorModule.showPreview = function(imageData) {
-        this.el.imagePreview.src = imageData;
-        this.el.imagePreviewContainer.classList.remove('hidden');
-        this.el.uploadPlaceholder.classList.add('hidden');
-        this.el.recognizeLoading.classList.remove('hidden');
-        this.el.recogStatus.textContent = '⏳ AI识别中...';
-        this.el.recogStatus.className = 'text-xs text-blue-600';
-    };
-
-    // ===== 清空图片 =====
-    window.VehicleMonitorModule.clearImage = function() {
-        this.el.imagePreviewContainer.classList.add('hidden');
-        this.el.uploadPlaceholder.classList.remove('hidden');
-        this.el.recognizeLoading.classList.add('hidden');
-        ['cameraInput', 'uploadInput'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        this.el.recogStatus.textContent = '等待识别...';
-        this.el.recogStatus.className = 'text-xs text-gray-400';
-    };
-
-    // ===== 调用识别API =====
-    window.VehicleMonitorModule.callRecognizeAPI = function(imageData) {
-        var self = this;
-
-        // 模拟沙特车牌识别结果
-        setTimeout(function() {
-            var mockResults = [
-                { plate: 'ABC 1234', plateColor: '白色', brand: 'Toyota', model: 'Camry', color: '白色', confidence: 0.96 },
-                { plate: 'XYZ 5678', plateColor: '黄色', brand: 'Honda', model: 'Accord', color: '黑色', confidence: 0.94 },
-                { plate: 'DEF 9012', plateColor: '蓝色', brand: 'Nissan', model: 'Altima', color: '银色', confidence: 0.92 },
-                { plate: 'GHI 3456', plateColor: '白色', brand: 'Hyundai', model: 'Sonata', color: '白色', confidence: 0.95 },
-                { plate: 'JKL 7890', plateColor: '绿色', brand: 'Mercedes', model: 'E-Class', color: '黑色', confidence: 0.93 }
-            ];
-
-            var randomIndex = Math.floor(Math.random() * mockResults.length);
-            var result = mockResults[randomIndex];
-            result.confidence = 0.85 + Math.random() * 0.14;
-
-            self.displayRecognitionResult(result);
-        }, 1500 + Math.random() * 1000);
-    };
-
-    // ===== 显示识别结果 =====
-    window.VehicleMonitorModule.displayRecognitionResult = function(result) {
-        this.el.recognizeLoading.classList.add('hidden');
-        this.el.recogStatus.textContent = '✅ 识别完成，请确认信息';
-        this.el.recogStatus.className = 'text-xs text-green-600';
-
-        this.el.recogPlate.value = result.plate || '';
-        this.el.recogPlateColor.value = result.plateColor || '';
-        this.el.recogBrand.value = result.brand || '';
-        this.el.recogModel.value = result.model || '';
-        this.el.recogColor.value = result.color || '';
-
-        var confidence = Math.round((result.confidence || 0) * 100);
-        this.el.recogConfidence.textContent = confidence + '%';
-        this.el.recogConfidenceBar.style.width = Math.min(confidence, 100) + '%';
-
-        var hint = this.el.recogHint;
-        if (confidence >= 90) {
-            hint.textContent = '✅ 置信度较高，建议直接保存';
-            hint.className = 'text-[10px] text-green-600 mt-1';
-        } else if (confidence >= 70) {
-            hint.textContent = '⚠️ 置信度一般，建议核对后保存';
-            hint.className = 'text-[10px] text-amber-600 mt-1';
+        if (typeof VehicleMonitorModule !== 'undefined') {
+            VehicleMonitorModule.cacheDom();
+            VehicleMonitorModule.bindEvents();
+            VehicleMonitorModule.loadData();
+            console.log('✅ Vehicle Monitor 模块已初始化');
         } else {
-            hint.textContent = '❌ 置信度较低，建议修正后保存';
-            hint.className = 'text-[10px] text-red-600 mt-1';
+            console.warn('⚠️ VehicleMonitorModule 未定义');
         }
+    }
 
-        this.el.saveRecogBtn.disabled = false;
-        this._lastRecognition = result;
-        this._isEditMode = false;
-    };
-
-    // ===== 手动修正 =====
-    window.VehicleMonitorModule.enableEdit = function() {
-        this._isEditMode = true;
-        var inputs = ['recogPlate', 'recogPlateColor', 'recogBrand', 'recogModel', 'recogColor'];
-        inputs.forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) {
-                el.readOnly = false;
-                el.disabled = false;
-                el.classList.add('border-blue-300', 'bg-white');
-            }
+    // DOM 就绪后初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initModule, 300);
         });
-        var select = document.getElementById('recogPlateColor');
-        if (select) select.disabled = false;
+    } else {
+        setTimeout(initModule, 300);
+    }
 
-        this.el.recogStatus.textContent = '✏️ 手动修正模式，修改后点击保存';
-        this.el.recogStatus.className = 'text-xs text-amber-600';
-        this.el.recogHint.textContent = '✏️ 请修正识别结果后点击保存';
-        this.el.recogHint.className = 'text-[10px] text-amber-600 mt-1';
-        this.toast('✏️ 已进入修正模式，请修改后保存', 'info');
-    };
-
-    // ===== 保存识别记录 =====
-    window.VehicleMonitorModule.saveRecognizedVehicle = function() {
-        var self = this;
-        var currentUser = AppStore.get('currentUser');
-        var store = AppStore.get('currentStore');
-
-        var plate = this.el.recogPlate.value.trim().toUpperCase();
-        if (!plate) {
-            this.toast('❌ 车牌号码不能为空', 'error');
-            return;
-        }
-
-        if (plate.length < 2) {
-            this.toast('❌ 车牌号码格式不正确', 'error');
-            return;
-        }
-
-        // 检查车牌是否已在场内
-        var existing = this.activeVehicles.find(function(v) {
-            return v.plate === plate && !v.exit_time;
-        });
-        if (existing) {
-            this.toast('⚠️ 车辆 ' + plate + ' 已在场内，无需重复录入', 'warning');
-            return;
-        }
-
-        var data = {
-            plate: plate,
-            plate_color: this.el.recogPlateColor.value || '',
-            vehicle_brand: this.el.recogBrand.value || '',
-            vehicle_model: this.el.recogModel.value || '',
-            vehicle_color: this.el.recogColor.value || '',
-            confidence: this._lastRecognition ? this._lastRecognition.confidence : 0,
-            image_path: this.el.imagePreview.src || '',
-            operator_id: currentUser ? currentUser.id : null,
-            branch_id: store ? store.id : null,
-            vehicle_type: 'sedan',
-            note: this._isEditMode ? '已手动修正' : 'AI识别',
-            entry_time: new Date().toISOString(),
-            date: new Date().toISOString().split('T')[0],
-            direction: 'in',
-            exit_time: null,
-            duration_minutes: null
-        };
-
-        // 保存到数据库
-        if (window.AppApi && AppApi.insert) {
-            AppApi.insert('vehicle_records', data)
-                .then(function(saved) {
-                    self.toast('✅ 车辆记录已保存', 'success');
-                    self.clearRecognition();
-                    self.refresh();
-                    if (window.PermissionService) {
-                        PermissionService.logAudit({
-                            action: 'CREATE',
-                            resourceType: 'vehicle_record',
-                            resourceName: plate,
-                            newValue: data
-                        });
-                    }
-                })
-                .catch(function(error) {
-                    self.toast('❌ 保存失败: ' + error.message, 'error');
-                });
-        } else {
-            // 备用：保存到本地
-            var record = {
-                id: 'veh_' + Date.now(),
-                plate: plate,
-                vehicle_type: 'sedan',
-                direction: 'in',
-                date: new Date().toISOString().split('T')[0],
-                entry_time: new Date().toISOString(),
-                exit_time: null,
-                duration_minutes: null,
-                note: data.note,
-                created_at: new Date().toISOString()
-            };
-            this.records.push(record);
-            this.activeVehicles.push(record);
-            this.saveToLocal();
-            this.toast('✅ 车辆记录已保存（本地）', 'success');
-            this.clearRecognition();
-            this.refresh();
-        }
-    };
-
-    // ===== 清空识别 =====
-    window.VehicleMonitorModule.clearRecognition = function() {
-        this.clearImage();
-        this.el.recogPlate.value = '';
-        this.el.recogPlateColor.value = '';
-        this.el.recogBrand.value = '';
-        this.el.recogModel.value = '';
-        this.el.recogColor.value = '';
-        this.el.recogConfidence.textContent = '--%';
-        this.el.recogConfidenceBar.style.width = '0%';
-        this.el.recogStatus.textContent = '等待识别...';
-        this.el.recogStatus.className = 'text-xs text-gray-400';
-        this.el.recogHint.textContent = '';
-        this.el.saveRecogBtn.disabled = true;
-
-        var inputs = ['recogPlate', 'recogBrand', 'recogModel', 'recogColor'];
-        inputs.forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) {
-                el.readOnly = true;
-                el.classList.remove('border-blue-300', 'bg-white');
-            }
-        });
-        var select = document.getElementById('recogPlateColor');
-        if (select) select.disabled = true;
-
-        this._lastRecognition = null;
-        this._isEditMode = false;
-    };
-
-    console.log('[VehicleMonitor] 模块已注册');
+    console.log('[VehicleMonitor] 模块已加载');
 })();

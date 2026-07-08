@@ -1,10 +1,15 @@
 /**
- * 01-dashboard/executive/executive.js
- * 执行仪表板 - 完整数据渲染
+ * 01-dashboard/executive/executive.js - 高管视图
+ * @module executive
+ * @description 展示高管级别的业务概览数据
  */
+
 console.log('🏠 Executive Dashboard loaded');
 
-// ---------- 模拟数据 ----------
+// ============================================================
+// 1. 数据
+// ============================================================
+
 const mockData = {
     metrics: {
         revenue: { current: 125000, previous: 118000, change: 5.9 },
@@ -21,7 +26,10 @@ const mockData = {
     ]
 };
 
-// ---------- 工具函数 ----------
+// ============================================================
+// 2. 工具函数
+// ============================================================
+
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-SA', {
         style: 'currency',
@@ -79,7 +87,10 @@ function showToast(message, type) {
     setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
 }
 
-// ---------- 渲染指标卡片 ----------
+// ============================================================
+// 3. 渲染函数
+// ============================================================
+
 function renderMetricCards(metrics) {
     var container = document.querySelector('.metric-cards');
     if (!container) {
@@ -149,7 +160,6 @@ function renderMetricCards(metrics) {
     console.log('✅ Metric cards rendered');
 }
 
-// ---------- 渲染最近订单 ----------
 function renderRecentOrders(orders) {
     var container = document.querySelector('.recent-orders');
     if (!container) {
@@ -183,7 +193,6 @@ function renderRecentOrders(orders) {
     console.log('✅ Recent orders rendered');
 }
 
-// ---------- 渲染快速操作 ----------
 function renderQuickActions() {
     var container = document.querySelector('.quick-actions');
     if (!container) {
@@ -220,7 +229,10 @@ function renderQuickActions() {
     console.log('✅ Quick actions rendered');
 }
 
-// ---------- 加载仪表板数据 ----------
+// ============================================================
+// 4. 加载数据
+// ============================================================
+
 function loadDashboardData() {
     console.log('🔄 Loading dashboard data...');
 
@@ -246,7 +258,110 @@ function loadDashboardData() {
     }
 }
 
-// ---------- 自动刷新（每60秒） ----------
+// ============================================================
+// 5. 快捷登记函数（供 HTML 调用）
+// ============================================================
+
+/**
+ * 快速记录车辆进入
+ * @param {string} plate - 车牌号
+ */
+window.quickEntry = function(plate) {
+    if (!plate) {
+        var input = document.getElementById('vmPlateInput');
+        if (input) plate = input.value.trim().toUpperCase();
+    }
+    if (!plate) {
+        showToast('请输入车牌号', 'warning');
+        return;
+    }
+
+    // 检查是否已在场内
+    var existing = window.VehicleMonitorModule?.activeVehicles?.find(function(v) {
+        return v.plate === plate && !v.exit_time;
+    });
+    if (existing) {
+        showToast('车辆 ' + plate + ' 已在场内', 'warning');
+        return;
+    }
+
+    if (window.VehicleMonitorModule && typeof window.VehicleMonitorModule.quickEntry === 'function') {
+        window.VehicleMonitorModule.quickEntry(plate);
+    } else {
+        // 降级方案：直接添加记录
+        var record = {
+            id: 'veh_' + Date.now(),
+            plate: plate,
+            vehicle_type: 'sedan',
+            direction: 'in',
+            date: new Date().toISOString().split('T')[0],
+            entry_time: new Date().toISOString(),
+            exit_time: null,
+            duration_minutes: null,
+            note: '手动登记'
+        };
+        
+        var all = JSON.parse(localStorage.getItem('vehicle_records') || '[]');
+        all.push(record);
+        localStorage.setItem('vehicle_records', JSON.stringify(all));
+        
+        showToast('📥 车辆 ' + plate + ' 已进入', 'success');
+        
+        if (window.VehicleMonitorModule && typeof window.VehicleMonitorModule.refresh === 'function') {
+            window.VehicleMonitorModule.refresh();
+        }
+    }
+};
+
+/**
+ * 快速记录车辆离开
+ * @param {string} plate - 车牌号
+ */
+window.quickExit = function(plate) {
+    if (!plate) {
+        var input = document.getElementById('vmPlateInput');
+        if (input) plate = input.value.trim().toUpperCase();
+    }
+    if (!plate) {
+        showToast('请输入车牌号', 'warning');
+        return;
+    }
+
+    if (window.VehicleMonitorModule && typeof window.VehicleMonitorModule.quickExit === 'function') {
+        window.VehicleMonitorModule.quickExit(plate);
+    } else {
+        var all = JSON.parse(localStorage.getItem('vehicle_records') || '[]');
+        var index = all.findIndex(function(r) {
+            return r.plate === plate && !r.exit_time;
+        });
+        
+        if (index < 0) {
+            showToast('车辆 ' + plate + ' 不在场内', 'warning');
+            return;
+        }
+        
+        var vehicle = all[index];
+        var now = new Date();
+        var entryTime = new Date(vehicle.entry_time);
+        var duration = Math.floor((now - entryTime) / 1000 / 60);
+        
+        vehicle.exit_time = now.toISOString();
+        vehicle.duration_minutes = duration;
+        all[index] = vehicle;
+        localStorage.setItem('vehicle_records', JSON.stringify(all));
+        
+        showToast('📤 车辆 ' + plate + ' 已离开，停留 ' + duration + ' 分钟', 'success');
+        
+        if (window.VehicleMonitorModule && typeof window.VehicleMonitorModule.refresh === 'function') {
+            window.VehicleMonitorModule.refresh();
+        }
+    }
+};
+
+// ============================================================
+// 6. 自动刷新
+// ============================================================
+
 var refreshInterval = null;
 
 function startAutoRefresh() {
@@ -266,7 +381,10 @@ function stopAutoRefresh() {
     }
 }
 
-// ---------- 页面初始化 ----------
+// ============================================================
+// 7. 初始化
+// ============================================================
+
 export function init() {
     console.log('📊 Executive Dashboard initializing...');
 
@@ -276,7 +394,10 @@ export function init() {
     console.log('✅ Executive Dashboard ready');
 }
 
-// ---------- 默认导出 ----------
+// ============================================================
+// 8. 导出
+// ============================================================
+
 export default {
     init: init,
     loadData: loadDashboardData,
@@ -284,12 +405,18 @@ export default {
     stopAutoRefresh: stopAutoRefresh
 };
 
-// ---------- DOM 就绪 ----------
+// ============================================================
+// 9. DOM 就绪
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 Executive Dashboard DOM ready');
 });
 
-// ---------- 暴露全局方法 ----------
+// ============================================================
+// 10. 暴露全局方法
+// ============================================================
+
 if (typeof window !== 'undefined') {
     window.ExecutiveDashboard = {
         loadData: loadDashboardData,

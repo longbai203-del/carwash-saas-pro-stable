@@ -1,6 +1,7 @@
 /**
- * modules/01-dashboard/inventory/inventory.js
- * 库存概览 - 完整数据渲染
+ * modules/01-dashboard/inventory/inventory.js - 库存概览
+ * @module inventory
+ * @description 库存状态总览
  */
 
 // ============================================================
@@ -61,19 +62,56 @@ function showToast(message, type) {
 
 function renderStats() {
     var stats = INVENTORY_DATA.stats;
-    var cards = document.querySelectorAll('.inventory-card .value');
-
-    if (cards.length >= 4) {
-        cards[0].textContent = stats.total;
-        cards[1].textContent = stats.lowStock;
-        cards[2].textContent = stats.outOfStock;
-        cards[3].textContent = '¥' + formatCurrency(stats.totalValue);
+    
+    var cards = document.querySelectorAll('.inventory-card');
+    var values = cards.length > 0 ? cards.querySelectorAll('.value') : [];
+    
+    if (values.length >= 4) {
+        values[0].textContent = stats.total;
+        values[1].textContent = stats.lowStock;
+        values[2].textContent = stats.outOfStock;
+        values[3].textContent = '¥' + formatCurrency(stats.totalValue);
+    } else {
+        // 备用：通过ID查找
+        var idMap = {
+            'invTotal': stats.total,
+            'invLowStock': stats.lowStock,
+            'invOutOfStock': stats.outOfStock,
+            'invTotalValue': '¥' + formatCurrency(stats.totalValue)
+        };
+        Object.keys(idMap).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = idMap[id];
+        });
+        
+        // 再尝试通过卡片内部的元素查找
+        var allCards = document.querySelectorAll('.inventory-card, .stat-card, .card');
+        allCards.forEach(function(card, index) {
+            var valEl = card.querySelector('.value, .stat-value, .number');
+            if (valEl) {
+                var keys = ['total', 'lowStock', 'outOfStock', 'totalValue'];
+                if (index < keys.length) {
+                    var key = keys[index];
+                    if (key === 'totalValue') {
+                        valEl.textContent = '¥' + formatCurrency(stats.totalValue);
+                    } else {
+                        valEl.textContent = stats[key];
+                    }
+                }
+            }
+        });
     }
 }
 
 function renderLowStockItems() {
-    var tbody = document.querySelector('.table tbody');
-    if (!tbody) return;
+    var tbody = document.querySelector('.table tbody') || 
+                document.querySelector('#lowStockTable tbody') ||
+                document.querySelector('[data-lowstock-table] tbody');
+    
+    if (!tbody) {
+        console.warn('⚠️ 找不到低库存表格');
+        return;
+    }
 
     var html = '';
     for (var i = 0; i < INVENTORY_DATA.lowStockItems.length; i++) {
@@ -102,10 +140,12 @@ export function init() {
         return;
     }
 
-    renderStats();
-    renderLowStockItems();
+    setTimeout(function() {
+        renderStats();
+        renderLowStockItems();
+    }, 100);
 
-    var refreshBtn = document.querySelector('.page-header .btn-secondary');
+    var refreshBtn = document.querySelector('.page-header .btn-secondary, #refreshInventoryBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
             var icon = this.querySelector('i');
@@ -124,10 +164,16 @@ export function init() {
     console.log('✅ Inventory Dashboard 初始化完成');
 }
 
+// ============================================================
+// 5. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(init, 200);
+    });
 } else {
-    setTimeout(init, 100);
+    setTimeout(init, 200);
 }
 
 console.log('✅ Inventory 模块加载完成');

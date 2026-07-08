@@ -1,6 +1,7 @@
 /**
- * modules/01-dashboard/finance/finance.js
- * 财务概览 - 完整数据渲染
+ * modules/01-dashboard/finance/finance.js - 财务概览
+ * @module finance
+ * @description 财务状况总览
  */
 
 // ============================================================
@@ -55,13 +56,65 @@ function showToast(message, type) {
 
 function renderStats() {
     var stats = FINANCE_DATA.stats;
-    var cards = document.querySelectorAll('.finance-card .value');
-
-    if (cards.length >= 4) {
-        cards[0].textContent = '¥' + formatCurrency(stats.income);
-        cards[1].textContent = '¥' + formatCurrency(stats.expenses);
-        cards[2].textContent = '¥' + formatCurrency(stats.profit);
-        cards[3].textContent = stats.profitRate + '%';
+    
+    var cards = document.querySelectorAll('.finance-card');
+    var values = cards.length > 0 ? cards.querySelectorAll('.value') : [];
+    
+    if (values.length >= 4) {
+        values[0].textContent = '¥' + formatCurrency(stats.income);
+        values[1].textContent = '¥' + formatCurrency(stats.expenses);
+        values[2].textContent = '¥' + formatCurrency(stats.profit);
+        values[3].textContent = stats.profitRate + '%';
+        
+        // 添加颜色类
+        if (values[0]) values[0].classList.add('positive');
+        if (values[1]) values[1].classList.add('negative');
+        if (values[2]) values[2].classList.add('positive');
+        if (values[3]) values[3].classList.add('positive');
+    } else {
+        // 备用：通过ID查找
+        var idMap = {
+            'finIncome': '¥' + formatCurrency(stats.income),
+            'finExpenses': '¥' + formatCurrency(stats.expenses),
+            'finProfit': '¥' + formatCurrency(stats.profit),
+            'finProfitRate': stats.profitRate + '%'
+        };
+        Object.keys(idMap).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.textContent = idMap[id];
+                if (id === 'finIncome' || id === 'finProfit') {
+                    el.classList.add('positive');
+                } else if (id === 'finExpenses') {
+                    el.classList.add('negative');
+                }
+            }
+        });
+        
+        // 再尝试通过卡片内部的元素查找
+        var allCards = document.querySelectorAll('.finance-card, .stat-card, .card');
+        allCards.forEach(function(card, index) {
+            var valEl = card.querySelector('.value, .stat-value, .number');
+            if (valEl) {
+                var keys = ['income', 'expenses', 'profit', 'profitRate'];
+                if (index < keys.length) {
+                    var key = keys[index];
+                    if (key === 'income') {
+                        valEl.textContent = '¥' + formatCurrency(stats.income);
+                        valEl.classList.add('positive');
+                    } else if (key === 'expenses') {
+                        valEl.textContent = '¥' + formatCurrency(stats.expenses);
+                        valEl.classList.add('negative');
+                    } else if (key === 'profit') {
+                        valEl.textContent = '¥' + formatCurrency(stats.profit);
+                        valEl.classList.add('positive');
+                    } else if (key === 'profitRate') {
+                        valEl.textContent = stats.profitRate + '%';
+                        valEl.classList.add('positive');
+                    }
+                }
+            }
+        });
     }
 }
 
@@ -77,9 +130,11 @@ export function init() {
         return;
     }
 
-    renderStats();
+    setTimeout(function() {
+        renderStats();
+    }, 100);
 
-    var refreshBtn = document.querySelector('.page-header .btn-secondary');
+    var refreshBtn = document.querySelector('.page-header .btn-secondary, #refreshFinanceBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
             var icon = this.querySelector('i');
@@ -97,10 +152,16 @@ export function init() {
     console.log('✅ Finance Dashboard 初始化完成');
 }
 
+// ============================================================
+// 5. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(init, 200);
+    });
 } else {
-    setTimeout(init, 100);
+    setTimeout(init, 200);
 }
 
 console.log('✅ Finance 模块加载完成');

@@ -1,6 +1,7 @@
 /**
- * modules/01-dashboard/employee/employee.js
- * 员工概览 - 完整数据渲染
+ * modules/01-dashboard/employee/employee.js - 员工概览
+ * @module employee
+ * @description 员工数据总览
  */
 
 // ============================================================
@@ -62,19 +63,40 @@ function showToast(message, type) {
 
 function renderStats() {
     var stats = EMPLOYEE_DATA.stats;
-    var cards = document.querySelectorAll('.employee-card .value');
-
+    
+    var cards = document.querySelectorAll('.employee-card');
     if (cards.length >= 4) {
-        cards[0].textContent = stats.total;
-        cards[1].textContent = stats.active;
-        cards[2].textContent = stats.attendanceRate + '%';
-        cards[3].textContent = '¥' + formatCurrency(stats.monthlyPayroll);
+        var values = cards.querySelectorAll('.value');
+        if (values.length >= 4) {
+            values[0].textContent = stats.total;
+            values[1].textContent = stats.active;
+            values[2].textContent = stats.attendanceRate + '%';
+            values[3].textContent = '¥' + formatCurrency(stats.monthlyPayroll);
+        }
+    } else {
+        // 备用：通过ID查找
+        var idMap = {
+            'empTotal': stats.total,
+            'empActive': stats.active,
+            'empAttendance': stats.attendanceRate + '%',
+            'empPayroll': '¥' + formatCurrency(stats.monthlyPayroll)
+        };
+        Object.keys(idMap).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = idMap[id];
+        });
     }
 }
 
 function renderEmployees() {
-    var tbody = document.querySelector('.table tbody');
-    if (!tbody) return;
+    var tbody = document.querySelector('.table tbody') || 
+                document.querySelector('#employeeList tbody') ||
+                document.querySelector('[data-employee-table] tbody');
+    
+    if (!tbody) {
+        console.warn('⚠️ 找不到员工表格');
+        return;
+    }
 
     var html = '';
     for (var i = 0; i < EMPLOYEE_DATA.employees.length; i++) {
@@ -101,10 +123,12 @@ export function init() {
         return;
     }
 
-    renderStats();
-    renderEmployees();
+    setTimeout(function() {
+        renderStats();
+        renderEmployees();
+    }, 100);
 
-    var refreshBtn = document.querySelector('.page-header .btn-secondary');
+    var refreshBtn = document.querySelector('.page-header .btn-secondary, #refreshEmployeeBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
             var icon = this.querySelector('i');
@@ -123,10 +147,16 @@ export function init() {
     console.log('✅ Employee Dashboard 初始化完成');
 }
 
+// ============================================================
+// 5. 自动初始化
+// ============================================================
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(init, 200);
+    });
 } else {
-    setTimeout(init, 100);
+    setTimeout(init, 200);
 }
 
 console.log('✅ Employee 模块加载完成');
