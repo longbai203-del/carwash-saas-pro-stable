@@ -75,7 +75,7 @@ class App {
             console.error('[App] ❌ 初始化失败:', error);
             this.showFatalError(error.message);
         }
-    },
+    }
 
     /**
      * 设置容器元素
@@ -97,21 +97,28 @@ class App {
             this.contentContainer = document.createElement('div');
             this.contentContainer.id = 'page-content';
             this.contentContainer.className = 'page-content';
-            document.querySelector('.main-content')?.appendChild(this.contentContainer);
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.appendChild(this.contentContainer);
+            } else {
+                document.body.appendChild(this.contentContainer);
+            }
         }
-    },
+    }
 
     /**
      * 初始化侧边栏
      * @returns {void}
      */
     initSidebar() {
-        SidebarComponent.init(this.sidebarContainer);
-    },
+        if (this.sidebarContainer) {
+            SidebarComponent.init(this.sidebarContainer);
+        }
+    }
 
     /**
      * 加载用户信息
-     * @returns {Promise<void>}
+     * @returns {Promise<Object>}
      */
     async loadUser() {
         try {
@@ -120,10 +127,14 @@ class App {
 
             // 如果没有用户，尝试从API获取
             if (!user) {
-                const response = await apiClient.getCurrentUser();
-                if (response && response.code === 200) {
-                    user = response.data;
-                    appStore.set('user', user);
+                try {
+                    const response = await apiClient.getCurrentUser();
+                    if (response && response.code === 200) {
+                        user = response.data;
+                        appStore.set('user', user);
+                    }
+                } catch (apiError) {
+                    console.warn('[App] API获取用户失败:', apiError);
                 }
             }
 
@@ -159,7 +170,7 @@ class App {
             appStore.set('user', defaultUser);
             return defaultUser;
         }
-    },
+    }
 
     /**
      * 设置全局错误处理
@@ -177,7 +188,7 @@ class App {
             console.error('[App] 未处理的Promise错误:', e.reason);
             this.showErrorToast('操作失败，请重试');
         });
-    },
+    }
 
     /**
      * 设置响应式
@@ -202,7 +213,7 @@ class App {
                 this.sidebarContainer.classList.remove('mobile-open');
             }
         });
-    },
+    }
 
     /**
      * 显示错误提示
@@ -233,7 +244,7 @@ class App {
             toast.style.transition = 'opacity 0.3s';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
-    },
+    }
 
     /**
      * 显示致命错误
