@@ -1,5 +1,20 @@
-{{
+{
   "name": "HR",
   "icon": "user-tie",
-  "order": 10
-}}
+  "order": 10,
+  "defaultPage": "employees",
+  "pages": [
+    { "path": "employees", "name": "员工管理", "icon": "users" },
+    { "path": "attendance", "name": "考勤管理", "icon": "clock" },
+    { "path": "leaves", "name": "请假管理", "icon": "calendar-minus" },
+    { "path": "payroll", "name": "薪资管理", "icon": "money-bill" },
+    { "path": "commissions", "name": "佣金管理", "icon": "percentage" },
+    { "path": "bonuses", "name": "奖金管理", "icon": "gift" },
+    { "path": "penalties", "name": "处罚管理", "icon": "exclamation-circle" },
+    { "path": "schedules", "name": "排班管理", "icon": "calendar-alt" },
+    { "path": "shifts", "name": "班次管理", "icon": "clock" },
+    { "path": "performance", "name": "绩效管理", "icon": "chart-bar" },
+    { "path": "tasks", "name": "任务管理", "icon": "tasks" },
+    { "path": "permissions", "name": "权限管理", "icon": "lock" }
+  ]
+}

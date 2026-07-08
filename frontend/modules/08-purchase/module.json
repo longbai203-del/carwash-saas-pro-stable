@@ -1,5 +1,15 @@
-{{
+{
   "name": "Purchasing",
   "icon": "truck",
-  "order": 8
-}}
+  "order": 8,
+  "defaultPage": "orders",
+  "pages": [
+    { "path": "orders", "name": "采购订单", "icon": "shopping-cart" },
+    { "path": "suppliers", "name": "供应商管理", "icon": "building" },
+    { "path": "quotations", "name": "询价管理", "icon": "file-invoice" },
+    { "path": "receiving", "name": "收货管理", "icon": "clipboard-list" },
+    { "path": "returns", "name": "采购退货", "icon": "undo" },
+    { "path": "import", "name": "导入管理", "icon": "file-import" },
+    { "path": "supplier-payments", "name": "供应商付款", "icon": "money-bill" }
+  ]
+}

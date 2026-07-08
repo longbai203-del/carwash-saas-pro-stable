@@ -1,5 +1,14 @@
-{{
+{
   "name": "Analytics",
   "icon": "chart-bar",
-  "order": 13
-}}
+  "order": 13,
+  "defaultPage": "reports",
+  "pages": [
+    { "path": "reports", "name": "报表中心", "icon": "file-alt" },
+    { "path": "custom-reports", "name": "自定义报表", "icon": "file-export" },
+    { "path": "visualizations", "name": "数据可视化", "icon": "chart-pie" },
+    { "path": "forecast", "name": "预测分析", "icon": "chart-line" },
+    { "path": "recommendations", "name": "智能推荐", "icon": "lightbulb" },
+    { "path": "business-health", "name": "业务健康", "icon": "heartbeat" }
+  ]
+}

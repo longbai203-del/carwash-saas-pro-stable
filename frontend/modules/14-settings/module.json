@@ -1,5 +1,13 @@
-{{
+{
   "name": "Settings",
   "icon": "sliders-h",
-  "order": 14
-}}
+  "order": 14,
+  "defaultPage": "company",
+  "pages": [
+    { "path": "company", "name": "公司设置", "icon": "building" },
+    { "path": "branches", "name": "分支管理", "icon": "code-branch" },
+    { "path": "profile", "name": "个人设置", "icon": "user" },
+    { "path": "preferences", "name": "偏好设置", "icon": "sliders-h" },
+    { "path": "general", "name": "通用设置", "icon": "cog" }
+  ]
+}

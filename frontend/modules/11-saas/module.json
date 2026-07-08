@@ -1,5 +1,17 @@
-{{
+{
   "name": "SaaS",
   "icon": "cloud",
-  "order": 11
-}}
+  "order": 11,
+  "defaultPage": "tenants",
+  "pages": [
+    { "path": "tenants", "name": "租户管理", "icon": "building" },
+    { "path": "subscriptions", "name": "订阅管理", "icon": "credit-card" },
+    { "path": "plans", "name": "套餐管理", "icon": "list" },
+    { "path": "packages", "name": "服务包管理", "icon": "box" },
+    { "path": "billing", "name": "计费管理", "icon": "receipt" },
+    { "path": "invoices", "name": "发票管理", "icon": "file-invoice" },
+    { "path": "usage", "name": "用量统计", "icon": "chart-pie" },
+    { "path": "storage", "name": "存储管理", "icon": "database" },
+    { "path": "feature-limits", "name": "功能限制", "icon": "sliders-h" }
+  ]
+}

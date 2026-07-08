@@ -1,5 +1,18 @@
-{{
+{
   "name": "Inventory",
   "icon": "warehouse",
-  "order": 7
-}}
+  "order": 7,
+  "defaultPage": "stock",
+  "pages": [
+    { "path": "stock", "name": "库存管理", "icon": "warehouse" },
+    { "path": "warehouses", "name": "仓库管理", "icon": "building" },
+    { "path": "transfers", "name": "调拨管理", "icon": "exchange-alt" },
+    { "path": "adjustments", "name": "库存调整", "icon": "sliders-h" },
+    { "path": "cycle-counts", "name": "盘点管理", "icon": "clipboard-check" },
+    { "path": "low-stock", "name": "低库存预警", "icon": "exclamation-triangle" },
+    { "path": "batches", "name": "批次管理", "icon": "layer-group" },
+    { "path": "expiry", "name": "过期管理", "icon": "clock" },
+    { "path": "serial-numbers", "name": "序列号管理", "icon": "hashtag" },
+    { "path": "history", "name": "库存历史", "icon": "history" }
+  ]
+}
