@@ -1,24 +1,19 @@
 /**
- * modules/01-dashboard/sales/sales.js - Dashboard 仪表盘
- * 使用数据服务层获取数据
+ * modules/01-dashboard/dashboard/dashboard.js - 仪表盘模块
+ * @module dashboard
+ * @description 展示业务概览、实时数据、销售趋势和最新订单
+ * 
+ * @example
+ * import { init } from './dashboard.js';
+ * init();
  */
 
-// ============================================================
-// 1. 导入数据服务
-// ============================================================
+import { apiClient } from '../../../js/api/api-client.js';
+import { appStore } from '../../../js/core/store.js';
 
-// 尝试从全局获取服务，如果不存在则使用 Mock
-function getServices() {
-    if (typeof window !== 'undefined' && window.Services) {
-        return window.Services;
-    }
-    return null;
-}
-
-// ============================================================
-// 2. 状态管理
-// ============================================================
-
+/**
+ * 仪表盘状态
+ */
 const state = {
     stats: {
         todayRevenue: 0,
@@ -28,354 +23,248 @@ const state = {
     },
     recentOrders: [],
     chartData: {
-        labels: [],
+        labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
         values: []
     },
-    loading: false
+    loading: true,
+    error: null
 };
 
-// ============================================================
-// 3. Mock 数据（备用）
-// ============================================================
-
-function getMockStats() {
-    return {
-        stats: {
-            todayRevenue: 28650.00,
-            todayOrders: 47,
-            activeCustomers: 328,
-            conversionRate: 68.5
-        },
-        recentOrders: [
-            { id: 'ORD-001', customer: '张伟', amount: 680, status: 'completed', time: '10:30' },
-            { id: 'ORD-002', customer: '李娜', amount: 420, status: 'pending', time: '10:15' },
-            { id: 'ORD-003', customer: '王强', amount: 1250, status: 'processing', time: '09:45' },
-            { id: 'ORD-004', customer: '刘洋', amount: 380, status: 'completed', time: '09:20' },
-            { id: 'ORD-005', customer: '陈静', amount: 890, status: 'completed', time: '08:55' }
-        ],
-        chartData: {
-            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-            values: [3200, 4500, 3800, 6200, 5800, 7200, 4800]
-        }
-    };
-}
-
-// ============================================================
-// 4. 核心功能
-// ============================================================
-
+/**
+ * 初始化仪表盘
+ * @returns {Promise<void>}
+ */
 export async function init() {
-    console.log('📊 Dashboard 初始化...');
+    console.log('📊 Dashboard 模块初始化...');
     
-    // 检查是否在浏览器环境
-    if (typeof document === 'undefined') {
-        console.warn('⚠️ 非浏览器环境，跳过初始化');
-        return;
+    try {
+        // 加载数据
+        await loadDashboardData();
+        // 渲染统计卡片
+        renderStats();
+        // 渲染最新订单
+        renderRecentOrders();
+        // 渲染图表
+        renderChart();
+        // 绑定事件
+        bindEvents();
+        
+        console.log('✅ Dashboard 初始化完成');
+    } catch (error) {
+        console.error('❌ Dashboard 初始化失败:', error);
+        showError('加载仪表盘数据失败，请刷新重试');
     }
-
-    await loadDashboardData();
-    bindEvents();
 }
 
-// 加载仪表盘数据
+/**
+ * 加载仪表盘数据
+ * @returns {Promise<void>}
+ */
 async function loadDashboardData() {
-    state.loading = true;
-    showLoading();
-
     try {
-        let data = null;
-        const services = getServices();
-
-        // 优先使用数据服务
-        if (services && services.dashboard) {
-            try {
-                console.log('📦 使用数据服务加载 Dashboard 数据...');
-                data = await services.dashboard.getDashboardData();
-                console.log('✅ 数据服务返回数据:', data);
-            } catch (serviceError) {
-                console.warn('⚠️ 数据服务加载失败，使用 Mock 数据:', serviceError.message);
-                data = getMockStats();
-            }
-        } else {
-            console.log('📦 使用 Mock 数据加载 Dashboard...');
-            data = getMockStats();
-        }
-
-        // 更新状态
-        if (data) {
+        state.loading = true;
+        
+        // 从API获取数据
+        const response = await apiClient.getDashboardStats();
+        
+        if (response && response.code === 200) {
+            const data = response.data;
             state.stats = data.stats || state.stats;
             state.recentOrders = data.recentOrders || [];
-            state.chartData = data.chartData || { labels: [], values: [] };
+            state.chartData = data.chartData || state.chartData;
+        } else {
+            // 如果API返回错误，尝试从Store获取缓存
+            const cached = appStore.get('dashboardData');
+            if (cached) {
+                state.stats = cached.stats || state.stats;
+                state.recentOrders = cached.recentOrders || [];
+                state.chartData = cached.chartData || state.chartData;
+            }
         }
-
-        // 渲染UI
-        renderStats();
-        renderRecentOrders();
-        renderChart();
-
-    } catch (error) {
-        console.error('❌ 加载仪表盘失败:', error);
-        // 使用备用数据
-        const fallbackData = getMockStats();
-        state.stats = fallbackData.stats;
-        state.recentOrders = fallbackData.recentOrders;
-        state.chartData = fallbackData.chartData;
-        renderStats();
-        renderRecentOrders();
-        renderChart();
-        showToast('加载数据失败，显示备用数据', 'warning');
-    } finally {
+        
         state.loading = false;
-        hideLoading();
+    } catch (error) {
+        console.warn('⚠️ API获取失败，使用缓存数据:', error);
+        // 使用缓存数据
+        const cached = appStore.get('dashboardData');
+        if (cached) {
+            state.stats = cached.stats || state.stats;
+            state.recentOrders = cached.recentOrders || [];
+            state.chartData = cached.chartData || state.chartData;
+        }
+        state.loading = false;
     }
 }
 
-// ============================================================
-// 5. 渲染函数
-// ============================================================
-
+/**
+ * 渲染统计卡片
+ * @returns {void}
+ */
 function renderStats() {
-    const container = document.getElementById('statsContainer');
-    if (!container) {
-        console.warn('⚠️ statsContainer 不存在');
-        return;
+    const stats = state.stats;
+    
+    // 更新DOM
+    const elements = {
+        todayRevenue: document.getElementById('todayRevenue'),
+        todayOrders: document.getElementById('todayOrders'),
+        activeCustomers: document.getElementById('activeCustomers'),
+        conversionRate: document.getElementById('conversionRate')
+    };
+    
+    if (elements.todayRevenue) {
+        elements.todayRevenue.textContent = '¥' + stats.todayRevenue.toFixed(2);
     }
-
-    const statsMap = [
-        { key: 'todayRevenue', label: '今日收入', icon: 'fa-money-bill-wave', color: 'blue', prefix: '¥' },
-        { key: 'todayOrders', label: '今日订单', icon: 'fa-shopping-cart', color: 'green' },
-        { key: 'activeCustomers', label: '活跃客户', icon: 'fa-users', color: 'purple' },
-        { key: 'conversionRate', label: '转化率', icon: 'fa-percent', color: 'orange', suffix: '%' }
-    ];
-
-    let html = '';
-    for (var i = 0; i < statsMap.length; i++) {
-        var stat = statsMap[i];
-        var value = state.stats[stat.key] || 0;
-        html += `
-            <div class="stat-card">
-                <div class="stat-icon ${stat.color}">
-                    <i class="fas ${stat.icon}"></i>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-value">${stat.prefix || ''}${value}${stat.suffix || ''}</div>
-                    <div class="stat-label">${stat.label}</div>
-                </div>
-            </div>
-        `;
+    if (elements.todayOrders) {
+        elements.todayOrders.textContent = stats.todayOrders;
     }
-
-    container.innerHTML = html;
+    if (elements.activeCustomers) {
+        elements.activeCustomers.textContent = stats.activeCustomers;
+    }
+    if (elements.conversionRate) {
+        elements.conversionRate.textContent = stats.conversionRate + '%';
+    }
 }
 
+/**
+ * 渲染最新订单
+ * @returns {void}
+ */
 function renderRecentOrders() {
     const tbody = document.getElementById('recentOrdersBody');
-    if (!tbody) {
-        console.warn('⚠️ recentOrdersBody 不存在');
-        return;
-    }
-
-    if (!state.recentOrders || state.recentOrders.length === 0) {
+    if (!tbody) return;
+    
+    const orders = state.recentOrders.slice(0, 5);
+    
+    if (orders.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" class="text-center py-8 text-gray-500">
-                    <i class="fas fa-inbox text-2xl"></i>
-                    <p class="mt-2">暂无订单</p>
+                <td colspan="5" style="text-align:center;padding:20px;color:#9CA3AF;">
+                    暂无订单
                 </td>
             </tr>
         `;
         return;
     }
-
+    
     const statusMap = {
-        pending: { label: '待处理', color: 'warning' },
-        processing: { label: '处理中', color: 'info' },
-        completed: { label: '已完成', color: 'success' },
-        cancelled: { label: '已取消', color: 'danger' }
+        'completed': { label: '已完成', color: '#D1FAE5', textColor: '#065F46' },
+        'pending': { label: '待处理', color: '#FEF3C7', textColor: '#92400E' },
+        'processing': { label: '处理中', color: '#DBEAFE', textColor: '#1E40AF' },
+        'cancelled': { label: '已取消', color: '#FEE2E2', textColor: '#991B1B' }
     };
-
-    let html = '';
-    for (var i = 0; i < state.recentOrders.length; i++) {
-        var order = state.recentOrders[i];
-        var status = statusMap[order.status] || { label: order.status, color: 'secondary' };
-        html += `
+    
+    tbody.innerHTML = orders.map(order => {
+        const status = statusMap[order.status] || statusMap.pending;
+        return `
             <tr>
-                <td class="font-mono">${order.id}</td>
-                <td>${order.customer}</td>
-                <td class="text-right">¥${formatCurrency(order.amount)}</td>
-                <td>
-                    <span class="badge badge-${status.color}">
+                <td style="padding:10px;border-bottom:1px solid #F3F4F6;font-family:monospace;">${order.id}</td>
+                <td style="padding:10px;border-bottom:1px solid #F3F4F6;">${order.customer}</td>
+                <td style="padding:10px;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;">¥${order.amount.toFixed(2)}</td>
+                <td style="padding:10px;border-bottom:1px solid #F3F4F6;">
+                    <span style="display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;background:${status.color};color:${status.textColor};">
                         ${status.label}
                     </span>
                 </td>
-                <td class="text-sm">${order.time}</td>
+                <td style="padding:10px;border-bottom:1px solid #F3F4F6;">${order.time || ''}</td>
             </tr>
         `;
-    }
-
-    tbody.innerHTML = html;
+    }).join('');
 }
 
+/**
+ * 渲染图表
+ * @returns {void}
+ */
 function renderChart() {
-    const canvas = document.getElementById('salesChart');
-    if (!canvas) {
-        console.warn('⚠️ salesChart 不存在');
-        return;
-    }
-
-    if (!state.chartData.labels || state.chartData.labels.length === 0) {
-        console.warn('⚠️ 无图表数据');
-        return;
-    }
-
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.parentElement ? canvas.parentElement.getBoundingClientRect() : { width: 800 };
-    canvas.width = (rect.width - 40) || 800;
-    canvas.height = 280;
-
-    const width = canvas.width;
-    const height = canvas.height;
-    const padding = 40;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
-    const maxValue = Math.max.apply(null, state.chartData.values) * 1.2 || 100;
-
-    ctx.clearRect(0, 0, width, height);
-
-    // 绘制网格
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 0.5;
-    for (var i = 0; i < 5; i++) {
-        var y = padding + (chartHeight / 5) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(width - padding, y);
-        ctx.stroke();
-
-        var val = Math.round(maxValue - (maxValue / 5) * i);
-        ctx.fillStyle = '#9CA3AF';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(val, padding - 8, y + 4);
-    }
-
-    // 绘制柱状图
-    var barWidth = chartWidth / state.chartData.labels.length * 0.6;
-    var gap = chartWidth / state.chartData.labels.length;
-
-    // 修复 roundRect 方法
-    if (!CanvasRenderingContext2D.prototype.roundRect) {
-        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-            if (r > w/2) r = w/2;
-            if (r > h/2) r = h/2;
-            this.moveTo(x + r, y);
-            this.arcTo(x + w, y, x + w, y + h, r);
-            this.arcTo(x + w, y + h, x, y + h, r);
-            this.arcTo(x, y + h, x, y, r);
-            this.arcTo(x, y, x + w, y, r);
-            return this;
-        };
-    }
-
-    for (var j = 0; j < state.chartData.labels.length; j++) {
-        var label = state.chartData.labels[j];
-        var value = state.chartData.values[j] || 0;
-        var barHeight = (value / maxValue) * chartHeight;
-        var x = padding + j * gap + (gap - barWidth) / 2;
-        var y = padding + chartHeight - barHeight;
-
-        // 柱状条
-        var gradient = ctx.createLinearGradient(x, y, x, padding + chartHeight);
-        gradient.addColorStop(0, '#4F46E5');
-        gradient.addColorStop(1, '#818CF8');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, 4);
-        ctx.fill();
-
-        // 数值标签
-        ctx.fillStyle = '#6B7280';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(value, x + barWidth / 2, y - 8);
-
-        // X轴标签
-        ctx.fillStyle = '#9CA3AF';
-        ctx.font = '11px sans-serif';
-        ctx.fillText(label, x + barWidth / 2, padding + chartHeight + 20);
-    }
-}
-
-// ============================================================
-// 6. 工具函数
-// ============================================================
-
-function formatCurrency(amount) {
-    if (amount === undefined || amount === null) return '0.00';
-    return Number(amount).toFixed(2);
-}
-
-function showToast(message, type) {
-    var toast = document.createElement('div');
-    var colors = {
-        success: '#10B981',
-        error: '#EF4444',
-        warning: '#F59E0B',
-        info: '#3B82F6'
-    };
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        padding: 12px 24px;
-        background: ${colors[type] || '#4F46E5'};
-        color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 9999;
-        font-size: 14px;
-        max-width: 400px;
-        animation: slideUp 0.3s ease;
+    const container = document.getElementById('chartContainer');
+    if (!container) return;
+    
+    const data = state.chartData;
+    const maxValue = Math.max(...data.values, 1);
+    
+    let html = `
+        <div style="padding:16px 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;font-size:16px;font-weight:600;">📈 近7天销售趋势</h3>
+                <span style="font-size:13px;color:#6B7280;">单位: 元</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;height:180px;gap:12px;padding:0 8px;">
     `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(function() {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(function() {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 300);
-    }, 3000);
+    
+    data.labels.forEach((label, index) => {
+        const value = data.values[index] || 0;
+        const height = (value / maxValue) * 150;
+        
+        html += `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="height:${height}px;width:100%;background:linear-gradient(180deg,#4F46E5, #818CF8);border-radius:4px 4px 0 0;transition:height 0.5s;min-height:4px;"></div>
+                <span style="font-size:11px;color:#6B7280;">${label}</span>
+                <span style="font-size:11px;font-weight:600;color:#1F2937;">${value}</span>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
 }
 
-function showLoading() {
-    var spinner = document.getElementById('loadingSpinner');
-    if (spinner) spinner.classList.remove('hidden');
-}
-
-function hideLoading() {
-    var spinner = document.getElementById('loadingSpinner');
-    if (spinner) spinner.classList.add('hidden');
-}
-
+/**
+ * 绑定事件
+ * @returns {void}
+ */
 function bindEvents() {
-    var refreshBtn = document.getElementById('refreshBtn');
+    // 刷新按钮
+    const refreshBtn = document.getElementById('refreshDashboard');
     if (refreshBtn) {
-        refreshBtn.addEventListener('click', function() {
-            loadDashboardData();
-            showToast('已刷新', 'success');
+        refreshBtn.addEventListener('click', async () => {
+            // 清除缓存
+            appStore.set('dashboardData', null);
+            await loadDashboardData();
+            renderStats();
+            renderRecentOrders();
+            renderChart();
+        });
+    }
+    
+    // 查看全部订单
+    const viewAllBtn = document.getElementById('viewAllOrders');
+    if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', () => {
+            window.location.hash = '#/orders';
         });
     }
 }
 
-// ============================================================
-// 7. 自动初始化（如果页面已加载）
-// ============================================================
+/**
+ * 显示错误信息
+ * @param {string} message - 错误信息
+ * @returns {void}
+ */
+function showError(message) {
+    const container = document.querySelector('.dashboard-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="padding:40px;text-align:center;">
+            <i class="fas fa-exclamation-circle" style="font-size:48px;color:#EF4444;margin-bottom:16px;"></i>
+            <h3 style="color:#374151;">加载失败</h3>
+            <p style="color:#6B7280;">${message}</p>
+            <button onclick="location.reload()" style="margin-top:16px;padding:8px 24px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">
+                重新加载
+            </button>
+        </div>
+    `;
+}
 
+// 自动初始化
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
 }
 
-console.log('✅ Dashboard 模块加载完成');
+export default { init };

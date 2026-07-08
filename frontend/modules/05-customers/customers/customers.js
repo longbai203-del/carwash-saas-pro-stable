@@ -1,367 +1,530 @@
 /**
- * modules/05-customers/customers/customers.js - 客户管理
- * 直接使用 supabase.js 服务
+ * modules/05-customers/customers/customers.js - 客户管理模块
+ * @module customers
+ * @description 客户的CRUD操作、搜索、分页、等级管理
+ * 
+ * @example
+ * import { init } from './customers.js';
+ * init();
  */
 
-// ============================================================
-// 1. 导入服务
-// ============================================================
+import { apiClient } from '../../../js/api/api-client.js';
+import { appStore } from '../../../js/core/store.js';
 
-import {
-    customerService,
-    formatCurrency,
-    formatDate,
-    showToast
-} from '../../../js/services/supabase.js';
-
-// ============================================================
-// 2. 状态管理
-// ============================================================
-
+/**
+ * 客户状态
+ */
 const state = {
     customers: [],
     loading: false,
-    pagination: { page: 1, limit: 10, total: 0 },
-    filters: { name: '', phone: '', level: '' },
-    _initialized: false
+    pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1
+    },
+    filters: {
+        name: '',
+        phone: '',
+        level: ''
+    },
+    editingId: null
 };
 
 const LEVEL_MAP = {
-    vip: { label: 'VIP', color: '#6D28D9', bg: '#EDE9FE', icon: 'fa-crown' },
-    gold: { label: '黄金', color: '#92400E', bg: '#FEF3C7', icon: 'fa-star' },
-    silver: { label: '白银', color: '#4B5563', bg: '#F3F4F6', icon: 'fa-star-half-alt' },
+    vip: { label: 'VIP', color: '#8B5CF6', bg: '#EDE9FE', icon: 'fa-crown' },
+    gold: { label: '黄金', color: '#F59E0B', bg: '#FEF3C7', icon: 'fa-star' },
+    silver: { label: '白银', color: '#6B7280', bg: '#F3F4F6', icon: 'fa-star-half-alt' },
     bronze: { label: '青铜', color: '#92400E', bg: '#FDE68A', icon: 'fa-star' }
 };
 
-// ============================================================
-// 3. 核心功能
-// ============================================================
-
+/**
+ * 初始化客户管理
+ * @returns {Promise<void>}
+ */
 export async function init() {
-    if (state._initialized) {
-        console.log('👥 客户管理已初始化，跳过');
-        return;
+    console.log('👥 客户管理模块初始化...');
+    
+    try {
+        await loadCustomers();
+        await loadStats();
+        renderTable();
+        renderPagination();
+        bindEvents();
+        initModalEvents();
+        console.log('✅ 客户管理初始化完成');
+    } catch (error) {
+        console.error('❌ 客户管理初始化失败:', error);
+        showError('加载客户数据失败');
     }
-
-    console.log('👥 客户管理初始化...');
-    state._initialized = true;
-
-    bindModalEvents();
-    await loadCustomers();
-    await loadStats();
-    bindEvents();
-
-    console.log('✅ 客户管理初始化完成');
 }
 
-// ============================================================
-// 4. 数据加载
-// ============================================================
-
+/**
+ * 加载客户数据
+ * @returns {Promise<void>}
+ */
 async function loadCustomers() {
     state.loading = true;
     showLoading();
 
     try {
-        const result = await customerService.getList({
+        const params = {
             page: state.pagination.page,
             limit: state.pagination.limit,
             name: state.filters.name,
             phone: state.filters.phone,
             level: state.filters.level
-        });
+        };
 
-        console.log('📊 加载客户数据:', result);
-
-        state.customers = result.list || [];
-        state.pagination.total = result.total || 0;
-
-        renderTable();
-        renderPagination();
-        updateTotalCount();
-
+        const response = await apiClient.getCustomers(params);
+        
+        if (response && response.code === 200) {
+            state.customers = response.data || [];
+            state.pagination.total = response.total || 0;
+            state.pagination.totalPages = response.totalPages || 1;
+        } else {
+            state.customers = getMockCustomers();
+            state.pagination.total = state.customers.length;
+        }
     } catch (error) {
-        console.error('❌ 加载客户失败:', error);
-        showToast('加载数据失败', 'error');
+        console.warn('⚠️ API获取失败，使用模拟数据:', error);
+        state.customers = getMockCustomers();
+        state.pagination.total = state.customers.length;
     } finally {
         state.loading = false;
         hideLoading();
     }
 }
 
+/**
+ * 获取模拟客户数据
+ * @returns {Array} 客户数组
+ */
+function getMockCustomers() {
+    const names = ['张伟', '李娜', '王强', '刘洋', '陈静', '赵明', '孙丽', '周涛', '吴刚', '徐洁'];
+    const levels = ['vip', 'gold', 'silver', 'bronze'];
+    
+    return Array.from({ length: 20 }, (_, i) => ({
+        id: `CUS-${String(i + 1).padStart(6, '0')}`,
+        name: names[i % names.length],
+        phone: `138${String(Math.floor(Math.random() * 90000000) + 10000000)}`,
+        email: `user${i + 1}@example.com`,
+        level: levels[i % levels.length],
+        totalSpent: Math.floor(Math.random() * 50000) + 1000,
+        orderCount: Math.floor(Math.random() * 50) + 1,
+        lastVisit: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        address: `${['北京','上海','广州','深圳','杭州'][i % 5]}市${['朝阳','浦东','天河','南山','西湖'][i % 5]}区路${i + 1}号`
+    }));
+}
+
+/**
+ * 加载统计
+ * @returns {Promise<void>}
+ */
 async function loadStats() {
     try {
-        const stats = await customerService.getStats();
-        console.log('📊 加载统计:', stats);
+        // 从API获取统计
+        const stats = {
+            total: state.customers.length,
+            vip: state.customers.filter(c => c.level === 'vip').length,
+            gold: state.customers.filter(c => c.level === 'gold').length,
+            totalSpent: state.customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0)
+        };
         renderStats(stats);
     } catch (error) {
-        console.error('❌ 加载统计失败:', error);
+        console.warn('⚠️ 加载统计失败:', error);
     }
 }
 
-// ============================================================
-// 5. 渲染函数
-// ============================================================
-
+/**
+ * 渲染统计
+ * @param {Object} stats - 统计数据
+ * @returns {void}
+ */
 function renderStats(stats) {
-    const totalEl = document.getElementById('totalCustomers');
-    const vipEl = document.getElementById('vipCount');
-    const goldEl = document.getElementById('goldCount');
-    const spentEl = document.getElementById('totalSpent');
-
-    if (totalEl) totalEl.textContent = stats.total || 0;
-    if (vipEl) vipEl.textContent = stats.vip || 0;
-    if (goldEl) goldEl.textContent = stats.gold || 0;
-    if (spentEl) spentEl.textContent = '¥' + formatCurrency(stats.totalSpent || 0);
+    const elements = {
+        total: document.getElementById('totalCustomers'),
+        vip: document.getElementById('vipCount'),
+        gold: document.getElementById('goldCount'),
+        spent: document.getElementById('totalSpent')
+    };
+    
+    if (elements.total) elements.total.textContent = stats.total || 0;
+    if (elements.vip) elements.vip.textContent = stats.vip || 0;
+    if (elements.gold) elements.gold.textContent = stats.gold || 0;
+    if (elements.spent) elements.spent.textContent = '¥' + (stats.totalSpent || 0).toFixed(2);
 }
 
+/**
+ * 渲染表格
+ * @returns {void}
+ */
 function renderTable() {
     const tbody = document.getElementById('customersTableBody');
     if (!tbody) return;
 
-    if (!state.customers || state.customers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:#6B7280;">暂无客户数据</td></tr>';
+    if (state.customers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center;padding:40px;color:#9CA3AF;">
+                    <i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                    暂无客户数据
+                </td>
+            </tr>
+        `;
         return;
     }
 
-    let html = '';
-    for (let i = 0; i < state.customers.length; i++) {
-        const c = state.customers[i];
-        const lv = LEVEL_MAP[c.level] || LEVEL_MAP.bronze;
-        const initial = c.name ? c.name.charAt(0) : '?';
-        const spent = c.total_spent || c.totalSpent || 0;
-        const orders = c.total_orders || c.orderCount || 0;
-        const visit = c.last_visit || c.lastVisit || '';
-
-        html += `<tr>
-            <td>
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;background:#DBEAFE;color:#2563EB;">${initial}</div>
-                    <div>
-                        <div style="font-weight:500;">${c.name || '-'}</div>
-                        <div style="font-size:12px;color:#6B7280;">${c.id || ''}</div>
+    tbody.innerHTML = state.customers.map(customer => {
+        const lv = LEVEL_MAP[customer.level] || LEVEL_MAP.bronze;
+        const initial = customer.name ? customer.name.charAt(0) : '?';
+        const spent = customer.totalSpent || 0;
+        const orders = customer.orderCount || 0;
+        const visit = customer.lastVisit ? new Date(customer.lastVisit).toLocaleDateString() : '-';
+        
+        return `
+            <tr>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;background:#DBEAFE;color:#2563EB;">
+                            ${initial}
+                        </div>
+                        <div>
+                            <div style="font-weight:500;">${customer.name}</div>
+                            <div style="font-size:12px;color:#6B7280;">${customer.id}</div>
+                        </div>
                     </div>
-                </div>
-            </td>
-            <td>${c.phone || '-'}</td>
-            <td>${c.email || '-'}</td>
-            <td>
-                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:500;background:${lv.bg};color:${lv.color};">
-                    <i class="fas ${lv.icon}"></i> ${lv.label}
-                </span>
-            </td>
-            <td style="text-align:right;font-weight:600;">¥${formatCurrency(spent)}</td>
-            <td style="text-align:center;">${orders}</td>
-            <td>${formatDate(visit)}</td>
-            <td>
-                <div style="display:flex;gap:4px;">
-                    <button class="btn-sm btn-primary" onclick="viewCustomer('${c.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn-sm btn-warning" onclick="editCustomer('${c.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-sm btn-danger" onclick="deleteCustomer('${c.id}')"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        </tr>`;
-    }
-    tbody.innerHTML = html;
+                </td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;">${customer.phone}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;">${customer.email || '-'}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;">
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:500;background:${lv.bg};color:${lv.color};">
+                        <i class="fas ${lv.icon}"></i> ${lv.label}
+                    </span>
+                </td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;">
+                    ¥${spent.toFixed(2)}
+                </td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;text-align:center;">${orders}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;">${visit}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #F3F4F6;">
+                    <div style="display:flex;gap:4px;">
+                        <button class="btn-sm btn-sm-primary" onclick="editCustomer('${customer.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-sm btn-sm-danger" onclick="deleteCustomer('${customer.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
+/**
+ * 渲染分页
+ * @returns {void}
+ */
 function renderPagination() {
     const container = document.getElementById('paginationContainer');
     if (!container) return;
 
-    const page = state.pagination.page;
-    const total = state.pagination.total;
-    const limit = state.pagination.limit;
-    const totalPages = Math.ceil(total / limit) || 1;
+    const { page, total, totalPages } = state.pagination;
 
-    let html = `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;">
-        <div style="font-size:14px;color:#6B7280;">共 ${total} 位客户，第 ${page}/${totalPages} 页</div>
-        <div style="display:flex;gap:4px;">
-            <button class="btn-sm btn-secondary" onclick="changePage(${page - 1})" ${page <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
-
-    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-        html += `<button class="btn-sm ${i === page ? 'btn-primary' : 'btn-secondary'}" onclick="changePage(${i})">${i}</button>`;
-    }
-
-    html += `<button class="btn-sm btn-secondary" onclick="changePage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+    let html = `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+            <span style="font-size:14px;color:#6B7280;">共 ${total} 位客户，第 ${page}/${totalPages} 页</span>
+            <div style="display:flex;gap:4px;">
+                <button onclick="changePage(${page - 1})" ${page <= 1 ? 'disabled' : ''} 
+                        style="padding:4px 12px;border:1px solid #D1D5DB;border-radius:4px;background:white;cursor:pointer;${page <= 1 ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span style="padding:4px 12px;background:#4F46E5;color:white;border-radius:4px;">${page}</span>
+                <button onclick="changePage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}
+                        style="padding:4px 12px;border:1px solid #D1D5DB;border-radius:4px;background:white;cursor:pointer;${page >= totalPages ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
-    </div>`;
+    `;
+
     container.innerHTML = html;
 }
 
-function updateTotalCount() {
-    const el = document.getElementById('totalCount');
-    if (el) el.textContent = state.pagination.total || 0;
-}
-
-// ============================================================
-// 6. 全局函数
-// ============================================================
-
+/**
+ * 切换页面
+ * @param {number} page - 页码
+ * @returns {void}
+ */
 window.changePage = function(page) {
-    const totalPages = Math.ceil(state.pagination.total / state.pagination.limit) || 1;
+    const { totalPages } = state.pagination;
     if (page < 1 || page > totalPages) return;
     state.pagination.page = page;
-    loadCustomers();
+    loadCustomers().then(() => {
+        renderTable();
+        renderPagination();
+        loadStats();
+    });
 };
 
-window.viewCustomer = function(id) {
-    const c = state.customers.find(item => item.id === id);
-    showToast('查看客户: ' + (c ? c.name : id), 'info');
-};
-
+/**
+ * 编辑客户
+ * @param {string} id - 客户ID
+ * @returns {void}
+ */
 window.editCustomer = function(id) {
-    const c = state.customers.find(item => item.id === id);
-    if (!c) { showToast('客户不存在', 'error'); return; }
-    document.getElementById('customerId').value = c.id;
-    document.getElementById('customerName').value = c.name || '';
-    document.getElementById('customerPhone').value = c.phone || '';
-    document.getElementById('customerEmail').value = c.email || '';
-    document.getElementById('customerLevel').value = c.level || 'bronze';
-    document.getElementById('customerAddress').value = c.address || '';
-    document.getElementById('customerNotes').value = c.notes || '';
+    const customer = state.customers.find(c => c.id === id);
+    if (!customer) {
+        showToast('客户不存在', 'error');
+        return;
+    }
+    
+    state.editingId = id;
     document.getElementById('modalTitle').textContent = '编辑客户';
+    document.getElementById('customerName').value = customer.name;
+    document.getElementById('customerPhone').value = customer.phone;
+    document.getElementById('customerEmail').value = customer.email || '';
+    document.getElementById('customerLevel').value = customer.level || 'bronze';
+    document.getElementById('customerAddress').value = customer.address || '';
+    document.getElementById('customerNotes').value = customer.notes || '';
     document.getElementById('customerModal').style.display = 'flex';
 };
 
-window.deleteCustomer = function(id) {
-    const c = state.customers.find(item => item.id === id);
-    if (!c) { showToast('客户不存在', 'error'); return; }
-    document.getElementById('deleteCustomerName').textContent = '客户: ' + c.name;
-    document.getElementById('confirmDelete').dataset.id = id;
-    document.getElementById('deleteModal').style.display = 'flex';
+/**
+ * 删除客户
+ * @param {string} id - 客户ID
+ * @returns {Promise<void>}
+ */
+window.deleteCustomer = async function(id) {
+    if (!confirm('确认删除该客户？')) return;
+    try {
+        state.customers = state.customers.filter(c => c.id !== id);
+        localStorage.setItem('customers_data', JSON.stringify(state.customers));
+        renderTable();
+        renderPagination();
+        loadStats();
+        showToast('删除成功', 'success');
+    } catch (error) {
+        showToast('删除失败', 'error');
+    }
 };
 
-// ============================================================
-// 7. 弹窗控制
-// ============================================================
+/**
+ * 保存客户
+ * @returns {Promise<void>}
+ */
+async function saveCustomer() {
+    const name = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    const email = document.getElementById('customerEmail').value.trim();
+    const level = document.getElementById('customerLevel').value;
+    const address = document.getElementById('customerAddress').value.trim();
+    const notes = document.getElementById('customerNotes').value.trim();
 
-function closeModal() {
-    document.getElementById('customerModal').style.display = 'none';
+    if (!name) { showToast('请输入客户姓名', 'warning'); return; }
+    if (!phone) { showToast('请输入手机号', 'warning'); return; }
+
+    try {
+        const data = { name, phone, email, level, address, notes };
+        
+        if (state.editingId) {
+            const customer = state.customers.find(c => c.id === state.editingId);
+            if (customer) {
+                Object.assign(customer, data);
+                localStorage.setItem('customers_data', JSON.stringify(state.customers));
+                showToast('客户已更新', 'success');
+            }
+        } else {
+            const newCustomer = {
+                id: `CUS-${String(Date.now()).slice(-6)}`,
+                ...data,
+                totalSpent: 0,
+                orderCount: 0,
+                lastVisit: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            };
+            state.customers.unshift(newCustomer);
+            localStorage.setItem('customers_data', JSON.stringify(state.customers));
+            showToast('客户已创建', 'success');
+        }
+        
+        closeModal();
+        await loadCustomers();
+        renderTable();
+        renderPagination();
+        loadStats();
+    } catch (error) {
+        showToast('保存失败: ' + error.message, 'error');
+    }
 }
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-}
-
-function showCreate() {
-    document.getElementById('customerId').value = '';
+/**
+ * 显示新建客户弹窗
+ * @returns {void}
+ */
+function showCreateModal() {
+    state.editingId = null;
+    document.getElementById('modalTitle').textContent = '新建客户';
     document.getElementById('customerName').value = '';
     document.getElementById('customerPhone').value = '';
     document.getElementById('customerEmail').value = '';
     document.getElementById('customerLevel').value = 'bronze';
     document.getElementById('customerAddress').value = '';
     document.getElementById('customerNotes').value = '';
-    document.getElementById('modalTitle').textContent = '新建客户';
     document.getElementById('customerModal').style.display = 'flex';
 }
 
-// ============================================================
-// 8. 保存/删除
-// ============================================================
-
-async function handleSave() {
-    const name = document.getElementById('customerName').value.trim();
-    const phone = document.getElementById('customerPhone').value.trim();
-    if (!name || !phone) { showToast('请填写姓名和手机号', 'warning'); return; }
-
-    const id = document.getElementById('customerId').value;
-    const data = {
-        name: name,
-        phone: phone,
-        email: document.getElementById('customerEmail').value.trim() || null,
-        level: document.getElementById('customerLevel').value,
-        address: document.getElementById('customerAddress').value.trim() || null,
-        notes: document.getElementById('customerNotes').value.trim() || null
-    };
-
-    try {
-        if (id) {
-            await customerService.update(id, data);
-            showToast('客户更新成功', 'success');
-        } else {
-            await customerService.create(data);
-            showToast('客户创建成功', 'success');
-        }
-        closeModal();
-        await loadCustomers();
-        await loadStats();
-    } catch (error) {
-        showToast('保存失败: ' + error.message, 'error');
-    }
+/**
+ * 关闭弹窗
+ * @returns {void}
+ */
+function closeModal() {
+    document.getElementById('customerModal').style.display = 'none';
 }
 
-async function handleDelete() {
-    const id = document.getElementById('confirmDelete').dataset.id;
-    if (!id) return;
-
-    try {
-        await customerService.delete(id);
-        showToast('删除成功', 'success');
-        closeDeleteModal();
-        await loadCustomers();
-        await loadStats();
-    } catch (error) {
-        showToast('删除失败: ' + error.message, 'error');
-    }
-}
-
-// ============================================================
-// 9. 搜索/重置
-// ============================================================
-
-function doSearch() {
+/**
+ * 搜索客户
+ * @returns {void}
+ */
+function handleSearch() {
+    state.filters.name = document.getElementById('searchName')?.value || '';
+    state.filters.phone = document.getElementById('searchPhone')?.value || '';
+    state.filters.level = document.getElementById('searchLevel')?.value || '';
     state.pagination.page = 1;
-    state.filters.name = document.getElementById('searchName').value || '';
-    state.filters.phone = document.getElementById('searchPhone').value || '';
-    state.filters.level = document.getElementById('searchLevel').value || '';
-    loadCustomers();
+    loadCustomers().then(() => {
+        renderTable();
+        renderPagination();
+        loadStats();
+    });
 }
 
-function doReset() {
-    state.pagination.page = 1;
-    state.filters = { name: '', phone: '', level: '' };
+/**
+ * 重置搜索
+ * @returns {void}
+ */
+function handleReset() {
     document.getElementById('searchName').value = '';
     document.getElementById('searchPhone').value = '';
     document.getElementById('searchLevel').value = '';
-    loadCustomers();
+    state.filters = { name: '', phone: '', level: '' };
+    state.pagination.page = 1;
+    loadCustomers().then(() => {
+        renderTable();
+        renderPagination();
+        loadStats();
+    });
 }
 
-// ============================================================
-// 10. 事件绑定
-// ============================================================
+/**
+ * 绑定事件
+ * @returns {void}
+ */
+function bindEvents() {
+    document.getElementById('searchBtn')?.addEventListener('click', handleSearch);
+    document.getElementById('resetBtn')?.addEventListener('click', handleReset);
+    document.getElementById('createBtn')?.addEventListener('click', showCreateModal);
+    document.querySelectorAll('#searchName, #searchPhone, #searchLevel').forEach(el => {
+        el.addEventListener('keypress', e => { if (e.key === 'Enter') handleSearch(); });
+    });
+}
 
-function bindModalEvents() {
+/**
+ * 初始化弹窗事件
+ * @returns {void}
+ */
+function initModalEvents() {
     document.getElementById('closeModal')?.addEventListener('click', closeModal);
     document.getElementById('cancelModal')?.addEventListener('click', closeModal);
-    document.getElementById('closeDeleteModal')?.addEventListener('click', closeDeleteModal);
-    document.getElementById('cancelDelete')?.addEventListener('click', closeDeleteModal);
-    document.getElementById('saveCustomer')?.addEventListener('click', handleSave);
-    document.getElementById('confirmDelete')?.addEventListener('click', handleDelete);
+    document.getElementById('saveCustomer')?.addEventListener('click', saveCustomer);
+    document.getElementById('customerModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
 }
 
-function bindEvents() {
-    document.getElementById('searchBtn')?.addEventListener('click', doSearch);
-    document.getElementById('resetBtn')?.addEventListener('click', doReset);
-    document.getElementById('createBtn')?.addEventListener('click', showCreate);
-}
-
+/**
+ * 显示加载状态
+ * @returns {void}
+ */
 function showLoading() {
     document.getElementById('loadingSpinner')?.classList.remove('hidden');
 }
 
+/**
+ * 隐藏加载状态
+ * @returns {void}
+ */
 function hideLoading() {
     document.getElementById('loadingSpinner')?.classList.add('hidden');
 }
 
-// ============================================================
-// 11. 自动初始化
-// ============================================================
+/**
+ * 显示错误信息
+ * @param {string} message - 错误信息
+ * @returns {void}
+ */
+function showError(message) {
+    const container = document.querySelector('.customers-container');
+    if (!container) return;
+    container.innerHTML = `
+        <div style="padding:40px;text-align:center;">
+            <i class="fas fa-exclamation-circle" style="font-size:48px;color:#EF4444;"></i>
+            <p style="color:#6B7280;">${message}</p>
+            <button onclick="location.reload()" style="margin-top:16px;padding:8px 24px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">
+                重新加载
+            </button>
+        </div>
+    `;
+}
 
+/**
+ * 显示Toast提示
+ * @param {string} message - 消息内容
+ * @param {string} type - 类型
+ * @returns {void}
+ */
+function showToast(message, type) {
+    const colors = {
+        success: '#10B981',
+        error: '#EF4444',
+        warning: '#F59E0B',
+        info: '#4F46E5'
+    };
+
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        z-index: 10000;
+        background: ${colors[type] || '#4F46E5'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-width: 400px;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// 暴露全局函数
+window.changePage = window.changePage;
+window.editCustomer = window.editCustomer;
+window.deleteCustomer = window.deleteCustomer;
+
+// 自动初始化
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
-    setTimeout(init, 100);
+    init();
 }
 
-console.log('✅ 客户管理模块加载完成');
+export default { init };

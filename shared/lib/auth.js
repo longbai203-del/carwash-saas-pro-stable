@@ -1,98 +1,212 @@
 /**
- * api/_lib/auth.js - JWT 验证中间件
+ * shared/lib/auth.js - JWT认证中间件
+ * @module auth
+ * @description 提供JWT令牌验证、用户认证、权限检查
+ * 
+ * @example
+ * import { authenticate, requireRole } from './auth.js';
+ * app.get('/api/orders', authenticate, (req, res) => { ... });
+ * app.post('/api/orders', authenticate, requireRole(['admin']), (req, res) => { ... });
  */
-import { getUserFromRequest } from './supabase.js';
+
+import jwt from 'jsonwebtoken';
+import { supabase } from './supabase.js';
+
+// ============================================================
+// 配置
+// ============================================================
+
+const JWT_SECRET = process.env.JWT_SECRET || 'carwash-saas-pro-secret-key-2024';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**
- * 验证 JWT 中间件
- * 用法: export default authMiddleware(handler)
+ * 生成JWT令牌
+ * @param {Object} payload - 令牌载荷
+ * @param {string} payload.id - 用户ID
+ * @param {string} payload.email - 用户邮箱
+ * @param {string} payload.role - 用户角色
+ * @param {Object} options - 选项
+ * @param {string} options.expiresIn - 过期时间
+ * @returns {string} JWT令牌
  */
-export function authMiddleware(handler) {
-    return async function(req, res) {
+export function generateToken(payload, options = {}) {
+    const expiresIn = options.expiresIn || JWT_EXPIRES_IN;
+    return jwt.sign(payload, JWT_SECRET, { expiresIn });
+}
+
+/**
+ * 验证JWT令牌
+ * @param {string} token - JWT令牌
+ * @returns {Object|null} 解码后的载荷或null
+ */
+export function verifyToken(token) {
+    try {
+        return jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+        console.error('[Auth] 令牌验证失败:', error.message);
+        return null;
+    }
+}
+
+/**
+ * 认证中间件 - 验证请求中的JWT令牌
+ * @param {Object} req - Express请求对象
+ * @param {Object} res - Express响应对象
+ * @param {Function} next - 下一个中间件
+ * @returns {void}
+ */
+export async function authenticate(req, res, next) {
+    try {
+        // 从Authorization头获取令牌
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                code: 401,
+                message: '未提供认证令牌'
+            });
+        }
+
+        const token = authHeader.substring(7);
+        const decoded = verifyToken(token);
+
+        if (!decoded) {
+            return res.status(401).json({
+                code: 401,
+                message: '无效或过期的认证令牌'
+            });
+        }
+
+        // 验证用户是否存在
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, email, name, role, status')
+            .eq('id', decoded.id)
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({
+                code: 401,
+                message: '用户不存在或已被禁用'
+            });
+        }
+
+        if (user.status !== 'active') {
+            return res.status(403).json({
+                code: 403,
+                message: '用户账户已被禁用'
+            });
+        }
+
+        // 将用户信息附加到请求对象
+        req.user = user;
+        req.token = token;
+        req.tokenPayload = decoded;
+
+        next();
+
+    } catch (error) {
+        console.error('[Auth] 认证中间件错误:', error);
+        return res.status(500).json({
+            code: 500,
+            message: '认证服务错误'
+        });
+    }
+}
+
+/**
+ * 角色权限检查中间件
+ * @param {Array<string>} roles - 允许的角色列表
+ * @returns {Function} Express中间件
+ */
+export function requireRole(roles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                code: 401,
+                message: '请先登录'
+            });
+        }
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                code: 403,
+                message: `需要以下角色之一: ${roles.join(', ')}`
+            });
+        }
+
+        next();
+    };
+}
+
+/**
+ * 权限检查中间件（基于权限字符串）
+ * @param {Array<string>} permissions - 需要的权限列表
+ * @returns {Function} Express中间件
+ */
+export function requirePermission(permissions) {
+    return async (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                code: 401,
+                message: '请先登录'
+            });
+        }
+
         try {
-            // 获取用户信息
-            const user = await getUserFromRequest(req);
-            
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    error: '未授权，请先登录',
-                    code: 'UNAUTHORIZED'
+            // 查询用户权限
+            const { data: userPermissions, error } = await supabase
+                .from('user_permissions')
+                .select('permission')
+                .eq('user_id', req.user.id);
+
+            if (error) {
+                console.error('[Auth] 查询权限失败:', error);
+                return res.status(500).json({
+                    code: 500,
+                    message: '权限查询失败'
                 });
             }
-            
-            // 将用户信息附加到请求对象
-            req.user = user;
-            
-            // 继续执行处理器
-            return handler(req, res);
+
+            const userPerms = userPermissions.map(p => p.permission);
+            const hasPermission = permissions.some(p => userPerms.includes(p));
+
+            if (!hasPermission && req.user.role !== 'admin') {
+                return res.status(403).json({
+                    code: 403,
+                    message: `需要以下权限之一: ${permissions.join(', ')}`
+                });
+            }
+
+            next();
+
         } catch (error) {
-            console.error('[Auth] 验证失败:', error);
-            return res.status(401).json({
-                success: false,
-                error: '认证失败',
-                code: 'AUTH_FAILED'
+            console.error('[Auth] 权限检查错误:', error);
+            return res.status(500).json({
+                code: 500,
+                message: '权限检查失败'
             });
         }
     };
 }
 
 /**
- * 可选认证（不强制登录）
+ * 获取当前用户信息（从请求中）
+ * @param {Object} req - Express请求对象
+ * @returns {Object|null} 用户信息或null
  */
-export function optionalAuthMiddleware(handler) {
-    return async function(req, res) {
-        try {
-            const user = await getUserFromRequest(req);
-            req.user = user;
-            return handler(req, res);
-        } catch (error) {
-            req.user = null;
-            return handler(req, res);
-        }
-    };
+export function getCurrentUser(req) {
+    return req.user || null;
 }
 
-/**
- * 角色验证中间件
- * 用法: export default roleMiddleware(['owner', 'admin'])(handler)
- */
-export function roleMiddleware(allowedRoles) {
-    return function(handler) {
-        return async function(req, res) {
-            const user = req.user;
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    error: '未授权',
-                    code: 'UNAUTHORIZED'
-                });
-            }
-            
-            if (!allowedRoles.includes(user.role)) {
-                return res.status(403).json({
-                    success: false,
-                    error: '权限不足，需要角色: ' + allowedRoles.join(', '),
-                    code: 'FORBIDDEN'
-                });
-            }
-            
-            return handler(req, res);
-        };
-    };
-}
+// ============================================================
+// 导出
+// ============================================================
 
-/**
- * 生成 JWT（用于测试或特殊场景）
- * 注意：Supabase 会自动生成 JWT，此函数仅用于特殊场景
- */
-export function generateToken(userId, email) {
-    // 使用 Supabase 的 admin API 生成 token
-    // 或者使用第三方库如 jsonwebtoken
-    // 这里使用 Supabase 的 admin 方法
-    const { supabase } = require('./supabase.js');
-    // 实际实现需要根据 Supabase 版本调整
-    return null;
-}
-
-console.log('[Auth] ✅ 认证中间件已加载');
+export default {
+    generateToken,
+    verifyToken,
+    authenticate,
+    requireRole,
+    requirePermission,
+    getCurrentUser
+};

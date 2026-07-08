@@ -1,271 +1,410 @@
 /**
- * api/customers.js - 客户 API
- * GET    /api/customers
- * GET    /api/customers/:id
- * POST   /api/customers
- * PUT    /api/customers/:id
+ * api/customers.js - 客户API路由
+ * @module customers
+ * @description 客户的CRUD操作、搜索、分级管理
+ * 
+ * @example
+ * // GET /api/customers - 获取客户列表
+ * // POST /api/customers - 创建客户
+ * // PUT /api/customers/:id - 更新客户
+ * // DELETE /api/customers/:id - 删除客户
  */
-import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware } from '../shared/lib/auth.js';
-import { validateCustomer } from '../shared/lib/validation.js';
-import { logger } from '../shared/lib/logger.js';
 
-async function handler(req, res) {
-    const { method } = req;
-    const { id } = req.query;
+import express from 'express';
+import { supabase } from '../shared/lib/supabase.js';
+import { authenticate } from '../shared/lib/auth.js';
 
-    // GET /api/customers - 列表
-    if (method === 'GET' && !id) {
-        return handleList(req, res);
-    }
+const router = express.Router();
 
-    // GET /api/customers/:id - 详情
-    if (method === 'GET' && id) {
-        return handleGet(req, res);
-    }
+// ============================================================
+// 获取客户列表 (支持分页、筛选、排序)
+// ============================================================
 
-    // POST /api/customers - 创建
-    if (method === 'POST') {
-        return handleCreate(req, res);
-    }
-
-    // PUT /api/customers/:id - 更新
-    if (method === 'PUT' && id) {
-        return handleUpdate(req, res);
-    }
-
-    return res.status(405).json({
-        success: false,
-        error: 'Method not allowed',
-        code: 'METHOD_NOT_ALLOWED'
-    });
-}
-
-// ===== 客户列表 =====
-async function handleList(req, res) {
+router.get('/', authenticate, async (req, res, next) => {
     try {
-        const userId = req.user?.id;
-        const { page = 1, limit = 20, search, level } = req.query;
+        const {
+            page = 1,
+            limit = 10,
+            name,
+            phone,
+            level,
+            status,
+            sortBy = 'created_at',
+            sortOrder = 'desc'
+        } = req.query;
 
-        const user = await getUserById(userId);
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: '未授权',
-                code: 'UNAUTHORIZED'
-            });
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        let query = supabase
+            .from('customers')
+            .select('*', { count: 'exact' });
+
+        // 应用筛选
+        if (name) {
+            query = query.ilike('name', `%${name}%`);
         }
-
-        let query = supabase.from('customers').select('*', { count: 'exact' });
-
-        if (user?.tenant_id) {
-            query = query.eq('tenant_id', user.tenant_id);
+        if (phone) {
+            query = query.ilike('phone', `%${phone}%`);
         }
-
-        if (user?.store_id && user?.role !== 'owner' && user?.role !== 'admin') {
-            query = query.eq('store_id', user.store_id);
-        }
-
-        if (search) {
-            query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,plate_number.ilike.%${search}%`);
-        }
-
-        if (level && level !== 'all') {
+        if (level) {
             query = query.eq('level', level);
         }
+        if (status) {
+            query = query.eq('status', status);
+        }
 
-        const { from, to } = getPagination(parseInt(page), parseInt(limit));
-        query = query.order('created_at', { ascending: false }).range(from, to);
+        // 应用排序
+        query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
-        const result = await safeQuery(() => query);
+        // 应用分页
+        query = query.range(offset, offset + parseInt(limit) - 1);
 
-        if (!result.success) {
+        const { data, error, count } = await query;
+
+        if (error) {
+            console.error('[Customers] 查询失败:', error);
             return res.status(500).json({
-                success: false,
-                error: '查询客户失败',
-                code: 'DB_ERROR'
+                code: 500,
+                message: '查询客户失败',
+                error: error.message
             });
         }
 
-        return res.status(200).json({
-            success: true,
-            data: result.data || [],
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total: result.data?.length || 0
-            }
+        res.json({
+            code: 200,
+            message: 'success',
+            data: data || [],
+            total: count || 0,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil((count || 0) / parseInt(limit))
         });
 
     } catch (error) {
-        logger.error('[Customers] 获取客户列表失败:', error);
-        return res.status(500).json({
-            success: false,
-            error: '获取客户列表失败',
-            code: 'INTERNAL_ERROR'
-        });
+        console.error('[Customers] 查询异常:', error);
+        next(error);
     }
-}
+});
 
-// ===== 客户详情 =====
-async function handleGet(req, res) {
+// ============================================================
+// 获取客户详情
+// ============================================================
+
+router.get('/:id', authenticate, async (req, res, next) => {
     try {
-        const { id } = req.query;
+        const { id } = req.params;
 
-        const result = await safeQuery(() =>
-            supabase.from('customers').select('*').eq('id', id).single()
-        );
+        const { data, error } = await supabase
+            .from('customers')
+            .select('*, vehicles(*)')
+            .eq('id', id)
+            .single();
 
-        if (!result.success) {
-            return res.status(404).json({
-                success: false,
-                error: '客户不存在',
-                code: 'CUSTOMER_NOT_FOUND'
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({
+                    code: 404,
+                    message: '客户不存在'
+                });
+            }
+            console.error('[Customers] 查询详情失败:', error);
+            return res.status(500).json({
+                code: 500,
+                message: '查询客户详情失败',
+                error: error.message
             });
         }
 
-        // 获取客户订单历史
-        const { data: orders } = await supabase
+        // 获取订单统计
+        const { count: orderCount, error: orderError } = await supabase
             .from('orders')
-            .select('*')
-            .eq('customer_id', id)
-            .order('created_at', { ascending: false })
-            .limit(10);
+            .select('*', { count: 'exact', head: true })
+            .eq('customer_id', id);
 
-        return res.status(200).json({
-            success: true,
+        const { data: orderData, error: orderDataError } = await supabase
+            .from('orders')
+            .select('total')
+            .eq('customer_id', id)
+            .eq('status', 'completed');
+
+        const totalSpent = (orderData || []).reduce((sum, o) => sum + (o.total || 0), 0);
+
+        res.json({
+            code: 200,
+            message: 'success',
             data: {
-                ...result.data,
-                recent_orders: orders || []
+                ...data,
+                orderCount: orderCount || 0,
+                totalSpent: totalSpent
             }
         });
 
     } catch (error) {
-        logger.error('[Customers] 获取客户失败:', error);
-        return res.status(500).json({
-            success: false,
-            error: '获取客户失败',
-            code: 'INTERNAL_ERROR'
-        });
+        console.error('[Customers] 查询详情异常:', error);
+        next(error);
     }
-}
+});
 
-// ===== 创建客户 =====
-async function handleCreate(req, res) {
+// ============================================================
+// 创建客户
+// ============================================================
+
+router.post('/', authenticate, async (req, res, next) => {
     try {
-        const userId = req.user?.id;
-        const body = req.body;
+        const {
+            name,
+            phone,
+            email,
+            level = 'bronze',
+            address,
+            notes,
+            plateNumber,
+            vehicleBrand,
+            vehicleModel
+        } = req.body;
 
-        const errors = validateCustomer(body);
-        if (errors.length > 0) {
+        // 验证必填字段
+        if (!name) {
             return res.status(400).json({
-                success: false,
-                error: '参数验证失败',
-                errors: errors,
-                code: 'VALIDATION_ERROR'
+                code: 400,
+                message: '客户姓名不能为空'
+            });
+        }
+        if (!phone) {
+            return res.status(400).json({
+                code: 400,
+                message: '手机号不能为空'
             });
         }
 
-        const user = await getUserById(userId);
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: '未授权',
-                code: 'UNAUTHORIZED'
+        // 检查客户是否已存在
+        const { data: existing, error: existError } = await supabase
+            .from('customers')
+            .select('id')
+            .eq('phone', phone)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(409).json({
+                code: 409,
+                message: '该手机号已被注册'
             });
         }
 
+        // 创建客户
         const customerData = {
-            tenant_id: user?.tenant_id || null,
-            store_id: user?.store_id || null,
-            name: body.name,
-            phone: body.phone || '',
-            email: body.email || null,
-            plate_number: body.plate_number || null,
-            address: body.address || null,
-            level: body.level || '普通',
-            notes: body.notes || null,
-            points: 0,
-            balance: 0,
-            visit_count: 0,
-            created_at: new Date().toISOString()
-        };
-
-        const result = await safeQuery(() =>
-            supabase.from('customers').insert(customerData).select().single()
-        );
-
-        if (!result.success) {
-            return res.status(500).json({
-                success: false,
-                error: '创建客户失败',
-                code: 'DB_ERROR'
-            });
-        }
-
-        return res.status(201).json({
-            success: true,
-            data: result.data,
-            message: '客户创建成功'
-        });
-
-    } catch (error) {
-        logger.error('[Customers] 创建客户失败:', error);
-        return res.status(500).json({
-            success: false,
-            error: '创建客户失败',
-            code: 'INTERNAL_ERROR'
-        });
-    }
-}
-
-// ===== 更新客户 =====
-async function handleUpdate(req, res) {
-    try {
-        const { id } = req.query;
-        const body = req.body;
-
-        const updateData = {
-            name: body.name,
-            phone: body.phone,
-            email: body.email,
-            plate_number: body.plate_number,
-            address: body.address,
-            level: body.level,
-            notes: body.notes,
+            name,
+            phone,
+            email: email || null,
+            level: level || 'bronze',
+            address: address || null,
+            notes: notes || null,
+            status: 'active',
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
 
-        Object.keys(updateData).forEach(key => {
-            if (updateData[key] === undefined) delete updateData[key];
-        });
+        const { data: customer, error: customerError } = await supabase
+            .from('customers')
+            .insert(customerData)
+            .select()
+            .single();
 
-        const result = await safeQuery(() =>
-            supabase.from('customers').update(updateData).eq('id', id).select().single()
-        );
-
-        if (!result.success) {
+        if (customerError) {
+            console.error('[Customers] 创建失败:', customerError);
             return res.status(500).json({
-                success: false,
-                error: '更新客户失败',
-                code: 'DB_ERROR'
+                code: 500,
+                message: '创建客户失败',
+                error: customerError.message
             });
         }
 
-        return res.status(200).json({
-            success: true,
-            data: result.data,
-            message: '客户更新成功'
+        // 如果有车辆信息，创建车辆
+        if (plateNumber && customer) {
+            const vehicleData = {
+                customer_id: customer.id,
+                plate_number: plateNumber,
+                brand: vehicleBrand || null,
+                model: vehicleModel || null,
+                created_at: new Date().toISOString()
+            };
+
+            await supabase
+                .from('vehicles')
+                .insert(vehicleData)
+                .select();
+        }
+
+        res.status(201).json({
+            code: 201,
+            message: '客户创建成功',
+            data: customer
         });
 
     } catch (error) {
-        logger.error('[Customers] 更新客户失败:', error);
-        return res.status(500).json({
-            success: false,
-            error: '更新客户失败',
-            code: 'INTERNAL_ERROR'
-        });
+        console.error('[Customers] 创建异常:', error);
+        next(error);
     }
-}
+});
 
-export default authMiddleware(handler);
+// ============================================================
+// 更新客户
+// ============================================================
+
+router.put('/:id', authenticate, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        delete updateData.id;
+        delete updateData.created_at;
+        delete updateData.totalSpent;
+        delete updateData.orderCount;
+        updateData.updated_at = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from('customers')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({
+                    code: 404,
+                    message: '客户不存在'
+                });
+            }
+            console.error('[Customers] 更新失败:', error);
+            return res.status(500).json({
+                code: 500,
+                message: '更新客户失败',
+                error: error.message
+            });
+        }
+
+        res.json({
+            code: 200,
+            message: '客户更新成功',
+            data: data
+        });
+
+    } catch (error) {
+        console.error('[Customers] 更新异常:', error);
+        next(error);
+    }
+});
+
+// ============================================================
+// 删除客户
+// ============================================================
+
+router.delete('/:id', authenticate, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        // 检查是否有订单
+        const { count, error: countError } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('customer_id', id);
+
+        if (count > 0) {
+            return res.status(400).json({
+                code: 400,
+                message: '该客户有订单记录，无法删除'
+            });
+        }
+
+        // 删除车辆
+        await supabase
+            .from('vehicles')
+            .delete()
+            .eq('customer_id', id);
+
+        const { data, error } = await supabase
+            .from('customers')
+            .delete()
+            .eq('id', id)
+            .select();
+
+        if (error) {
+            console.error('[Customers] 删除失败:', error);
+            return res.status(500).json({
+                code: 500,
+                message: '删除客户失败',
+                error: error.message
+            });
+        }
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({
+                code: 404,
+                message: '客户不存在'
+            });
+        }
+
+        res.json({
+            code: 200,
+            message: '客户删除成功',
+            data: data[0]
+        });
+
+    } catch (error) {
+        console.error('[Customers] 删除异常:', error);
+        next(error);
+    }
+});
+
+// ============================================================
+// 获取客户统计
+// ============================================================
+
+router.get('/stats/summary', authenticate, async (req, res, next) => {
+    try {
+        const { count: total, error: totalError } = await supabase
+            .from('customers')
+            .select('*', { count: 'exact', head: true });
+
+        const { count: active, error: activeError } = await supabase
+            .from('customers')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'active');
+
+        const { data: vipData, error: vipError } = await supabase
+            .from('customers')
+            .select('count')
+            .eq('level', 'vip');
+
+        const vipCount = vipData?.[0]?.count || 0;
+
+        const { data: goldData, error: goldError } = await supabase
+            .from('customers')
+            .select('count')
+            .eq('level', 'gold');
+
+        const goldCount = goldData?.[0]?.count || 0;
+
+        res.json({
+            code: 200,
+            message: 'success',
+            data: {
+                total: total || 0,
+                active: active || 0,
+                vip: vipCount,
+                gold: goldCount
+            }
+        });
+
+    } catch (error) {
+        console.error('[Customers] 统计异常:', error);
+        next(error);
+    }
+});
+
+// ============================================================
+// 导出
+// ============================================================
+
+export default router;

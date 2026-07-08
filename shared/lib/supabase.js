@@ -1,242 +1,259 @@
 /**
- * shared/lib/supabase.js - 服务端 Supabase 客户端
- * 使用 Service Role Key 获得完整数据库访问权限
- * 供 api/ 目录下的 Vercel Serverless Functions 使用
+ * shared/lib/supabase.js - Supabase数据库客户端
+ * @module supabase
+ * @description 封装Supabase数据库操作，提供统一的CRUD接口
+ * 
+ * @example
+ * import { supabase, query, insert, update, delete } from './supabase.js';
+ * // 查询数据
+ * const orders = await query('orders', { status: 'completed' });
+ * // 插入数据
+ * const newOrder = await insert('orders', { customer: '张伟', total: 680 });
  */
+
 import { createClient } from '@supabase/supabase-js';
 
-// 从环境变量读取配置
+// ============================================================
+// 初始化Supabase客户端
+// ============================================================
+
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('❌ [Supabase] 环境变量未设置: SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY');
+if (!supabaseUrl || !supabaseKey) {
+    console.warn('⚠️ Supabase credentials not found. Using mock mode.');
 }
 
-// 创建服务端客户端（使用 Service Role Key）
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-});
-
-console.log('[Supabase] ✅ 服务端客户端已加载');
+/** @type {import('@supabase/supabase-js').SupabaseClient} */
+export const supabase = createClient(
+    supabaseUrl || 'https://example.supabase.co',
+    supabaseKey || 'mock-key'
+);
 
 // ============================================================
-// 用户相关函数
+// 通用查询函数
 // ============================================================
 
 /**
- * 从请求中获取用户信息（通过 JWT）
+ * 查询数据
+ * @param {string} table - 表名
+ * @param {Object} options - 查询选项
+ * @param {Object} options.filter - 过滤条件
+ * @param {Object} options.order - 排序
+ * @param {number} options.limit - 限制数量
+ * @param {number} options.offset - 偏移量
+ * @param {Array<string>} options.select - 选择字段
+ * @returns {Promise<{data: Array, error: Object, total: number}>}
  */
-export async function getUserFromRequest(req) {
+export async function query(table, options = {}) {
+    const {
+        filter = {},
+        order = { by: 'created_at', ascending: false },
+        limit = 100,
+        offset = 0,
+        select = '*'
+    } = options;
+
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader) return null;
-        
-        const token = authHeader.replace('Bearer ', '');
-        if (!token) return null;
-        
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        let query = supabase.from(table).select(select, { count: 'exact' });
+
+        // 应用过滤条件
+        Object.entries(filter).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                query = query.eq(key, value);
+            }
+        });
+
+        // 应用排序
+        if (order.by) {
+            query = query.order(order.by, { ascending: order.ascending !== false });
+        }
+
+        // 应用分页
+        if (limit > 0) {
+            query = query.range(offset, offset + limit - 1);
+        }
+
+        const { data, error, count } = await query;
+
         if (error) {
-            console.warn('[Supabase] 获取用户失败:', error.message);
-            return null;
+            console.error(`[Supabase] 查询失败 (${table}):`, error);
+            return { data: [], error, total: 0 };
         }
-        return user;
+
+        return { data: data || [], error: null, total: count || 0 };
+
     } catch (error) {
-        console.error('[Supabase] 获取用户异常:', error);
-        return null;
+        console.error(`[Supabase] 查询异常 (${table}):`, error);
+        return { data: [], error, total: 0 };
     }
 }
 
 /**
- * 根据用户ID获取用户信息（从 users 表）
+ * 根据ID查询单条数据
+ * @param {string} table - 表名
+ * @param {string|number} id - 记录ID
+ * @param {string} idField - ID字段名 (默认 'id')
+ * @returns {Promise<{data: Object|null, error: Object}>}
  */
-export async function getUserById(userId) {
+export async function getById(table, id, idField = 'id') {
     try {
         const { data, error } = await supabase
-            .from('users')
+            .from(table)
             .select('*')
-            .eq('id', userId)
+            .eq(idField, id)
             .single();
-        
-        if (error) throw error;
-        return data;
-    } catch (error) {
-        console.error('[Supabase] 获取用户失败:', error);
-        return null;
-    }
-}
 
-/**
- * 检查用户是否有指定权限
- */
-export async function checkPermission(userId, permissionCode) {
-    try {
-        // 先获取用户角色
-        const user = await getUserById(userId);
-        if (!user) return false;
-        
-        // Owner 和 Admin 拥有所有权限
-        if (user.role === 'owner' || user.role === 'admin') return true;
-        
-        // 查询用户权限
-        const { data, error } = await supabase
-            .from('user_permissions')
-            .select('permission_code')
-            .eq('user_id', userId)
-            .eq('permission_code', permissionCode);
-        
-        if (error) return false;
-        return data && data.length > 0;
-    } catch (error) {
-        console.error('[Supabase] 检查权限失败:', error);
-        return false;
-    }
-}
-
-/**
- * 检查用户是否有指定角色
- */
-export async function checkRole(userId, roleCode) {
-    try {
-        const user = await getUserById(userId);
-        if (!user) return false;
-        return user.role === roleCode;
-    } catch (error) {
-        console.error('[Supabase] 检查角色失败:', error);
-        return false;
-    }
-}
-
-/**
- * 获取用户的租户ID和门店ID
- */
-export async function getUserContext(userId) {
-    try {
-        const user = await getUserById(userId);
-        if (!user) return { tenantId: null, storeId: null };
-        return {
-            tenantId: user.tenant_id || null,
-            storeId: user.store_id || null
-        };
-    } catch (error) {
-        console.error('[Supabase] 获取用户上下文失败:', error);
-        return { tenantId: null, storeId: null };
-    }
-}
-
-// ============================================================
-// 分页工具
-// ============================================================
-
-/**
- * 生成分页查询参数
- */
-export function getPagination(page = 1, limit = 20) {
-    const start = (page - 1) * limit;
-    const end = start + limit - 1;
-    return { from: start, to: end };
-}
-
-// ============================================================
-// 安全查询包装器
-// ============================================================
-
-/**
- * 安全执行查询，统一错误处理
- */
-export async function safeQuery(queryFn) {
-    try {
-        const result = await queryFn();
-        if (result.error) {
-            console.error('[Supabase] 查询错误:', result.error);
-            return { success: false, error: result.error.message, data: null };
-        }
-        return { success: true, data: result.data, error: null };
-    } catch (error) {
-        console.error('[Supabase] 查询异常:', error);
-        return { success: false, error: error.message, data: null };
-    }
-}
-
-// ============================================================
-// 通用 CRUD 操作（可选，直接使用 supabase 对象也可以）
-// ============================================================
-
-/**
- * 查询数据（带过滤、排序、分页）
- */
-export async function queryTable(table, options = {}) {
-    try {
-        let query = supabase.from(table).select(options.select || '*');
-
-        if (options.filter) {
-            Object.keys(options.filter).forEach(key => {
-                query = query.eq(key, options.filter[key]);
-            });
-        }
-        if (options.order) {
-            query = query.order(options.order.by, {
-                ascending: options.order.ascending || false
-            });
-        }
-        if (options.limit) {
-            query = query.limit(options.limit);
-        }
-        if (options.page) {
-            const { from, to } = getPagination(options.page, options.limit || 20);
-            query = query.range(from, to);
+        if (error) {
+            console.error(`[Supabase] 查询单条失败 (${table}):`, error);
+            return { data: null, error };
         }
 
-        const result = await query;
-        if (result.error) throw result.error;
-        return { success: true, data: result.data, error: null };
+        return { data, error: null };
+
     } catch (error) {
-        console.error('[Supabase] queryTable 错误:', error);
-        return { success: false, data: null, error: error.message };
+        console.error(`[Supabase] 查询单条异常 (${table}):`, error);
+        return { data: null, error };
     }
 }
 
 /**
  * 插入数据
+ * @param {string} table - 表名
+ * @param {Object|Array} data - 要插入的数据
+ * @param {Object} options - 选项
+ * @param {string} options.idField - ID字段名 (默认 'id')
+ * @returns {Promise<{data: Array, error: Object}>}
  */
-export async function insertRow(table, data) {
+export async function insert(table, data, options = {}) {
+    const { idField = 'id' } = options;
+
     try {
-        const result = await supabase.from(table).insert(data).select();
-        if (result.error) throw result.error;
-        return { success: true, data: result.data, error: null };
+        // 自动添加时间戳
+        const now = new Date().toISOString();
+        const dataWithTimestamp = Array.isArray(data)
+            ? data.map(item => ({ ...item, created_at: now, updated_at: now }))
+            : { ...data, created_at: now, updated_at: now };
+
+        const { data: result, error } = await supabase
+            .from(table)
+            .insert(dataWithTimestamp)
+            .select();
+
+        if (error) {
+            console.error(`[Supabase] 插入失败 (${table}):`, error);
+            return { data: null, error };
+        }
+
+        return { data: result || [], error: null };
+
     } catch (error) {
-        console.error('[Supabase] insertRow 错误:', error);
-        return { success: false, data: null, error: error.message };
+        console.error(`[Supabase] 插入异常 (${table}):`, error);
+        return { data: null, error };
     }
 }
 
 /**
  * 更新数据
+ * @param {string} table - 表名
+ * @param {string|number} id - 记录ID
+ * @param {Object} data - 要更新的数据
+ * @param {string} idField - ID字段名 (默认 'id')
+ * @returns {Promise<{data: Object|null, error: Object}>}
  */
-export async function updateRow(table, id, data) {
+export async function update(table, id, data, idField = 'id') {
     try {
-        const result = await supabase.from(table).update(data).eq('id', id).select();
-        if (result.error) throw result.error;
-        return { success: true, data: result.data, error: null };
+        // 自动更新时间戳
+        const dataWithTimestamp = { ...data, updated_at: new Date().toISOString() };
+
+        const { data: result, error } = await supabase
+            .from(table)
+            .update(dataWithTimestamp)
+            .eq(idField, id)
+            .select();
+
+        if (error) {
+            console.error(`[Supabase] 更新失败 (${table}):`, error);
+            return { data: null, error };
+        }
+
+        return { data: result?.[0] || null, error: null };
+
     } catch (error) {
-        console.error('[Supabase] updateRow 错误:', error);
-        return { success: false, data: null, error: error.message };
+        console.error(`[Supabase] 更新异常 (${table}):`, error);
+        return { data: null, error };
     }
 }
 
 /**
  * 删除数据
+ * @param {string} table - 表名
+ * @param {string|number} id - 记录ID
+ * @param {string} idField - ID字段名 (默认 'id')
+ * @returns {Promise<{data: Array, error: Object}>}
  */
-export async function deleteRow(table, id) {
+export async function del(table, id, idField = 'id') {
     try {
-        const result = await supabase.from(table).delete().eq('id', id);
-        if (result.error) throw result.error;
-        return { success: true, error: null };
+        const { data, error } = await supabase
+            .from(table)
+            .delete()
+            .eq(idField, id)
+            .select();
+
+        if (error) {
+            console.error(`[Supabase] 删除失败 (${table}):`, error);
+            return { data: null, error };
+        }
+
+        return { data: data || [], error: null };
+
     } catch (error) {
-        console.error('[Supabase] deleteRow 错误:', error);
-        return { success: false, error: error.message };
+        console.error(`[Supabase] 删除异常 (${table}):`, error);
+        return { data: null, error };
     }
 }
+
+/**
+ * 统计记录数
+ * @param {string} table - 表名
+ * @param {Object} filter - 过滤条件
+ * @returns {Promise<number>}
+ */
+export async function count(table, filter = {}) {
+    try {
+        let query = supabase.from(table).select('*', { count: 'exact', head: true });
+
+        Object.entries(filter).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                query = query.eq(key, value);
+            }
+        });
+
+        const { count, error } = await query;
+
+        if (error) {
+            console.error(`[Supabase] 统计失败 (${table}):`, error);
+            return 0;
+        }
+
+        return count || 0;
+
+    } catch (error) {
+        console.error(`[Supabase] 统计异常 (${table}):`, error);
+        return 0;
+    }
+}
+
+// ============================================================
+// 导出
+// ============================================================
+
+export default {
+    supabase,
+    query,
+    getById,
+    insert,
+    update,
+    del,
+    count
+};
