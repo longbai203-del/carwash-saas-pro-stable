@@ -37,7 +37,19 @@
       "dest": "/frontend/assets/$1"
     },
     {
+      "src": "/(.*)\\.js",
+      "dest": "/frontend/$1.js"
+    },
+    {
+      "src": "/(.*)\\.css",
+      "dest": "/frontend/$1.css"
+    },
+    {
       "src": "/",
+      "dest": "/frontend/index.html"
+    },
+    {
+      "src": "/(.*)",
       "dest": "/frontend/index.html"
     }
   ],
