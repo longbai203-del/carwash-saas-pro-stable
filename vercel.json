@@ -1,63 +1,59 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "name": "carwash-saas-pro-stable",
-  "builds": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "framework": null,
+  "functions": {
+    "api/index.js": {
+      "runtime": "@vercel/node@22",
+      "memory": 1024,
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/module-map.json",  "destination": "/frontend/module-map.json" },
+    { "source": "/js/(.*)",          "destination": "/frontend/js/$1" },
+    { "source": "/css/(.*)",         "destination": "/frontend/css/$1" },
+    { "source": "/components/(.*)",  "destination": "/frontend/components/$1" },
+    { "source": "/modules/(.*)",     "destination": "/frontend/modules/$1" },
+    { "source": "/assets/(.*)",      "destination": "/frontend/assets/$1" },
+    { "source": "/(.*)\\.js",        "destination": "/frontend/$1.js" },
+    { "source": "/(.*)\\.css",       "destination": "/frontend/$1.css" },
+    { "source": "/",                 "destination": "/frontend/index.html" },
     {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+      "source": "/((?!api/|_vercel|.*\\.[a-zA-Z0-9]+$).*)",
+      "destination": "/frontend/index.html"
     }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
     },
     {
-      "src": "/module-map.json",
-      "dest": "/frontend/module-map.json"
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",      "value": "*" },
+        { "key": "Access-Control-Allow-Methods",     "value": "GET, POST, PUT, PATCH, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers",     "value": "Authorization, Content-Type, X-Client-Info, apikey" },
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Max-Age",           "value": "86400" },
+        { "key": "Cache-Control",                    "value": "no-store" }
+      ]
     },
     {
-      "src": "/js/(.*)",
-      "dest": "/frontend/js/$1"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/frontend/css/$1"
-    },
-    {
-      "src": "/components/(.*)",
-      "dest": "/frontend/components/$1"
-    },
-    {
-      "src": "/modules/(.*)",
-      "dest": "/frontend/modules/$1"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/frontend/assets/$1"
-    },
-    {
-      "src": "/(.*)\\.js",
-      "dest": "/frontend/$1.js"
-    },
-    {
-      "src": "/(.*)\\.css",
-      "dest": "/frontend/$1.css"
-    },
-    {
-      "src": "/",
-      "dest": "/frontend/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/index.html"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options",        "value": "DENY" }
+      ]
     }
-  ],
-  "env": {
-    "SUPABASE_URL": "https://ukqhdzvegqlkimxzkfcp.supabase.co",
-    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjE3OTQsImV4cCI6MjA5ODczNzc5NH0.YuEB1rzpqc8kynZukXU4ANKnVtpIC3JJ9IEacQ2fcQE",
-    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzE2MTc5NCwiZXhwIjoyMDk4NzM3Nzk0fQ.0yJZmV5hSNlAMV1gKzCSQLNq7Wp0xKUYP0DUowkQ7gQ",
-    "JWT_SECRET": "1d199fa23059d91fa54fb4c6ced0ec224f7eb1320786e1c0602d319d8a37e279",
-    "NODE_ENV": "production"
-  }
+  ]
 }
