@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: carwash-backend-api
+    runtime: node
+    plan: free
+    rootDir: backend               # 👈 关键：告诉 Render 构建时进入 backend 子目录
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /api/health
