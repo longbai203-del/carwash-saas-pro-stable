@@ -1,139 +1,109 @@
-/**
- * api/index.js - API主路由入口
- * @module api
- * @description 统一API路由注册和中间件配置
- * 
- * @example
- * // Vercel serverless 函数入口
- * import app from './api/index.js';
- * export default app;
- */
-
+// backend/api/index.js
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
-// 导入路由模块
-import authRoutes from './auth.js';
-import orderRoutes from './orders.js';
-import productRoutes from './products.js';
-import customerRoutes from './customers.js';
-import employeeRoutes from './employees.js';
-import inventoryRoutes from './inventory.js';
-import reportRoutes from './reports.js';
-import attendanceRoutes from './attendance.js';
-import permissionRoutes from './permissions.js';
-import vehicleMonitorRoutes from './vehicle-monitor.js';
-
+// 加载环境变量（必须最先执行）
 dotenv.config();
+
+// 导入局部路由
+import healthRoute from './health.js';
+import authRoute from './auth.js';
+import ordersRoute from './orders.js';
+import customersRoute from './customers.js';
+import productsRoute from './products.js';
+import inventoryRoute from './inventory.js';
+import reportsRoute from './reports.js';
+import vehicleMonitorRoute from './vehicle-monitor.js';
+import employeesRoute from './employees.js';
+import permissionsRoute from './permissions.js';
+import attendanceRoute from './attendance.js';
+
+// 导入统一错误处理器 (第二阶段修复的文件)
+import { errorHandler } from '../shared/lib/auth.js';
 
 const app = express();
 
-// ============================================================
-// 中间件配置
-// ============================================================
-
-// 安全头
+/**
+ * 基础中间件配置
+ * @description 全局CORS、安全头、JSON解析
+ */
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-
-// CORS - 允许前端跨域访问
-const corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({
-    origin: corsOrigin,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
 }));
-console.log(`[API] CORS 允许来源: ${corsOrigin}`);
+app.use(express.json({ limit: '10mb' })); // 增加JSON大小限制
+app.use(express.urlencoded({ extended: true }));
 
-// 请求解析
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// 请求日志（开发环境）
-if (process.env.NODE_ENV === 'development') {
-    app.use((req, res, next) => {
-        console.log(`[API] ${req.method} ${req.path}`);
-        next();
-    });
-}
-
-// ============================================================
-// 健康检查
-// ============================================================
-
+/**
+ * 健康检查接口
+ * @name GET /api/health
+ * @function
+ * @returns {Object} 包含服务器状态和时间戳
+ */
 app.get('/api/health', (req, res) => {
-    res.json({
+    res.status(200).json({
         status: 'ok',
         timestamp: new Date().toISOString(),
-        version: '2.0.0',
-        environment: process.env.NODE_ENV || 'development',
-        corsOrigin: corsOrigin
+        uptime: process.uptime()
     });
 });
 
-// ============================================================
-// API路由注册
-// ============================================================
+// --- API 路由挂载 ---
+app.use('/api/auth', authRoute);
+app.use('/api/orders', ordersRoute);
+app.use('/api/customers', customersRoute);
+app.use('/api/products', productsRoute);
+app.use('/api/inventory', inventoryRoute);
+app.use('/api/reports', reportsRoute);
+app.use('/api/vehicle', vehicleMonitorRoute);
+app.use('/api/employees', employeesRoute);
+app.use('/api/permissions', permissionsRoute);
+app.use('/api/attendance', attendanceRoute);
 
-app.use('/api/auth', authRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/permissions', permissionRoutes);
-app.use('/api/vehicle-monitor', vehicleMonitorRoutes);
-
-// ============================================================
-// 404处理
-// ============================================================
-
+// --- 404 处理器 ---
 app.use((req, res) => {
     res.status(404).json({
-        code: 404,
-        message: `API endpoint not found: ${req.method} ${req.path}`,
-        timestamp: new Date().toISOString()
+        success: false,
+        code: 'ROUTE_NOT_FOUND',
+        message: `请求的接口 [${req.method}] ${req.originalUrl} 不存在`
     });
 });
 
-// ============================================================
-// 错误处理
-// ============================================================
+// --- 全局错误处理中间件 (必须放在最后) ---
+app.use(errorHandler);
 
-app.use((err, req, res, next) => {
-    console.error('[API Error]', err);
-
-    const status = err.status || 500;
-    const message = err.message || 'Internal server error';
-    const details = process.env.NODE_ENV === 'development' ? err.stack : undefined;
-
-    res.status(status).json({
-        code: status,
-        message: message,
-        ...(details && { details }),
-        timestamp: new Date().toISOString()
+/**
+ * 启动服务
+ * @description 监听端口，支持优雅关闭
+ */
+const PORT = process.env.PORT || 5000;
+if (process.env.NODE_ENV !== 'test') {
+    const server = app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ 后端服务已启动，监听端口 ${PORT}`);
+        console.log(`   Health 检查地址: http://localhost:${PORT}/api/health`);
     });
-});
 
-// ============================================================
-// 导出（用于 Render / Vercel Serverless）
-// ============================================================
+    // 优雅关闭 (Render/Signal 友好)
+    const gracefulShutdown = () => {
+        console.log('接收到关闭信号，正在关闭服务器...');
+        server.close(() => {
+            console.log('服务器已成功关闭');
+            process.exit(0);
+        });
+        // 如果关闭超时，则强制退出
+        setTimeout(() => {
+            console.error('服务器关闭超时，强制退出');
+            process.exit(1);
+        }, 10000);
+    };
+
+    process.on('SIGTERM', gracefulShutdown);
+    process.on('SIGINT', gracefulShutdown);
+}
 
 export default app;
-
-// 本地开发服务器
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-        console.log(`🚀 API Server running on http://localhost:${PORT}`);
-        console.log(`📚 Health check: http://localhost:${PORT}/api/health`);
-        console.log(`🔗 CORS allowed origin: ${corsOrigin}`);
-    });
-}
