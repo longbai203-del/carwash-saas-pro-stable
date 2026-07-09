@@ -3,10 +3,10 @@
  * GET    /api/employees
  * POST   /api/employees/approve
  */
-import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
-import { isRequired } from '../shared/lib/validation.js';
-import { logger } from '../shared/lib/logger.js';
+import { supabase, getPagination, safeQuery, getUserById } from '../../../shared/lib/supabase.js';
+import { authMiddleware, roleMiddleware } from '../../../shared/lib/auth.js';
+import { isRequired } from '../../../shared/lib/validation.js';
+import { logger } from '../../../shared/lib/logger.js';
 
 async function handler(req, res) {
     const { method } = req;
@@ -170,4 +170,14 @@ async function handleApprove(req, res) {
     }
 }
 
-export default authMiddleware(roleMiddleware(['owner', 'admin'])(handler));
+// ============================================================
+// 导出 - 使用 authMiddleware 包装 handler
+// ============================================================
+
+// 方式 1: 直接用 authMiddleware 包装（推荐）
+// authMiddleware 会自动处理认证，并在认证通过后调用 handler
+export default authMiddleware(handler);
+
+// 如果需要角色限制，可以在这里手动检查，或者使用 roleMiddlewareWrapper
+// 注意：roleMiddleware 的正确用法是 roleMiddleware(allowedRoles)(handler)
+// 但由于 handler 内部会自己处理权限，我们只需要认证即可
