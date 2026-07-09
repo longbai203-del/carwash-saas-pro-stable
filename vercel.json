@@ -1,28 +1,11 @@
 {
     "version": 2,
     "name": "carwash-saas-pro-stable",
-    "builds": [
-      {
-        "src": "api/index.js",
-        "use": "@vercel/node"
-      }
-    ],
     "outputDirectory": "frontend",
     "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "/api/index.js"
-      },
       {
         "src": "/(.*)",
         "dest": "/$1"
       }
-    ],
-    "env": {
-      "SUPABASE_URL": "https://ukqhdzvegqlkimxzkfcp.supabase.co",
-      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjE3OTQsImV4cCI6MjA5ODczNzc5NH0.YuEB1rzpqc8kynZukXU4ANKnVtpIC3JJ9IEacQ2fcQE",
-      "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzE2MTc5NCwiZXhwIjoyMDk4NzM3Nzk0fQ.0yJZmV5hSNlAMV1gKzCSQLNq7Wp0xKUYP0DUowkQ7gQ",
-      "JWT_SECRET": "1d199fa23059d91fa54fb4c6ced0ec224f7eb1320786e1c0602d319d8a37e279",
-      "NODE_ENV": "production"
-    }
+    ]
   }

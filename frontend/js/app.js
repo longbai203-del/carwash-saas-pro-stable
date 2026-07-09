@@ -12,7 +12,7 @@
 
 import { appStore } from './core/store.js';
 import { router } from './core/router.js';
-import { apiClient } from './api/api-client.js';
+import { apiClient } from '../../backend/api/api-client.js';
 import { SidebarComponent } from '../components/sidebar.js';
 
 /**

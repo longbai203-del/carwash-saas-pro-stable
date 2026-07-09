@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
@@ -25,6 +25,16 @@
         };
         console.log('✅ Supabase 配置已加载');
         console.log('📌 Supabase URL:', window.SUPABASE_CONFIG.url);
+    </script>
+
+    <!-- ===== 前后端分离配置 ===== -->
+    <script>
+        // 前端全局配置 - 后端 API 基地址
+        // 🔥 部署到 Vercel 前，请将此地址改为 Render 后端实际地址
+        window.APP_CONFIG = {
+            API_BASE_URL: 'https://your-render-backend.onrender.com/api/v1'
+        };
+        console.log('✅ APP_CONFIG 已加载，API_BASE_URL:', window.APP_CONFIG.API_BASE_URL);
     </script>
 
     <style>
