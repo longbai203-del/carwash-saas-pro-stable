@@ -11,8 +11,9 @@
  */
 
 import express from 'express';
-import { supabase, query, getById, insert, update, del } from '../shared/lib/supabase.js';
-import { authenticate, requireRole } from '../shared/lib/auth.js';
+import { supabase } from '../shared/lib/supabase.js';
+import { authenticate } from '../shared/lib/auth.js';
+import { requireRole } from '../shared/lib/auth.js';
 
 const router = express.Router();
 

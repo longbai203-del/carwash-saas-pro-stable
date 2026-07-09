@@ -198,3 +198,8 @@ export default {
     authMiddleware,
     roleMiddlewareWrapper
 };
+
+// ============================================================
+// 🔥 关键修复：添加 requireRole 别名（兼容 orders.js）
+// ============================================================
+export const requireRole = roleMiddleware;
