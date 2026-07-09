@@ -72,9 +72,12 @@ export async function authenticate(req, res, next) {
 /**
  * 角色授权中间件 - 检查用户是否有指定角色
  * @param {Array<string>} allowedRoles - 允许的角色列表
- * @returns {Function} Express 中间件
+ * @returns {Function} Express 中间件 (req, res, next) => void
  */
 export function roleMiddleware(allowedRoles) {
+    // 确保 allowedRoles 是数组
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+    
     return function(req, res, next) {
         try {
             // 确保 req.user 存在（先经过 authenticate）
@@ -88,10 +91,10 @@ export function roleMiddleware(allowedRoles) {
 
             const userRole = req.user.role;
             
-            if (!allowedRoles.includes(userRole)) {
+            if (!roles.includes(userRole)) {
                 return res.status(403).json({
                     success: false,
-                    error: `权限不足，需要以下角色之一: ${allowedRoles.join(', ')}`,
+                    error: `权限不足，需要以下角色之一: ${roles.join(', ')}`,
                     code: 'FORBIDDEN'
                 });
             }
