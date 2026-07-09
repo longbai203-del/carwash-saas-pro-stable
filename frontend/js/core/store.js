@@ -26,12 +26,14 @@ class Store {
             notifications: [],
             currentModule: null,
             currentPage: null,
+            currentModuleKey: null,
+            currentPath: '/dashboard', // 新增：当前路径
             isLoading: false
         };
         /** @type {Array<Function>} 状态变化监听器列表 */
         this.listeners = [];
         /** @type {Array<string>} 需要持久化的key列表 */
-        this.persistKeys = ['user', 'tenant', 'cart', 'theme', 'menuConfig'];
+        this.persistKeys = ['user', 'tenant', 'cart', 'theme', 'menuConfig', 'currentPath'];
         /** @type {boolean} 是否已初始化 */
         this.initialized = false;
     }
@@ -165,6 +167,8 @@ class Store {
             notifications: [],
             currentModule: null,
             currentPage: null,
+            currentModuleKey: null,
+            currentPath: '/dashboard',
             isLoading: false
         };
         this.persistKeys.forEach(key => {

@@ -26,12 +26,14 @@ class ApiClient {
     constructor() {
         /** @type {string} API基础URL */
         this.baseURL = '/api/v1';
-        /** @type {boolean} 是否使用Mock数据 */
-        this.useMock = true; // 开发阶段使用Mock，生产环境设为false
+        /** @type {boolean} 是否使用Mock数据 - 生产环境应设为false */
+        this.useMock = false; // 改为false，对接真实API
         /** @type {Object} Mock数据 */
         this.mockData = this.getMockData();
         /** @type {number} 请求超时时间(ms) */
         this.timeout = 30000;
+        /** @type {boolean} 是否正在使用Mock模式 (运行时状态) */
+        this._usingMock = false;
     }
 
     /**
@@ -91,6 +93,7 @@ class ApiClient {
             }
 
             const data = await response.json();
+            this._usingMock = false;
             return data;
 
         } catch (error) {
@@ -99,12 +102,21 @@ class ApiClient {
             // 如果使用Mock，返回Mock数据
             if (this.useMock) {
                 console.log(`[API] 📦 使用Mock数据降级: ${endpoint}`);
+                this._usingMock = true;
                 return this.mockRequest(endpoint, method, params, body);
             }
 
             // 重新抛出错误
             throw new Error(`请求失败: ${error.message}`);
         }
+    }
+
+    /**
+     * 检查当前是否在使用Mock模式
+     * @returns {boolean}
+     */
+    isUsingMock() {
+        return this._usingMock;
     }
 
     /**
@@ -178,12 +190,11 @@ class ApiClient {
             case 'orders':
                 data = this.mockData.orders || [];
                 total = data.length;
-                // 分页处理
                 const start = (page - 1) * limit;
                 const end = start + limit;
                 return {
                     code: 200,
-                    message: 'success',
+                    message: 'success (mock)',
                     data: data.slice(start, end),
                     total: total,
                     page: page,
@@ -196,7 +207,7 @@ class ApiClient {
                 total = data.length;
                 return {
                     code: 200,
-                    message: 'success',
+                    message: 'success (mock)',
                     data: data.slice((page - 1) * limit, page * limit),
                     total: total,
                     page: page,
@@ -208,7 +219,7 @@ class ApiClient {
                 total = data.length;
                 return {
                     code: 200,
-                    message: 'success',
+                    message: 'success (mock)',
                     data: data.slice((page - 1) * limit, page * limit),
                     total: total,
                     page: page,
@@ -231,7 +242,7 @@ class ApiClient {
                 };
         }
 
-        return this.mockData.default || { code: 200, message: 'success', data: [] };
+        return this.mockData.default || { code: 200, message: 'success (mock)', data: [] };
     }
 
     /**

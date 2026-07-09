@@ -1,16 +1,116 @@
 {
-  "01-dashboard": "Dashboard",
-  "02-pos": "POS",
-  "03-orders": "Orders",
-  "04-products": "Products",
-  "05-customers": "CRM",
-  "06-marketing": "Marketing",
-  "07-inventory": "Inventory",
-  "08-purchase": "Purchasing",
-  "09-finance": "Finance",
-  "10-hr": "HR",
-  "11-saas": "SaaS",
-  "12-system": "System",
-  "13-analytics": "Analytics",
-  "14-settings": "Settings"
+  "modules": [
+    {
+      "key": "dashboard",
+      "folder": "01-dashboard",
+      "defaultPage": "dashboard",
+      "label": "仪表板",
+      "icon": "fa-gauge-high",
+      "enabled": true
+    },
+    {
+      "key": "pos",
+      "folder": "02-pos",
+      "defaultPage": "quick-sale",
+      "label": "收银台",
+      "icon": "fa-cash-register",
+      "enabled": true
+    },
+    {
+      "key": "orders",
+      "folder": "03-orders",
+      "defaultPage": "list",
+      "label": "订单管理",
+      "icon": "fa-receipt",
+      "enabled": true
+    },
+    {
+      "key": "products",
+      "folder": "04-products",
+      "defaultPage": "products",
+      "label": "商品管理",
+      "icon": "fa-boxes-stacked",
+      "enabled": true
+    },
+    {
+      "key": "crm",
+      "folder": "05-customers",
+      "defaultPage": "customers",
+      "label": "客户管理",
+      "icon": "fa-users",
+      "enabled": true
+    },
+    {
+      "key": "marketing",
+      "folder": "06-marketing",
+      "defaultPage": "promotions",
+      "label": "营销中心",
+      "icon": "fa-bullhorn",
+      "enabled": true
+    },
+    {
+      "key": "inventory",
+      "folder": "07-inventory",
+      "defaultPage": "stock",
+      "label": "库存管理",
+      "icon": "fa-warehouse",
+      "enabled": true
+    },
+    {
+      "key": "purchasing",
+      "folder": "08-purchase",
+      "defaultPage": "orders",
+      "label": "采购管理",
+      "icon": "fa-truck",
+      "enabled": true
+    },
+    {
+      "key": "finance",
+      "folder": "09-finance",
+      "defaultPage": "income",
+      "label": "财务管理",
+      "icon": "fa-coins",
+      "enabled": true
+    },
+    {
+      "key": "hr",
+      "folder": "10-hr",
+      "defaultPage": "employees",
+      "label": "人力资源",
+      "icon": "fa-user-tie",
+      "enabled": true
+    },
+    {
+      "key": "saas",
+      "folder": "11-saas",
+      "defaultPage": "tenants",
+      "label": "多租户管理",
+      "icon": "fa-building",
+      "enabled": true
+    },
+    {
+      "key": "system",
+      "folder": "12-system",
+      "defaultPage": "audit-logs",
+      "label": "系统管理",
+      "icon": "fa-gear",
+      "enabled": true
+    },
+    {
+      "key": "analytics",
+      "folder": "13-analytics",
+      "defaultPage": "reports",
+      "label": "数据分析",
+      "icon": "fa-chart-line",
+      "enabled": true
+    },
+    {
+      "key": "settings",
+      "folder": "14-settings",
+      "defaultPage": "company",
+      "label": "系统设置",
+      "icon": "fa-sliders",
+      "enabled": true
+    }
+  ]
 }
