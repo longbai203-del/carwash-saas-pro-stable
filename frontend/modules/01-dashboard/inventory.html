@@ -1,0 +1,94 @@
+<!-- ============================================================ -->
+<!-- Inventory Dashboard - 库存概览                               -->
+<!-- ============================================================ -->
+
+<style>
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .inventory-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .inventory-card .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+    .inventory-card .label {
+        font-size: 14px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+    .inventory-card .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    .inventory-card .value.warning { color: #F59E0B; }
+    .inventory-card .value.danger { color: #EF4444; }
+    @media (max-width: 768px) {
+        .inventory-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📦 库存概览</h1>
+            <p class="page-subtitle">库存状态总览</p>
+        </div>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fas fa-sync"></i> 刷新
+        </button>
+    </div>
+
+    <div class="inventory-grid">
+        <div class="inventory-card">
+            <div class="icon">📦</div>
+            <div class="value">156</div>
+            <div class="label">总商品</div>
+        </div>
+        <div class="inventory-card">
+            <div class="icon">⚠️</div>
+            <div class="value warning">8</div>
+            <div class="label">低库存预警</div>
+        </div>
+        <div class="inventory-card">
+            <div class="icon">🚫</div>
+            <div class="value danger">3</div>
+            <div class="label">已售罄</div>
+        </div>
+        <div class="inventory-card">
+            <div class="icon">💰</div>
+            <div class="value">¥245,800</div>
+            <div class="label">库存价值</div>
+        </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom:16px;">⚠️ 低库存商品</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>商品名称</th>
+                    <th>当前库存</th>
+                    <th>最低库存</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>泡沫洗车液</td><td>5</td><td>20</td><td><span class="badge badge-danger">⚠️ 紧急</span></td></tr>
+                <tr><td>轮胎光亮剂</td><td>8</td><td>15</td><td><span class="badge badge-warning">⚠️ 预警</span></td></tr>
+                <tr><td>内饰清洗剂</td><td>3</td><td>10</td><td><span class="badge badge-danger">⚠️ 紧急</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>

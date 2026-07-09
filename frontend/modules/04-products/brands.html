@@ -1,0 +1,239 @@
+<!-- 04-products/brands.html -->
+<div class="page-container" data-page="04-products-brands">
+    <div class="page-header">
+        <h1><i class="fas fa-tag"></i> 品牌管理</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.BrandModule.newBrand()">
+                <i class="fas fa-plus"></i> 新建品牌
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="brand-container">
+            <!-- 统计卡片 -->
+            <div class="brand-stats">
+                <div class="stat-card">
+                    <span class="stat-label">总品牌</span>
+                    <span class="stat-number" id="totalBrands">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">活跃品牌</span>
+                    <span class="stat-number" id="activeBrands">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">关联商品</span>
+                    <span class="stat-number" id="totalProducts">0</span>
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="brand-search">
+                <input type="text" id="brandSearch" placeholder="搜索品牌名称..." 
+                       oninput="window.BrandModule.search(this.value)" />
+                <button class="btn btn-primary" onclick="window.BrandModule.searchBrands()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+
+            <!-- 品牌列表 -->
+            <div class="brand-grid" id="brandGrid">
+                <!-- 由JS生成 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .brand-container { max-width: 1200px; margin: 0 auto; }
+    
+    .brand-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .brand-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .brand-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .brand-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .brand-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .brand-stats .stat-card:nth-child(2) .stat-number { color: #10B981; }
+    .brand-stats .stat-card:nth-child(3) .stat-number { color: #8B5CF6; }
+    
+    .brand-search { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .brand-search input { flex: 1; padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; min-width: 200px; }
+    .brand-search input:focus { outline: none; border-color: #4F46E5; }
+    
+    .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+    .brand-card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; transition: all 0.3s; }
+    .brand-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .brand-card .brand-icon { font-size: 48px; text-align: center; margin-bottom: 8px; }
+    .brand-card .brand-name { font-size: 18px; font-weight: 600; text-align: center; }
+    .brand-card .brand-desc { font-size: 13px; color: #6B7280; text-align: center; margin-top: 4px; }
+    .brand-card .brand-stats { display: flex; justify-content: center; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; font-size: 13px; }
+    .brand-card .brand-actions { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+    
+    .empty-brands { grid-column: 1 / -1; text-align: center; padding: 60px 0; color: #9CA3AF; }
+    .empty-brands i { font-size: 48px; margin-bottom: 12px; }
+    
+    [data-theme="dark"] .brand-stats .stat-card,
+    [data-theme="dark"] .brand-card { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .brand-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .brand-search input { background: #3A3A3C; border-color: #48484A; color: #F5F5F7; }
+    
+    @media (max-width: 768px) { .brand-stats { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+    (function() {
+        window.BrandModule = {
+            brands: [],
+            filteredBrands: [],
+            
+            init: function() {
+                this.loadBrands();
+                this.render();
+            },
+            
+            loadBrands: function() {
+                const saved = localStorage.getItem('brand_data');
+                if (saved) {
+                    try {
+                        this.brands = JSON.parse(saved);
+                    } catch (e) {
+                        this.brands = this.getMockBrands();
+                    }
+                } else {
+                    this.brands = this.getMockBrands();
+                    localStorage.setItem('brand_data', JSON.stringify(this.brands));
+                }
+                this.filteredBrands = [...this.brands];
+            },
+            
+            getMockBrands: function() {
+                return [
+                    { id: 'BR-001', name: '3M', icon: '🏢', desc: '汽车美容产品', products: 12, status: 'active' },
+                    { id: 'BR-002', name: '龟牌', icon: '🐢', desc: '洗车护理用品', products: 8, status: 'active' },
+                    { id: 'BR-003', name: '美光', icon: '✨', desc: '高端汽车护理', products: 6, status: 'active' },
+                    { id: 'BR-004', name: '索纳克斯', icon: '🌟', desc: '德国汽车护理', products: 4, status: 'inactive' },
+                    { id: 'BR-005', name: '车仆', icon: '🚗', desc: '国产汽车用品', products: 10, status: 'active' }
+                ];
+            },
+            
+            render: function() {
+                const grid = document.getElementById('brandGrid');
+                
+                if (this.filteredBrands.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-brands">
+                            <i class="fas fa-tag"></i>
+                            <p>暂无品牌</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                grid.innerHTML = this.filteredBrands.map(b => `
+                    <div class="brand-card">
+                        <div class="brand-icon">${b.icon || '🏷️'}</div>
+                        <div class="brand-name">${b.name}</div>
+                        <div class="brand-desc">${b.desc || ''}</div>
+                        <div class="brand-stats">
+                            <span>📦 ${b.products || 0} 商品</span>
+                            <span class="${b.status === 'active' ? 'badge badge-success' : 'badge badge-secondary'}">${b.status === 'active' ? '活跃' : '停用'}</span>
+                        </div>
+                        <div class="brand-actions">
+                            <button class="btn-sm btn-primary" onclick="window.BrandModule.editBrand('${b.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-sm ${b.status === 'active' ? 'btn-warning' : 'btn-success'}" onclick="window.BrandModule.toggleBrand('${b.id}')">
+                                <i class="fas ${b.status === 'active' ? 'fa-pause' : 'fa-play'}"></i>
+                            </button>
+                            <button class="btn-sm btn-danger" onclick="window.BrandModule.deleteBrand('${b.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                this.updateStats();
+            },
+            
+            updateStats: function() {
+                document.getElementById('totalBrands').textContent = this.brands.length;
+                document.getElementById('activeBrands').textContent = this.brands.filter(b => b.status === 'active').length;
+                document.getElementById('totalProducts').textContent = this.brands.reduce((sum, b) => sum + (b.products || 0), 0);
+            },
+            
+            newBrand: function() {
+                const name = prompt('输入品牌名称：');
+                if (!name) return;
+                const desc = prompt('输入品牌描述：') || '';
+                const brand = {
+                    id: 'BR-' + Date.now().toString().slice(-6),
+                    name: name,
+                    icon: '🏷️',
+                    desc: desc,
+                    products: 0,
+                    status: 'active'
+                };
+                this.brands.push(brand);
+                this.filteredBrands = [...this.brands];
+                localStorage.setItem('brand_data', JSON.stringify(this.brands));
+                this.render();
+                alert('品牌已创建: ' + name);
+            },
+            
+            search: function(query) {
+                if (!query || query.length < 2) {
+                    this.filteredBrands = [...this.brands];
+                } else {
+                    this.filteredBrands = this.brands.filter(b => 
+                        b.name.includes(query) || 
+                        (b.desc && b.desc.includes(query))
+                    );
+                }
+                this.render();
+            },
+            
+            searchBrands: function() {
+                const query = document.getElementById('brandSearch').value;
+                this.search(query);
+            },
+            
+            editBrand: function(id) {
+                const brand = this.brands.find(b => b.id === id);
+                if (brand) {
+                    const newName = prompt('修改品牌名称：', brand.name);
+                    if (newName) {
+                        brand.name = newName;
+                        localStorage.setItem('brand_data', JSON.stringify(this.brands));
+                        this.render();
+                        alert('品牌已更新');
+                    }
+                }
+            },
+            
+            toggleBrand: function(id) {
+                const brand = this.brands.find(b => b.id === id);
+                if (brand) {
+                    brand.status = brand.status === 'active' ? 'inactive' : 'active';
+                    localStorage.setItem('brand_data', JSON.stringify(this.brands));
+                    this.render();
+                    alert('品牌状态已切换: ' + (brand.status === 'active' ? '活跃' : '停用'));
+                }
+            },
+            
+            deleteBrand: function(id) {
+                if (confirm('确认删除该品牌？')) {
+                    this.brands = this.brands.filter(b => b.id !== id);
+                    this.filteredBrands = [...this.brands];
+                    localStorage.setItem('brand_data', JSON.stringify(this.brands));
+                    this.render();
+                    alert('品牌已删除');
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.BrandModule.init();
+        });
+    })();
+</script>

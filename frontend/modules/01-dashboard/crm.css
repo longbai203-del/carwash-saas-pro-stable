@@ -1,0 +1,203 @@
+/**
+ * 01-dashboard/crm/crm.css - CRM概览样式
+ * @module crm-styles
+ * @description CRM客户关系管理专用样式
+ */
+
+ .crm-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.crm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.crm-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #1f2937;
+}
+
+.crm-header .subtitle {
+    color: #6b7280;
+    margin: 4px 0 0 0;
+    font-size: 14px;
+}
+
+.crm-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.crm-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.crm-stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.crm-stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.crm-stat-card .label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.crm-stat-card .icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+/* 客户等级徽章 */
+.badge-vip {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.badge-gold {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-silver {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.badge-bronze {
+    background: #fde68a;
+    color: #92400e;
+}
+
+/* 客户表格 */
+.crm-table-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.crm-table-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+}
+
+.crm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.crm-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: #6b7280;
+    border-bottom: 2px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.crm-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.crm-table tr:hover td {
+    background: #f9fafb;
+}
+
+/* ============================================================
+   深色主题
+   ============================================================ */
+
+[data-theme="dark"] .crm-header h1 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .crm-stat-card {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .crm-stat-card .value {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .crm-table-section {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .crm-table-section h3 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .crm-table th {
+    background: #3a3a3c;
+    color: #9ca3af;
+}
+
+[data-theme="dark"] .crm-table td {
+    border-color: #3a3a3c;
+}
+
+[data-theme="dark"] .crm-table tr:hover td {
+    background: #3a3a3c;
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .crm-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .crm-container {
+        padding: 12px;
+    }
+    .crm-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .crm-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .crm-stats {
+        grid-template-columns: 1fr;
+    }
+    .crm-stat-card .value {
+        font-size: 20px;
+    }
+}

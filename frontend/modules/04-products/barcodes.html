@@ -1,0 +1,184 @@
+<!-- modules/04-products/products/products.html -->
+<div class="products-container" style="padding:20px;max-width:1200px;margin:0 auto;">
+    <!-- 页面标题 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1 style="font-size:24px;font-weight:700;margin:0;">📦 商品管理</h1>
+            <p style="color:#6B7280;margin:4px 0 0 0;">管理所有商品和服务</p>
+        </div>
+        <button id="createBtn" style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-plus"></i> 新建商品
+        </button>
+    </div>
+
+    <!-- 统计 -->
+    <div id="productStats" style="padding:8px 0;margin-bottom:12px;font-size:14px;color:#6B7280;">
+        加载中...
+    </div>
+
+    <!-- 搜索栏 -->
+    <div style="background:white;border-radius:12px;padding:16px 20px;border:1px solid #E5E7EB;margin-bottom:16px;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:1;min-width:150px;">
+                <label style="display:block;font-size:12px;color:#6B7280;margin-bottom:4px;">商品名称</label>
+                <input id="searchName" type="text" placeholder="输入商品名称" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;background:white;" />
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <label style="display:block;font-size:12px;color:#6B7280;margin-bottom:4px;">分类</label>
+                <select id="searchCategory" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;background:white;">
+                    <option value="">全部分类</option>
+                    <option value="洗车">洗车</option>
+                    <option value="美容">美容</option>
+                    <option value="保养">保养</option>
+                    <option value="会员">会员</option>
+                    <option value="配件">配件</option>
+                </select>
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <label style="display:block;font-size:12px;color:#6B7280;margin-bottom:4px;">状态</label>
+                <select id="searchStatus" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;background:white;">
+                    <option value="">全部状态</option>
+                    <option value="active">上架</option>
+                    <option value="inactive">下架</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;padding-top:4px;">
+                <button id="searchBtn" style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+                <button id="resetBtn" style="padding:8px 16px;background:#F3F4F6;border:none;border-radius:6px;cursor:pointer;">
+                    <i class="fas fa-undo"></i> 重置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div id="loadingSpinner" style="display:none;text-align:center;padding:40px;color:#6B7280;">
+        <i class="fas fa-spinner fa-spin" style="font-size:24px;"></i>
+        <p style="margin-top:8px;">加载中...</p>
+    </div>
+
+    <!-- 商品列表 -->
+    <div style="background:white;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;">
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#F9FAFB;">
+                    <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">商品信息</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">分类</th>
+                    <th style="padding:10px 16px;text-align:right;font-size:12px;color:#6B7280;">售价</th>
+                    <th style="padding:10px 16px;text-align:right;font-size:12px;color:#6B7280;">成本</th>
+                    <th style="padding:10px 16px;text-align:right;font-size:12px;color:#6B7280;">库存</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">单位</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">状态</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody">
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#9CA3AF;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:24px;"></i>
+                        <p style="margin-top:8px;">加载中...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    <div id="paginationContainer" style="margin-top:16px;"></div>
+</div>
+
+<!-- 新建/编辑商品弹窗 -->
+<div id="productModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #E5E7EB;">
+            <h3 id="modalTitle" style="margin:0;font-size:18px;">新建商品</h3>
+            <button id="closeModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#9CA3AF;">&times;</button>
+        </div>
+        <div style="padding:20px 24px;">
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">商品名称 <span style="color:red;">*</span></label>
+                <input id="formName" type="text" placeholder="输入商品名称" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">分类 <span style="color:red;">*</span></label>
+                <select id="formCategory" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;background:white;">
+                    <option value="洗车">洗车</option>
+                    <option value="美容">美容</option>
+                    <option value="保养">保养</option>
+                    <option value="会员">会员</option>
+                    <option value="配件">配件</option>
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">售价 <span style="color:red;">*</span></label>
+                    <input id="formPrice" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">成本</label>
+                    <input id="formCost" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">库存 <span style="color:red;">*</span></label>
+                    <input id="formStock" type="number" placeholder="0" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">单位</label>
+                    <input id="formUnit" type="text" placeholder="个/件/瓶" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" />
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:#374151;">状态</label>
+                <select id="formStatus" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;background:white;">
+                    <option value="active">上架</option>
+                    <option value="inactive">下架</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid #E5E7EB;">
+            <button id="cancelModal" style="padding:8px 16px;background:#F3F4F6;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button id="saveProduct" style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">保存</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-sm { padding:4px 10px;border-radius:4px;border:none;cursor:pointer;font-size:12px; }
+    .btn-sm-primary { background:#4F46E5;color:white; }
+    .btn-sm-primary:hover { background:#4338CA; }
+    .btn-sm-danger { background:#EF4444;color:white; }
+    .btn-sm-danger:hover { background:#DC2626; }
+    .btn-sm-success { background:#10B981;color:white; }
+    .btn-sm-success:hover { background:#059669; }
+    
+    [data-theme="dark"] .products-container .search-bar,
+    [data-theme="dark"] .products-container .table-container,
+    [data-theme="dark"] .products-container .modal-content {
+        background: #2C2C2E;
+        border-color: #48484A;
+    }
+    [data-theme="dark"] .products-container table th {
+        background: #3A3A3C;
+        color: #9CA3AF;
+    }
+    [data-theme="dark"] .products-container table td {
+        border-color: #3A3A3C;
+    }
+    [data-theme="dark"] .products-container table tr:hover {
+        background: #3A3A3C;
+    }
+    [data-theme="dark"] .products-container input,
+    [data-theme="dark"] .products-container select {
+        background: #3A3A3C;
+        border-color: #48484A;
+        color: #F5F5F7;
+    }
+    [data-theme="dark"] .products-container #cancelModal {
+        background: #3A3A3C;
+        color: #F5F5F7;
+    }
+</style>

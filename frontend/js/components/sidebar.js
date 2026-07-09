@@ -1,19 +1,15 @@
-/**
- * components/sidebar.js - 侧边栏组件 (重构版)
- * @module sidebar
- * @description 渲染侧边栏菜单，支持折叠、激活状态、响应路由变化
- * 
- * @example
- * import { SidebarComponent } from './components/sidebar.js';
- * const sidebar = document.getElementById('sidebar');
- * SidebarComponent.init(sidebar);
- */
+// frontend/js/components/sidebar.js
+// 修复：彻底移除顶部的模拟对象，使用下方正确的真实 import 导入
+// 修复：确保 es module 中不存在重复声明导致的 SyntaxError
 
+// ✅ 使用真实路径引入 core 模块
 import { appStore } from '../js/core/store.js';
 import { router } from '../js/core/router.js';
 
 /**
  * 侧边栏组件对象
+ * @module SidebarComponent
+ * @description 负责渲染系统侧边栏菜单，支持折叠、高亮激活状态、响应式布局
  */
 export const SidebarComponent = {
     /** @type {HTMLElement} 容器元素 */
@@ -37,7 +33,7 @@ export const SidebarComponent = {
             return;
         }
 
-        // 从Store获取菜单配置
+        // 从 Store 获取菜单配置 (appStore 是真实导入的单例)
         this.menuItems = appStore.get('menuConfig') || this.getDefaultMenu();
 
         // 渲染
@@ -63,7 +59,7 @@ export const SidebarComponent = {
     render() {
         if (!this.container) return;
 
-        // 获取当前路径
+        // 获取当前路径 (router 是真实导入的单例)
         this.currentPath = router.getCurrentPath() || window.location.hash.replace('#', '') || '/dashboard';
 
         const html = this.buildMenuHTML();
@@ -71,10 +67,11 @@ export const SidebarComponent = {
     },
 
     /**
-     * 获取默认菜单配置
+     * 获取默认菜单配置（备用方案）
      * @returns {Array} 菜单数组
      */
     getDefaultMenu() {
+        // 此方法保持原样，保持不变动
         return [
             {
                 id: 'dashboard',

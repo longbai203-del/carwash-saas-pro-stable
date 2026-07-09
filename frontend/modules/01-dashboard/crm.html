@@ -1,0 +1,92 @@
+<!-- ============================================================ -->
+<!-- CRM Dashboard - CRM 概览                                     -->
+<!-- ============================================================ -->
+
+<style>
+    .crm-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .crm-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .crm-card .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+    .crm-card .label {
+        font-size: 14px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+    .crm-card .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+        .crm-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">👥 CRM 概览</h1>
+            <p class="page-subtitle">客户关系管理数据总览</p>
+        </div>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fas fa-sync"></i> 刷新
+        </button>
+    </div>
+
+    <div class="crm-grid">
+        <div class="crm-card">
+            <div class="icon">👥</div>
+            <div class="value">328</div>
+            <div class="label">总客户</div>
+        </div>
+        <div class="crm-card">
+            <div class="icon">👑</div>
+            <div class="value">45</div>
+            <div class="label">VIP 客户</div>
+        </div>
+        <div class="crm-card">
+            <div class="icon">⭐</div>
+            <div class="value">89</div>
+            <div class="label">黄金客户</div>
+        </div>
+        <div class="crm-card">
+            <div class="icon">📈</div>
+            <div class="value">¥245,800</div>
+            <div class="label">累计消费</div>
+        </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom:16px;">📋 最近客户</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>客户</th>
+                    <th>等级</th>
+                    <th>累计消费</th>
+                    <th>最近访问</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>张伟</td><td><span class="badge badge-gold">黄金</span></td><td>¥12,500</td><td>2026-07-05</td></tr>
+                <tr><td>李娜</td><td><span class="badge badge-vip">VIP</span></td><td>¥32,800</td><td>2026-07-06</td></tr>
+                <tr><td>王强</td><td><span class="badge badge-silver">白银</span></td><td>¥5,600</td><td>2026-07-04</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>

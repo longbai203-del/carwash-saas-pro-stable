@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库存管理 - CarwashPro</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/design-system.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .search-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+        .search-row .form-group { flex: 1; min-width: 150px; }
+        .search-row .form-group label { display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px; }
+        .search-row .form-group input, .search-row .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; }
+        .search-actions { display: flex; gap: 8px; padding-top: 4px; }
+        .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #F9FAFB; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
+        .table td { padding: 12px 16px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+        .table tr:hover { background: #F9FAFB; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .badge-info { background: #DBEAFE; color: #1E40AF; }
+        .btn-sm { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+        .btn-sm-primary { background: #4F46E5; color: white; }
+        .btn-sm-primary:hover { background: #4338CA; }
+        .btn-sm-danger { background: #EF4444; color: white; }
+        .btn-sm-danger:hover { background: #DC2626; }
+        .btn-primary { background: #4F46E5; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #4338CA; }
+        .btn-secondary { background: #F3F4F6; color: #374151; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-medium { font-weight: 500; }
+        .font-bold { font-weight: 700; }
+        .text-sm { font-size: 14px; }
+        .text-gray-500 { color: #6B7280; }
+        .text-red-500 { color: #EF4444; }
+        .flex { display: flex; }
+        .gap-1 { gap: 4px; }
+        .mt-4 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 16px; }
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .py-3 { padding-top: 12px; padding-bottom: 12px; }
+        .py-8 { padding-top: 32px; padding-bottom: 32px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">库存管理</h1>
+                <p class="page-subtitle">管理所有库存商品</p>
+            </div>
+            <button class="btn btn-primary" onclick="location.href='#/inventory/adjustments'">
+                <i class="fas fa-exchange-alt"></i> 库存调整
+            </button>
+        </div>
+        <div class="search-bar">
+            <div class="search-row">
+                <div class="form-group">
+                    <label>商品名称</label>
+                    <input id="searchName" type="text" placeholder="输入商品名称" />
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="searchCategory">
+                        <option value="">全部分类</option>
+                        <option value="洗车">洗车</option>
+                        <option value="美容">美容</option>
+                        <option value="保养">保养</option>
+                        <option value="配件">配件</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="searchStatus">
+                        <option value="">全部</option>
+                        <option value="low">低库存</option>
+                        <option value="normal">正常</option>
+                        <option value="over">超库存</option>
+                    </select>
+                </div>
+                <div class="search-actions">
+                    <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
+                    <button id="resetBtn" class="btn btn-secondary"><i class="fas fa-undo"></i> 重置</button>
+                </div>
+            </div>
+        </div>
+        <div class="toolbar">
+            <button class="btn btn-secondary" onclick="location.reload()"><i class="fas fa-sync"></i> 刷新</button>
+            <button class="btn btn-secondary" onclick="location.href='#/inventory/low-stock'">
+                <i class="fas fa-exclamation-triangle"></i> 低库存预警
+            </button>
+            <span class="text-sm text-gray-500" style="margin-left:auto;">共 <span id="totalCount">0</span> 项</span>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>商品信息</th>
+                        <th>分类</th>
+                        <th>库位</th>
+                        <th class="text-right">库存</th>
+                        <th class="text-right">最低库存</th>
+                        <th>状态</th>
+                        <th style="width:80px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl"></i>
+                            <p class="mt-2">加载中...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="paginationContainer" class="mt-4"></div>
+    </div>
+    <script type="module">
+        import('./stock.js').then(function(m) {
+            if (m && typeof m.init === 'function') m.init();
+        }).catch(function(e) {
+            console.warn('Inventory JS 加载失败:', e.message);
+            var tbody = document.getElementById('inventoryTableBody');
+            if (tbody) {
+                var items = [
+                    { name: '泡沫洗车液', category: '洗车', stock: 45, minStock: 20, status: '正常' },
+                    { name: '水蜡', category: '洗车', stock: 8, minStock: 15, status: '低库存' },
+                    { name: '轮胎光亮剂', category: '美容', stock: 32, minStock: 10, status: '正常' },
+                    { name: '玻璃清洁剂', category: '美容', stock: 5, minStock: 10, status: '低库存' },
+                    { name: '内饰清洗剂', category: '保养', stock: 28, minStock: 10, status: '正常' }
+                ];
+                var statusColors = { '正常': 'badge-success', '低库存': 'badge-danger', '超库存': 'badge-warning' };
+                var html = '';
+                for (var i = 0; i < items.length; i++) {
+                    var it = items[i];
+                    var color = statusColors[it.status] || 'badge-secondary';
+                    html += '<tr><td><div><div class="font-medium">' + it.name + '</div></div></td><td>' + it.category + '</td><td>A区-1号</td><td class="text-right"><span class="' + (it.status === '低库存' ? 'text-red-500 font-bold' : '') + '">' + it.stock + '</span></td><td class="text-right">' + it.minStock + '</td><td><span class="badge ' + color + '">' + it.status + '</span></td><td><div class="flex gap-1"><button class="btn-sm btn-primary"><i class="fas fa-edit"></i></button><button class="btn-sm btn-danger"><i class="fas fa-trash"></i></button></div></td></tr>';
+                }
+                tbody.innerHTML = html;
+                document.getElementById('totalCount').textContent = items.length;
+            }
+        });
+    </script>
+</body>
+</html>

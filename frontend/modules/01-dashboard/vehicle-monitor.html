@@ -1,0 +1,991 @@
+<!-- ============================================================ -->
+<!-- 车辆监控 - 纯 CSS 版本（去除 Tailwind）                       -->
+<!-- ============================================================ -->
+
+<style>
+    /* ============================================================
+       车辆监控专用样式
+       ============================================================ */
+
+    .vm-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 4px;
+    }
+
+    /* ---- 统计卡片 ---- */
+    .vm-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .vm-stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+        border-left: 4px solid #4F46E5;
+    }
+
+    .vm-stat-card .vm-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .vm-stat-card .vm-label {
+        font-size: 13px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+
+    .vm-stat-card .vm-sub {
+        font-size: 12px;
+        color: #9CA3AF;
+        margin-top: 2px;
+    }
+
+    .vm-stat-card.green { border-left-color: #10B981; }
+    .vm-stat-card.red { border-left-color: #EF4444; }
+    .vm-stat-card.purple { border-left-color: #8B5CF6; }
+    .vm-stat-card.amber { border-left-color: #F59E0B; }
+
+    /* ---- 工具栏 ---- */
+    .vm-toolbar {
+        background: white;
+        border-radius: 12px;
+        padding: 12px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .vm-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .vm-status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #10B981;
+        display: inline-block;
+        animation: vmPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes vmPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    .vm-status-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: #1F2937;
+    }
+
+    .vm-record-count {
+        font-size: 13px;
+        color: #6B7280;
+    }
+
+    .vm-toolbar-right {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .vm-btn {
+        padding: 6px 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .vm-btn-success { background: #10B981; color: white; }
+    .vm-btn-success:hover { background: #059669; }
+
+    .vm-btn-danger { background: #EF4444; color: white; }
+    .vm-btn-danger:hover { background: #DC2626; }
+
+    .vm-btn-primary { background: #4F46E5; color: white; }
+    .vm-btn-primary:hover { background: #4338CA; }
+
+    .vm-btn-secondary { background: #F3F4F6; color: #374151; }
+    .vm-btn-secondary:hover { background: #E5E7EB; }
+
+    .vm-btn-outline {
+        background: transparent;
+        border: 1px solid #D1D5DB;
+        color: #374151;
+    }
+    .vm-btn-outline:hover { background: #F3F4F6; }
+
+    .vm-btn-warning { background: #F59E0B; color: white; }
+    .vm-btn-warning:hover { background: #D97706; }
+
+    /* ---- 快捷登记 ---- */
+    .vm-quick-form {
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .vm-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .vm-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .vm-form-group label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6B7280;
+    }
+
+    .vm-form-group input,
+    .vm-form-group select {
+        padding: 8px 12px;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #F9FAFB;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .vm-form-group input:focus,
+    .vm-form-group select:focus {
+        outline: none;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    .vm-form-actions {
+        display: flex;
+        gap: 8px;
+        align-items: end;
+        padding-bottom: 2px;
+    }
+
+    /* ---- 车牌识别 ---- */
+    .vm-recognize-box {
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 2px dashed #93C5FD;
+        margin-bottom: 20px;
+    }
+
+    .vm-recognize-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .vm-recognize-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        color: #1F2937;
+    }
+
+    .vm-recognize-badge {
+        font-size: 12px;
+        background: #DBEAFE;
+        color: #2563EB;
+        padding: 2px 12px;
+        border-radius: 9999px;
+    }
+
+    .vm-recognize-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 16px;
+    }
+
+    .vm-upload-area {
+        border: 2px dashed #D1D5DB;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        background: #F9FAFB;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vm-upload-area:hover {
+        border-color: #4F46E5;
+        background: #EEF2FF;
+    }
+
+    .vm-upload-area .vm-icon {
+        font-size: 32px;
+        color: #9CA3AF;
+        margin-bottom: 8px;
+    }
+
+    .vm-upload-area .vm-text {
+        font-size: 14px;
+        color: #6B7280;
+    }
+
+    .vm-upload-area .vm-hint {
+        font-size: 12px;
+        color: #9CA3AF;
+        margin-top: 4px;
+    }
+
+    .vm-upload-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .vm-upload-actions .vm-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+
+    .vm-preview-container {
+        display: none;
+        margin-top: 10px;
+    }
+
+    .vm-preview-container .vm-preview-img {
+        width: 100%;
+        max-height: 160px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #F3F4F6;
+    }
+
+    .vm-preview-container .vm-preview-close {
+        float: right;
+        background: #EF4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: -20px;
+        margin-right: -8px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .vm-loading {
+        display: none;
+        text-align: center;
+        padding: 8px 0;
+        color: #6B7280;
+        font-size: 14px;
+    }
+
+    .vm-loading .vm-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #E5E7EB;
+        border-top-color: #4F46E5;
+        border-radius: 50%;
+        animation: vmSpin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    @keyframes vmSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    .vm-result-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .vm-result-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .vm-result-item label {
+        font-size: 10px;
+        font-weight: 500;
+        color: #6B7280;
+    }
+
+    .vm-result-item input,
+    .vm-result-item select {
+        padding: 4px 8px;
+        border: 1px solid #D1D5DB;
+        border-radius: 4px;
+        font-size: 13px;
+        background: white;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .vm-result-item input:read-only {
+        background: #F9FAFB;
+        cursor: default;
+    }
+
+    .vm-confidence-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .vm-confidence-track {
+        flex: 1;
+        height: 6px;
+        background: #E5E7EB;
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    .vm-confidence-fill {
+        height: 100%;
+        background: #4F46E5;
+        border-radius: 9999px;
+        transition: width 0.5s;
+        width: 0%;
+    }
+
+    .vm-confidence-text {
+        font-size: 12px;
+        font-weight: 700;
+        color: #4F46E5;
+        min-width: 40px;
+    }
+
+    .vm-result-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .vm-result-actions .vm-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+
+    .vm-result-status {
+        font-size: 12px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+
+    .vm-result-hint {
+        font-size: 10px;
+        color: #9CA3AF;
+        margin-top: 2px;
+    }
+
+    /* ---- 表格 ---- */
+    .vm-table-section {
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .vm-table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .vm-table-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        color: #1F2937;
+    }
+
+    .vm-table-header .vm-badge {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .vm-table-wrap {
+        overflow-x: auto;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .vm-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .vm-table thead {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 5;
+    }
+
+    .vm-table th {
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        color: #6B7280;
+        border-bottom: 2px solid #E5E7EB;
+        background: #F9FAFB;
+    }
+
+    .vm-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .vm-table tr:hover td {
+        background: #F9FAFB;
+    }
+
+    .vm-table .vm-empty {
+        text-align: center;
+        padding: 24px;
+        color: #9CA3AF;
+    }
+
+    /* ---- 搜索筛选 ---- */
+    .vm-filter-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .vm-filter-row input,
+    .vm-filter-row select {
+        padding: 6px 10px;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 13px;
+        background: white;
+    }
+
+    .vm-filter-row input:focus,
+    .vm-filter-row select:focus {
+        outline: none;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    /* ---- 弹窗 ---- */
+    .vm-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vm-modal-overlay.active {
+        display: flex;
+    }
+
+    .vm-modal-box {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .vm-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .vm-modal-header h3 {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+        color: #1F2937;
+    }
+
+    .vm-modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #9CA3AF;
+    }
+
+    .vm-modal-close:hover {
+        color: #1F2937;
+    }
+
+    /* ---- 响应式 ---- */
+    @media (max-width: 1024px) {
+        .vm-stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .vm-form-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .vm-recognize-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .vm-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .vm-form-grid {
+            grid-template-columns: 1fr;
+        }
+        .vm-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+        .vm-toolbar-right {
+            justify-content: center;
+        }
+        .vm-result-grid {
+            grid-template-columns: 1fr;
+        }
+        .vm-filter-row {
+            flex-direction: column;
+        }
+        .vm-filter-row input,
+        .vm-filter-row select {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .vm-stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .vm-stat-card {
+            padding: 12px;
+        }
+        .vm-stat-card .vm-number {
+            font-size: 20px;
+        }
+        .vm-table {
+            font-size: 12px;
+        }
+        .vm-table th,
+        .vm-table td {
+            padding: 6px 8px;
+        }
+    }
+</style>
+
+<!-- ============================================================ -->
+<!-- HTML 内容 -->
+<!-- ============================================================ -->
+
+<div class="vm-container">
+
+    <!-- ===== 统计卡片 ===== -->
+    <div class="vm-stats-grid">
+        <div class="vm-stat-card">
+            <div class="vm-number" id="vmTodayTotal">0</div>
+            <div class="vm-label">🚗 今日总车流</div>
+            <div class="vm-sub">进出合计</div>
+        </div>
+        <div class="vm-stat-card green">
+            <div class="vm-number" id="vmTodayIn">0</div>
+            <div class="vm-label">📥 今日进入</div>
+            <div class="vm-sub" id="vmTodayInRate">-</div>
+        </div>
+        <div class="vm-stat-card red">
+            <div class="vm-number" id="vmTodayOut">0</div>
+            <div class="vm-label">📤 今日离开</div>
+            <div class="vm-sub" id="vmTodayOutRate">-</div>
+        </div>
+        <div class="vm-stat-card purple">
+            <div class="vm-number" id="vmCurrentlyInside">0</div>
+            <div class="vm-label">📍 当前在场</div>
+            <div class="vm-sub">实时数量</div>
+        </div>
+        <div class="vm-stat-card amber">
+            <div class="vm-number" id="vmAvgStayTime">0</div>
+            <div class="vm-label">⏱️ 平均停留</div>
+            <div class="vm-sub">分钟</div>
+        </div>
+    </div>
+
+    <!-- ===== 工具栏 ===== -->
+    <div class="vm-toolbar">
+        <div class="vm-toolbar-left">
+            <span class="vm-status-dot"></span>
+            <span class="vm-status-text" id="vmStatusText">系统运行中</span>
+            <span class="vm-record-count">| 今日已记录 <span id="vmRecordCount">0</span> 条</span>
+        </div>
+        <div class="vm-toolbar-right">
+            <button class="vm-btn vm-btn-success" onclick="VehicleMonitorModule.addEntry()">
+                <i class="fas fa-sign-in-alt"></i> 车辆进入
+            </button>
+            <button class="vm-btn vm-btn-danger" onclick="VehicleMonitorModule.addExit()">
+                <i class="fas fa-sign-out-alt"></i> 车辆离开
+            </button>
+            <button class="vm-btn vm-btn-secondary" onclick="VehicleMonitorModule.exportData()">
+                <i class="fas fa-file-excel"></i> 导出
+            </button>
+            <button class="vm-btn vm-btn-secondary" onclick="VehicleMonitorModule.refresh()">
+                <i class="fas fa-sync"></i> 刷新
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== 快捷登记 ===== -->
+    <div class="vm-quick-form">
+        <div class="vm-form-grid">
+            <div class="vm-form-group">
+                <label>🚗 车牌号 *</label>
+                <input id="vmPlateInput" placeholder="ABC123" style="text-transform:uppercase;">
+            </div>
+            <div class="vm-form-group">
+                <label>📋 车辆类型</label>
+                <select id="vmVehicleType">
+                    <option value="sedan">🚗 轿车</option>
+                    <option value="suv">🚙 SUV</option>
+                    <option value="truck">🚛 货车</option>
+                    <option value="bus">🚌 客车</option>
+                    <option value="motorcycle">🏍️ 摩托车</option>
+                </select>
+            </div>
+            <div class="vm-form-group">
+                <label>📝 备注</label>
+                <input id="vmNoteInput" placeholder="可选备注">
+            </div>
+            <div class="vm-form-actions">
+                <button class="vm-btn vm-btn-primary" onclick="VehicleMonitorModule.quickEntry()">
+                    <i class="fas fa-plus"></i> 记录进入
+                </button>
+                <button class="vm-btn vm-btn-warning" onclick="VehicleMonitorModule.quickExit()">
+                    <i class="fas fa-check"></i> 记录离开
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 车牌智能识别 ===== -->
+    <div class="vm-recognize-box">
+        <div class="vm-recognize-header">
+            <h3>🤖 车牌智能识别</h3>
+            <span class="vm-recognize-badge">支持拍照/上传</span>
+        </div>
+
+        <div class="vm-recognize-grid">
+            <!-- 左侧：上传区 -->
+            <div>
+                <div class="vm-upload-area" id="vmUploadArea">
+                    <div class="vm-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="vm-text">点击上传或拖拽图片</div>
+                    <div class="vm-hint">支持 JPG, PNG, BMP</div>
+                    <div class="vm-upload-actions">
+                        <button class="vm-btn vm-btn-primary" onclick="event.stopPropagation(); VehicleMonitorModule.takePhoto()">
+                            <i class="fas fa-camera"></i> 拍照
+                        </button>
+                        <button class="vm-btn vm-btn-secondary" onclick="event.stopPropagation(); VehicleMonitorModule.uploadPhoto()">
+                            <i class="fas fa-folder-open"></i> 上传
+                        </button>
+                    </div>
+                </div>
+
+                <div class="vm-preview-container" id="vmPreviewContainer">
+                    <button class="vm-preview-close" onclick="VehicleMonitorModule.clearImage()">×</button>
+                    <img id="vmPreviewImg" class="vm-preview-img" alt="车辆图片">
+                </div>
+
+                <div class="vm-loading" id="vmLoading">
+                    <span class="vm-spinner"></span> AI识别中...
+                </div>
+            </div>
+
+            <!-- 右侧：识别结果 -->
+            <div>
+                <div class="vm-result-status" id="vmRecogStatus">等待识别...</div>
+                <div class="vm-result-grid">
+                    <div class="vm-result-item">
+                        <label>🚗 车牌号码 <span style="color:#EF4444;">*</span></label>
+                        <input id="vmRecogPlate" readonly placeholder="例如: ABC 1234">
+                    </div>
+                    <div class="vm-result-item">
+                        <label>🎨 车牌颜色</label>
+                        <select id="vmRecogPlateColor" disabled>
+                            <option value="">-- 请选择 --</option>
+                            <option value="白色">白色</option>
+                            <option value="黄色">黄色</option>
+                            <option value="蓝色">蓝色</option>
+                            <option value="红色">红色</option>
+                            <option value="绿色">绿色</option>
+                            <option value="黑色">黑色</option>
+                        </select>
+                    </div>
+                    <div class="vm-result-item">
+                        <label>🏭 车辆品牌</label>
+                        <input id="vmRecogBrand" readonly placeholder="例如: Toyota">
+                    </div>
+                    <div class="vm-result-item">
+                        <label>🚙 车型</label>
+                        <input id="vmRecogModel" readonly placeholder="例如: Camry">
+                    </div>
+                    <div class="vm-result-item">
+                        <label>🎨 车身颜色</label>
+                        <input id="vmRecogColor" readonly placeholder="例如: 白色">
+                    </div>
+                    <div class="vm-result-item">
+                        <label>📊 置信度</label>
+                        <div class="vm-confidence-bar">
+                            <span class="vm-confidence-text" id="vmRecogConfidence">--%</span>
+                            <div class="vm-confidence-track">
+                                <div class="vm-confidence-fill" id="vmRecogConfidenceBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="vm-result-hint" id="vmRecogHint"></div>
+                <div class="vm-result-actions">
+                    <button class="vm-btn vm-btn-success" id="vmSaveRecogBtn" disabled onclick="VehicleMonitorModule.saveRecognizedVehicle()">
+                        <i class="fas fa-save"></i> 保存记录
+                    </button>
+                    <button class="vm-btn vm-btn-warning" onclick="VehicleMonitorModule.enableEdit()">
+                        <i class="fas fa-edit"></i> 修正
+                    </button>
+                    <button class="vm-btn vm-btn-secondary" onclick="VehicleMonitorModule.clearRecognition()">
+                        <i class="fas fa-undo"></i> 清空
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 当前在场车辆 ===== -->
+    <div class="vm-table-section">
+        <div class="vm-table-header">
+            <h3>📍 当前在场车辆</h3>
+            <span class="vm-badge">实时更新</span>
+        </div>
+        <div class="vm-table-wrap">
+            <table class="vm-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>车牌</th>
+                        <th>类型</th>
+                        <th>进入时间</th>
+                        <th>停留时长</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="vmCurrentlyInsideList">
+                    <tr><td colspan="7" class="vm-empty">暂无车辆在场</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== 今日进出记录 ===== -->
+    <div class="vm-table-section">
+        <div class="vm-table-header">
+            <h3>📋 今日进出记录</h3>
+        </div>
+
+        <div class="vm-filter-row">
+            <input type="date" id="vmDateFilter">
+            <input type="text" id="vmSearchFilter" placeholder="🔍 搜索车牌...">
+            <button class="vm-btn vm-btn-primary" onclick="VehicleMonitorModule.filterRecords()">
+                <i class="fas fa-search"></i> 筛选
+            </button>
+        </div>
+
+        <div class="vm-table-wrap">
+            <table class="vm-table">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>车牌</th>
+                        <th>类型</th>
+                        <th>方向</th>
+                        <th>停留时长</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody id="vmRecordsList">
+                    <tr><td colspan="6" class="vm-empty">暂无记录</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== 车辆详情弹窗 ===== -->
+    <div class="vm-modal-overlay" id="vmDetailModal">
+        <div class="vm-modal-box">
+            <div class="vm-modal-header">
+                <h3>🚗 车辆详情</h3>
+                <button class="vm-modal-close" onclick="VehicleMonitorModule.closeDetail()">×</button>
+            </div>
+            <div id="vmDetailContent"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 隐藏的 input（用于拍照和上传）                                -->
+<!-- ============================================================ -->
+<input type="file" id="vmCameraInput" accept="image/*" style="display:none;" onchange="VehicleMonitorModule.handleCameraCapture(event)">
+<input type="file" id="vmUploadInput" accept="image/*" style="display:none;" onchange="VehicleMonitorModule.handleUploadSelect(event)">
+
+<!-- ============================================================ -->
+<!-- JavaScript 模块                                              -->
+<!-- ============================================================ -->
+<script type="module">
+    // 确保 VehicleMonitorModule 已加载
+    if (typeof VehicleMonitorModule !== 'undefined') {
+        // 绑定 DOM 引用
+        VehicleMonitorModule.cacheDom = function() {
+            this.el = {
+                todayTotal: document.getElementById('vmTodayTotal'),
+                todayIn: document.getElementById('vmTodayIn'),
+                todayOut: document.getElementById('vmTodayOut'),
+                currentlyInside: document.getElementById('vmCurrentlyInside'),
+                avgStayTime: document.getElementById('vmAvgStayTime'),
+                todayInRate: document.getElementById('vmTodayInRate'),
+                todayOutRate: document.getElementById('vmTodayOutRate'),
+                statusText: document.getElementById('vmStatusText'),
+                recordCount: document.getElementById('vmRecordCount'),
+                plateInput: document.getElementById('vmPlateInput'),
+                vehicleType: document.getElementById('vmVehicleType'),
+                noteInput: document.getElementById('vmNoteInput'),
+                currentlyInsideList: document.getElementById('vmCurrentlyInsideList'),
+                recordsList: document.getElementById('vmRecordsList'),
+                dateFilter: document.getElementById('vmDateFilter'),
+                searchFilter: document.getElementById('vmSearchFilter'),
+                detailModal: document.getElementById('vmDetailModal'),
+                detailContent: document.getElementById('vmDetailContent'),
+                uploadArea: document.getElementById('vmUploadArea'),
+                previewContainer: document.getElementById('vmPreviewContainer'),
+                previewImg: document.getElementById('vmPreviewImg'),
+                loading: document.getElementById('vmLoading'),
+                recogStatus: document.getElementById('vmRecogStatus'),
+                recogPlate: document.getElementById('vmRecogPlate'),
+                recogPlateColor: document.getElementById('vmRecogPlateColor'),
+                recogBrand: document.getElementById('vmRecogBrand'),
+                recogModel: document.getElementById('vmRecogModel'),
+                recogColor: document.getElementById('vmRecogColor'),
+                recogConfidence: document.getElementById('vmRecogConfidence'),
+                recogConfidenceBar: document.getElementById('vmRecogConfidenceBar'),
+                recogHint: document.getElementById('vmRecogHint'),
+                saveRecogBtn: document.getElementById('vmSaveRecogBtn')
+            };
+        };
+
+        // 重新绑定事件
+        VehicleMonitorModule.bindEvents = function() {
+            var self = this;
+
+            if (this.el.plateInput) {
+                this.el.plateInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        var plate = this.value.trim().toUpperCase();
+                        if (plate) {
+                            var existing = self.activeVehicles.find(function(v) {
+                                return v.plate === plate && !v.exit_time;
+                            });
+                            if (existing) {
+                                self.quickExit(plate);
+                            } else {
+                                self.quickEntry(plate);
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (this.el.searchFilter) {
+                this.el.searchFilter.addEventListener('input', function() {
+                    self.filterRecords();
+                });
+            }
+
+            if (this.el.dateFilter) {
+                this.el.dateFilter.addEventListener('change', function() {
+                    self.filterRecords();
+                });
+            }
+        };
+
+        // 设置日期默认值
+        if (document.getElementById('vmDateFilter')) {
+            document.getElementById('vmDateFilter').value = new Date().toISOString().split('T')[0];
+        }
+
+        // 初始化
+        VehicleMonitorModule.cacheDom();
+        VehicleMonitorModule.bindEvents();
+        VehicleMonitorModule.loadData();
+
+        console.log('✅ Vehicle Monitor 模块已初始化');
+    } else {
+        console.warn('⚠️ VehicleMonitorModule 未加载，请检查 vehicle-monitor.js');
+    }
+</script>

@@ -1,0 +1,368 @@
+/**
+ * 01-dashboard/executive/executive.css - 高管视图样式
+ * @module executive-styles
+ * @description 高管仪表盘专用样式
+ */
+
+ .executive-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.executive-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.executive-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #1f2937;
+}
+
+.executive-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.executive-controls .last-update {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.executive-controls .btn-refresh {
+    padding: 6px 16px;
+    border: 1px solid #d2d2d7;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.executive-controls .btn-refresh:hover {
+    background: #f5f5f7;
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+/* 指标卡片 */
+.metric-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s;
+}
+
+.metric-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    transform: translateY(-2px);
+}
+
+.metric-card .metric-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.metric-card .metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.metric-card .metric-label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.metric-card .metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.metric-card .metric-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.metric-card .metric-change.positive {
+    color: #10b981;
+    font-weight: 500;
+}
+
+.metric-card .metric-change.negative {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.metric-card .metric-change-label {
+    color: #6b7280;
+}
+
+/* 图表区域 */
+.charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.chart-container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.chart-container h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1f2937;
+}
+
+.chart-placeholder {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9f9fa;
+    border-radius: 8px;
+}
+
+.chart-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #8e8e93;
+    font-size: 14px;
+}
+
+.chart-message i {
+    font-size: 32px;
+    color: #c6c6c8;
+}
+
+/* 快速操作 */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.quick-action {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s;
+}
+
+.quick-action:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    transform: translateY(-2px);
+}
+
+.quick-action-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 auto 8px;
+}
+
+.quick-action-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/* 最近订单 */
+.recent-orders-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.recent-orders-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item .order-id {
+    font-weight: 500;
+    font-family: monospace;
+}
+
+.order-item .order-customer {
+    color: #6b7280;
+}
+
+.order-item .order-amount {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.order-item .order-status {
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #8e8e93;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #c6c6c8;
+    margin-bottom: 16px;
+}
+
+/* ============================================================
+   深色主题
+   ============================================================ */
+
+[data-theme="dark"] .metric-card,
+[data-theme="dark"] .chart-container,
+[data-theme="dark"] .quick-action,
+[data-theme="dark"] .recent-orders-section,
+[data-theme="dark"] .order-item {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+[data-theme="dark"] .executive-header h1,
+[data-theme="dark"] .metric-card .metric-value,
+[data-theme="dark"] .quick-action-label,
+[data-theme="dark"] .recent-orders-section h3,
+[data-theme="dark"] .chart-container h3,
+[data-theme="dark"] .order-item .order-id,
+[data-theme="dark"] .order-item .order-amount {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .metric-card .metric-label,
+[data-theme="dark"] .metric-card .metric-change-label,
+[data-theme="dark"] .order-item .order-customer,
+[data-theme="dark"] .executive-controls .last-update {
+    color: #9ca3af;
+}
+
+[data-theme="dark"] .chart-placeholder {
+    background: #3a3a3c;
+}
+
+[data-theme="dark"] .executive-controls .btn-refresh {
+    background: #3a3a3c;
+    border-color: #48484a;
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .executive-controls .btn-refresh:hover {
+    background: #48484a;
+    border-color: #4f46e5;
+}
+
+[data-theme="dark"] .order-item {
+    border-color: #3a3a3c;
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .metric-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .executive-container {
+        padding: 12px;
+    }
+    .executive-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+    .metric-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+    .quick-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+    .order-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .metric-cards {
+        grid-template-columns: 1fr;
+    }
+    .quick-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+    .metric-card .metric-value {
+        font-size: 20px;
+    }
+}

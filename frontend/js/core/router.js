@@ -1,5 +1,5 @@
 /**
- * core/router.js - 统一路由管理 (V2 增强版)
+ * frontend/js/core/router.js - 统一路由管理 (V2 增强版)
  * @module router
  * @description 负责解析URL、动态加载模块、管理页面切换
  * 支持从 module-map.json 读取配置，实现更灵活的路由映射。

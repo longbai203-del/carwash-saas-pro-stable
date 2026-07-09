@@ -1,0 +1,67 @@
+﻿<div class="container-fluid">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div>
+            <h1 class="page-title" style="font-size:24px;font-weight:700;margin:0;">⚙️ 公司设置</h1>
+            <p class="page-subtitle" style="color:#6B7280;margin:4px 0 0 0;">管理公司基本信息和配置</p>
+        </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:24px 32px;">
+        <div style="display:flex;gap:8px;margin-bottom:24px;border-bottom:1px solid #E5E7EB;padding-bottom:16px;flex-wrap:wrap;">
+            <a href="#/settings/company" style="padding:8px 16px;border-radius:6px;text-decoration:none;background:#4F46E5;color:white;font-size:14px;">公司信息</a>
+            <a href="#/settings/general" style="padding:8px 16px;border-radius:6px;text-decoration:none;color:#6B7280;font-size:14px;">通用设置</a>
+            <a href="#/settings/preferences" style="padding:8px 16px;border-radius:6px;text-decoration:none;color:#6B7280;font-size:14px;">偏好设置</a>
+            <a href="#/settings/profile" style="padding:8px 16px;border-radius:6px;text-decoration:none;color:#6B7280;font-size:14px;">个人资料</a>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:#F9FAFB;border-radius:8px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:60px;height:60px;background:#4F46E5;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;font-weight:700;">CP</div>
+                <span style="font-size:14px;color:#1F2937;">CarwashPro</span>
+            </div>
+            <button style="padding:6px 12px;background:#F3F4F6;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
+                <i class="fas fa-upload"></i> 上传Logo
+            </button>
+        </div>
+
+        <div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:14px;font-weight:500;color:#374151;margin-bottom:4px;">公司名称</label>
+                <input type="text" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" value="CarwashPro 洗车管理系统" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                <div>
+                    <label style="display:block;font-size:14px;font-weight:500;color:#374151;margin-bottom:4px;">联系电话</label>
+                    <input type="text" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" value="400-888-9999" />
+                </div>
+                <div>
+                    <label style="display:block;font-size:14px;font-weight:500;color:#374151;margin-bottom:4px;">电子邮箱</label>
+                    <input type="email" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" value="info@carwashpro.com" />
+                </div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:14px;font-weight:500;color:#374151;margin-bottom:4px;">公司地址</label>
+                <input type="text" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" value="中国广东省深圳市南山区科技园路88号" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <label style="display:block;font-size:14px;font-weight:500;color:#374151;margin-bottom:4px;">税号</label>
+                    <input type="text" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" value="91440300MA5XXXXX" />
+                </div>
+                <div>
+                    <label style="display:block;font-size:14px;font-weight:500;color:#374151;margin-bottom:4px;">公司网站</label>
+                    <input type="url" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:6px;font-size:14px;" value="https://www.carwashpro.com" />
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:24px;padding-top:16px;border-top:1px solid #E5E7EB;">
+            <button style="padding:10px 24px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;">
+                <i class="fas fa-save"></i> 保存设置
+            </button>
+            <button style="padding:10px 24px;background:#F3F4F6;color:#374151;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;">
+                <i class="fas fa-undo"></i> 恢复默认
+            </button>
+        </div>
+    </div>
+</div>

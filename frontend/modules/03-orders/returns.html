@@ -1,0 +1,447 @@
+<!-- 03-orders/returns.html -->
+<div class="page-container" data-page="03-orders-returns">
+    <div class="page-header">
+        <h1><i class="fas fa-undo"></i> 退货管理</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.ReturnOrderModule.newReturn()">
+                <i class="fas fa-plus"></i> 新建退货
+            </button>
+            <button class="btn btn-success" onclick="window.ReturnOrderModule.processReturns()">
+                <i class="fas fa-check"></i> 批量处理
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="return-container">
+            <!-- 统计卡片 -->
+            <div class="return-stats">
+                <div class="stat-card">
+                    <span class="stat-label">待审核</span>
+                    <span class="stat-number" id="pendingReturns">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">审核通过</span>
+                    <span class="stat-number" id="approvedReturns">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">退货中</span>
+                    <span class="stat-number" id="shippingReturns">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已完成</span>
+                    <span class="stat-number" id="completedReturns">0</span>
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="return-search">
+                <input type="text" id="returnSearch" placeholder="搜索退货单号或订单号..." 
+                       oninput="window.ReturnOrderModule.search(this.value)" />
+                <select id="returnStatusFilter" onchange="window.ReturnOrderModule.filterByStatus(this.value)">
+                    <option value="">全部状态</option>
+                    <option value="pending">待审核</option>
+                    <option value="approved">审核通过</option>
+                    <option value="shipping">退货中</option>
+                    <option value="completed">已完成</option>
+                    <option value="rejected">已拒绝</option>
+                </select>
+                <button class="btn btn-primary" onclick="window.ReturnOrderModule.searchReturns()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+
+            <!-- 退货列表 -->
+            <div class="return-list">
+                <table class="return-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onchange="window.ReturnOrderModule.toggleAll(this.checked)" /></th>
+                            <th>退货单号</th>
+                            <th>原订单</th>
+                            <th>客户</th>
+                            <th>退货商品</th>
+                            <th>退款金额</th>
+                            <th>状态</th>
+                            <th>申请时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returnTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:40px;color:#9CA3AF;">
+                                <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                暂无退货记录
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="return-pagination" id="returnPagination">
+                <span id="returnTotal">共 0 条记录</span>
+                <div class="pagination-btns">
+                    <button onclick="window.ReturnOrderModule.prevPage()"><i class="fas fa-chevron-left"></i></button>
+                    <span id="returnPageInfo">1/1</span>
+                    <button onclick="window.ReturnOrderModule.nextPage()"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .return-container { max-width: 1200px; margin: 0 auto; }
+    
+    .return-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .return-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .return-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .return-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .return-stats .stat-card:nth-child(1) .stat-number { color: #F59E0B; }
+    .return-stats .stat-card:nth-child(2) .stat-number { color: #3B82F6; }
+    .return-stats .stat-card:nth-child(3) .stat-number { color: #8B5CF6; }
+    .return-stats .stat-card:nth-child(4) .stat-number { color: #10B981; }
+    
+    .return-search { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .return-search input { flex: 1; padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; min-width: 200px; }
+    .return-search input:focus { outline: none; border-color: #4F46E5; }
+    .return-search select { padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; background: white; }
+    
+    .return-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .return-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .return-table th { background: #F9FAFB; padding: 10px 14px; text-align: left; font-weight: 600; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
+    .return-table td { padding: 10px 14px; border-bottom: 1px solid #F3F4F6; }
+    .return-table tr:hover { background: #F9FAFB; }
+    
+    .badge-return-pending { background: #FEF3C7; color: #92400E; }
+    .badge-return-approved { background: #DBEAFE; color: #1E40AF; }
+    .badge-return-shipping { background: #EDE9FE; color: #6D28D9; }
+    .badge-return-completed { background: #D1FAE5; color: #065F46; }
+    .badge-return-rejected { background: #FEE2E2; color: #991B1B; }
+    
+    .return-pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 12px; margin-top: 16px; border: 1px solid #e5e7eb; }
+    .return-pagination .pagination-btns { display: flex; gap: 4px; align-items: center; }
+    .return-pagination button { padding: 4px 12px; border: 1px solid #D1D5DB; border-radius: 4px; background: white; cursor: pointer; }
+    .return-pagination button:hover { background: #F3F4F6; }
+    
+    .btn-sm-return { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-sm-return-primary { background: #4F46E5; color: white; }
+    .btn-sm-return-primary:hover { background: #4338CA; }
+    .btn-sm-return-success { background: #10B981; color: white; }
+    .btn-sm-return-success:hover { background: #059669; }
+    .btn-sm-return-danger { background: #EF4444; color: white; }
+    .btn-sm-return-danger:hover { background: #DC2626; }
+    .btn-sm-return-warning { background: #F59E0B; color: white; }
+    .btn-sm-return-warning:hover { background: #D97706; }
+    
+    [data-theme="dark"] .return-stats .stat-card,
+    [data-theme="dark"] .return-list,
+    [data-theme="dark"] .return-pagination { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .return-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .return-table th { background: #3A3A3C; color: #9CA3AF; }
+    [data-theme="dark"] .return-table td { border-color: #3A3A3C; }
+    [data-theme="dark"] .return-table tr:hover { background: #3A3A3C; }
+    [data-theme="dark"] .return-search input,
+    [data-theme="dark"] .return-search select { background: #3A3A3C; border-color: #48484A; color: #F5F5F7; }
+    
+    @media (max-width: 768px) { .return-stats { grid-template-columns: repeat(2, 1fr); } .return-table { font-size: 12px; } }
+</style>
+
+<script>
+    (function() {
+        window.ReturnOrderModule = {
+            returns: [],
+            filteredReturns: [],
+            page: 1,
+            pageSize: 10,
+            selected: [],
+            
+            init: function() {
+                this.loadReturns();
+                this.render();
+            },
+            
+            loadReturns: function() {
+                const saved = localStorage.getItem('return_order_data');
+                if (saved) {
+                    try {
+                        this.returns = JSON.parse(saved);
+                    } catch (e) {
+                        this.returns = this.getMockReturns();
+                    }
+                } else {
+                    this.returns = this.getMockReturns();
+                    localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                }
+                this.filteredReturns = [...this.returns];
+            },
+            
+            getMockReturns: function() {
+                return [
+                    { id: 'RT-001', orderId: 'ORD-001', customer: '张伟', product: '标准洗车', amount: 68, status: 'pending', time: '2024-01-15 14:30' },
+                    { id: 'RT-002', orderId: 'ORD-003', customer: '李娜', product: '抛光打蜡', amount: 388, status: 'approved', time: '2024-01-16 09:20' },
+                    { id: 'RT-003', orderId: 'ORD-005', customer: '王强', product: '内饰清洗', amount: 328, status: 'shipping', time: '2024-01-17 16:45' },
+                    { id: 'RT-004', orderId: 'ORD-002', customer: '刘洋', product: '精致洗车', amount: 128, status: 'completed', time: '2024-01-18 11:00' },
+                    { id: 'RT-005', orderId: 'ORD-007', customer: '陈静', product: '漆面镀晶', amount: 688, status: 'rejected', time: '2024-01-19 13:15' }
+                ];
+            },
+            
+            render: function() {
+                const tbody = document.getElementById('returnTableBody');
+                const start = (this.page - 1) * this.pageSize;
+                const end = start + this.pageSize;
+                const pageData = this.filteredReturns.slice(start, end);
+                
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:40px;color:#9CA3AF;">
+                                <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                暂无退货记录
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    const statusMap = {
+                        pending: '待审核',
+                        approved: '审核通过',
+                        shipping: '退货中',
+                        completed: '已完成',
+                        rejected: '已拒绝'
+                    };
+                    const statusClass = {
+                        pending: 'badge-return-pending',
+                        approved: 'badge-return-approved',
+                        shipping: 'badge-return-shipping',
+                        completed: 'badge-return-completed',
+                        rejected: 'badge-return-rejected'
+                    };
+                    
+                    tbody.innerHTML = pageData.map(r => `
+                        <tr>
+                            <td><input type="checkbox" class="return-checkbox" data-id="${r.id}" onchange="window.ReturnOrderModule.toggleSelect(this)" /></td>
+                            <td><strong>${r.id}</strong></td>
+                            <td>${r.orderId}</td>
+                            <td>${r.customer}</td>
+                            <td>${r.product}</td>
+                            <td><strong>¥${r.amount.toFixed(2)}</strong></td>
+                            <td><span class="badge ${statusClass[r.status] || 'badge-return-pending'}">${statusMap[r.status] || r.status}</span></td>
+                            <td style="font-size:13px;color:#6B7280;">${r.time}</td>
+                            <td>
+                                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                                    <button class="btn-sm-return btn-sm-return-primary" onclick="window.ReturnOrderModule.viewReturn('${r.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${r.status === 'pending' ? `
+                                        <button class="btn-sm-return btn-sm-return-success" onclick="window.ReturnOrderModule.approveReturn('${r.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn-sm-return btn-sm-return-danger" onclick="window.ReturnOrderModule.rejectReturn('${r.id}')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${r.status === 'approved' ? `
+                                        <button class="btn-sm-return btn-sm-return-warning" onclick="window.ReturnOrderModule.startShipping('${r.id}')">
+                                            <i class="fas fa-truck"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${r.status === 'shipping' ? `
+                                        <button class="btn-sm-return btn-sm-return-success" onclick="window.ReturnOrderModule.completeReturn('${r.id}')">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                
+                this.updateStats();
+                this.renderPagination();
+            },
+            
+            updateStats: function() {
+                document.getElementById('pendingReturns').textContent = this.returns.filter(r => r.status === 'pending').length;
+                document.getElementById('approvedReturns').textContent = this.returns.filter(r => r.status === 'approved').length;
+                document.getElementById('shippingReturns').textContent = this.returns.filter(r => r.status === 'shipping').length;
+                document.getElementById('completedReturns').textContent = this.returns.filter(r => r.status === 'completed').length;
+            },
+            
+            renderPagination: function() {
+                const total = this.filteredReturns.length;
+                const totalPages = Math.ceil(total / this.pageSize) || 1;
+                document.getElementById('returnTotal').textContent = '共 ' + total + ' 条记录';
+                document.getElementById('returnPageInfo').textContent = this.page + '/' + totalPages;
+            },
+            
+            newReturn: function() {
+                const orderId = prompt('输入原订单号：');
+                if (!orderId) return;
+                const product = prompt('输入退货商品名称：');
+                if (!product) return;
+                const amount = parseFloat(prompt('输入退款金额：'));
+                if (isNaN(amount) || amount <= 0) return;
+                
+                const returnRecord = {
+                    id: 'RT-' + Date.now().toString().slice(-6),
+                    orderId: orderId,
+                    customer: '客户',
+                    product: product,
+                    amount: amount,
+                    status: 'pending',
+                    time: new Date().toLocaleString()
+                };
+                this.returns.push(returnRecord);
+                this.filteredReturns = [...this.returns];
+                localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                this.render();
+                alert('退货申请已创建: ' + returnRecord.id);
+            },
+            
+            processReturns: function() {
+                const pending = this.returns.filter(r => r.status === 'pending');
+                if (pending.length === 0) {
+                    alert('没有待处理的退货');
+                    return;
+                }
+                const confirm = confirm('批量审核通过 ' + pending.length + ' 条退货申请？');
+                if (confirm) {
+                    pending.forEach(r => r.status = 'approved');
+                    localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                    this.render();
+                    alert('已审核 ' + pending.length + ' 条退货申请');
+                }
+            },
+            
+            search: function(query) {
+                if (!query || query.length < 2) {
+                    this.filteredReturns = [...this.returns];
+                } else {
+                    this.filteredReturns = this.returns.filter(r => 
+                        r.id.includes(query) || 
+                        r.orderId.includes(query) || 
+                        r.customer.includes(query) ||
+                        r.product.includes(query)
+                    );
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            filterByStatus: function(status) {
+                if (!status) {
+                    this.filteredReturns = [...this.returns];
+                } else {
+                    this.filteredReturns = this.returns.filter(r => r.status === status);
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            searchReturns: function() {
+                const query = document.getElementById('returnSearch').value;
+                this.search(query);
+            },
+            
+            toggleSelect: function(checkbox) {
+                if (checkbox.checked) {
+                    this.selected.push(checkbox.dataset.id);
+                } else {
+                    this.selected = this.selected.filter(id => id !== checkbox.dataset.id);
+                }
+            },
+            
+            toggleAll: function(checked) {
+                document.querySelectorAll('.return-checkbox').forEach(cb => {
+                    cb.checked = checked;
+                    if (checked) {
+                        this.selected.push(cb.dataset.id);
+                    }
+                });
+                if (!checked) this.selected = [];
+            },
+            
+            viewReturn: function(id) {
+                const record = this.returns.find(r => r.id === id);
+                if (record) {
+                    alert('退货详情:\n' +
+                          '单号: ' + record.id + '\n' +
+                          '订单: ' + record.orderId + '\n' +
+                          '客户: ' + record.customer + '\n' +
+                          '商品: ' + record.product + '\n' +
+                          '金额: ¥' + record.amount.toFixed(2) + '\n' +
+                          '状态: ' + record.status + '\n' +
+                          '时间: ' + record.time);
+                }
+            },
+            
+            approveReturn: function(id) {
+                if (confirm('确认审核通过该退货？')) {
+                    const record = this.returns.find(r => r.id === id);
+                    if (record) {
+                        record.status = 'approved';
+                        localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                        this.render();
+                        alert('退货已审核通过');
+                    }
+                }
+            },
+            
+            rejectReturn: function(id) {
+                if (confirm('确认拒绝该退货？')) {
+                    const record = this.returns.find(r => r.id === id);
+                    if (record) {
+                        record.status = 'rejected';
+                        localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                        this.render();
+                        alert('退货已拒绝');
+                    }
+                }
+            },
+            
+            startShipping: function(id) {
+                const record = this.returns.find(r => r.id === id);
+                if (record) {
+                    record.status = 'shipping';
+                    localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                    this.render();
+                    alert('退货已进入物流环节');
+                }
+            },
+            
+            completeReturn: function(id) {
+                if (confirm('确认该退货已完成？')) {
+                    const record = this.returns.find(r => r.id === id);
+                    if (record) {
+                        record.status = 'completed';
+                        localStorage.setItem('return_order_data', JSON.stringify(this.returns));
+                        this.render();
+                        alert('退货已完成');
+                    }
+                }
+            },
+            
+            prevPage: function() {
+                if (this.page > 1) {
+                    this.page--;
+                    this.render();
+                }
+            },
+            
+            nextPage: function() {
+                const totalPages = Math.ceil(this.filteredReturns.length / this.pageSize);
+                if (this.page < totalPages) {
+                    this.page++;
+                    this.render();
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.ReturnOrderModule.init();
+        });
+    })();
+</script>

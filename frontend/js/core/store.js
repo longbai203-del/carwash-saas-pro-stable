@@ -1,7 +1,7 @@
 /**
- * core/store.js - 统一状态管理 (V2)
+ * frontend/js/core/store.js - 统一状态管理 (V2)
  * @module store
- * @description 全局状态管理中心，支持持久化和订阅
+ * @description 全局状态管理中心，支持持久化和订阅机制
  * 
  * @example
  * import { appStore } from './core/store.js';
@@ -27,7 +27,7 @@ class Store {
             currentModule: null,
             currentPage: null,
             currentModuleKey: null,
-            currentPath: '/dashboard', // 新增：当前路径
+            currentPath: '/dashboard', // 当前路由路径
             isLoading: false
         };
         /** @type {Array<Function>} 状态变化监听器列表 */

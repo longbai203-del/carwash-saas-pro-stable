@@ -1,0 +1,10 @@
+{
+    "name": "carwash-frontend",
+    "version": "1.0.0",
+    "scripts": {
+      "serve": "npx serve . -l 3000"
+    },
+    "devDependencies": {
+      "serve": "^14.0.0"
+    }
+  }

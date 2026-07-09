@@ -1,4 +1,4 @@
-﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
@@ -29,10 +29,10 @@
 
     <!-- ===== 前后端分离配置 ===== -->
     <script>
-        // 前端全局配置 - 后端 API 基地址（Render 后端）
+        // 前端全局配置 - 后端 API 基地址（✅ 修改为同源相对路径）
         window.APP_CONFIG = {
-            // 🔥 Render 后端 API 地址
-            API_BASE_URL: 'https://carwash-saas-pro-stable.onrender.com/api/v1'
+            // 使用相对路径，跟随当前域名和端口，避免跨域并自动适配本地开发与Render生产
+            API_BASE_URL: '/api'
         };
         console.log('✅ APP_CONFIG 已加载，API_BASE_URL:', window.APP_CONFIG.API_BASE_URL);
     </script>

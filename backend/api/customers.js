@@ -11,7 +11,7 @@
  */
 
 import express from 'express';
-import { supabase } from '../shared/lib/supabase.js';
+import { supabase, getPagination, safeQuery } from '../shared/lib/supabase.js'; // ✅ 修复：补充 getPagination 和 safeQuery
 import { authenticate } from '../shared/lib/auth.js';
 
 const router = express.Router();

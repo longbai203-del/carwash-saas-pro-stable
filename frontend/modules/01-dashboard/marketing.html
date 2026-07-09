@@ -1,0 +1,92 @@
+<!-- ============================================================ -->
+<!-- Marketing Dashboard - 营销概览                               -->
+<!-- ============================================================ -->
+
+<style>
+    .marketing-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .marketing-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .marketing-card .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+    .marketing-card .label {
+        font-size: 14px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+    .marketing-card .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+        .marketing-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📢 营销概览</h1>
+            <p class="page-subtitle">营销活动效果总览</p>
+        </div>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fas fa-sync"></i> 刷新
+        </button>
+    </div>
+
+    <div class="marketing-grid">
+        <div class="marketing-card">
+            <div class="icon">🎯</div>
+            <div class="value">12</div>
+            <div class="label">进行中活动</div>
+        </div>
+        <div class="marketing-card">
+            <div class="icon">📈</div>
+            <div class="value">23%</div>
+            <div class="label">转化率提升</div>
+        </div>
+        <div class="marketing-card">
+            <div class="icon">👥</div>
+            <div class="value">156</div>
+            <div class="label">新增客户</div>
+        </div>
+        <div class="marketing-card">
+            <div class="icon">💰</div>
+            <div class="value">¥45,800</div>
+            <div class="label">营销收入</div>
+        </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom:16px;">📋 活跃促销</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>促销名称</th>
+                    <th>类型</th>
+                    <th>状态</th>
+                    <th>使用次数</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>夏日特惠</td><td>折扣</td><td><span class="badge badge-success">进行中</span></td><td>128</td></tr>
+                <tr><td>新客立减</td><td>优惠券</td><td><span class="badge badge-success">进行中</span></td><td>56</td></tr>
+                <tr><td>会员折扣</td><td>会员专享</td><td><span class="badge badge-secondary">已结束</span></td><td>89</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,80 @@
+<!-- ============================================================ -->
+<!-- Finance Dashboard - 财务概览                                 -->
+<!-- ============================================================ -->
+
+<style>
+    .finance-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .finance-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .finance-card .value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+    .finance-card .value.positive { color: #10B981; }
+    .finance-card .value.negative { color: #EF4444; }
+    .finance-card .label {
+        font-size: 14px;
+        color: #6B7280;
+        margin-top: 4px;
+    }
+    .finance-card .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+        .finance-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">💰 财务概览</h1>
+            <p class="page-subtitle">财务状况总览</p>
+        </div>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fas fa-sync"></i> 刷新
+        </button>
+    </div>
+
+    <div class="finance-grid">
+        <div class="finance-card">
+            <div class="icon">📊</div>
+            <div class="value positive">¥245,800</div>
+            <div class="label">本月收入</div>
+        </div>
+        <div class="finance-card">
+            <div class="icon">💸</div>
+            <div class="value negative">¥178,200</div>
+            <div class="label">本月支出</div>
+        </div>
+        <div class="finance-card">
+            <div class="icon">📈</div>
+            <div class="value positive">¥67,600</div>
+            <div class="label">净利润</div>
+        </div>
+        <div class="finance-card">
+            <div class="icon">🎯</div>
+            <div class="value positive">27.5%</div>
+            <div class="label">利润率</div>
+        </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:40px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <i class="fas fa-chart-bar" style="font-size:48px;color:#D1D5DB;"></i>
+        <h3 style="margin:16px 0 8px 0;">财务趋势</h3>
+        <p style="color:#6B7280;">详细财务报表功能开发中</p>
+    </div>
+</div>

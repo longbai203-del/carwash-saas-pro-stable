@@ -1,0 +1,298 @@
+<!-- 02-pos/cash-register.html -->
+<div class="page-container" data-page="02-pos-cash-register">
+    <div class="page-header">
+        <h1><i class="fas fa-cash-register"></i> 收银机</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.CashRegisterModule.newTransaction()">
+                <i class="fas fa-plus"></i> 新建交易
+            </button>
+            <button class="btn btn-success" onclick="window.CashRegisterModule.openDrawer()">
+                <i class="fas fa-print"></i> 打开钱箱
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="cash-register-container">
+            <div class="register-status">
+                <div class="status-item">
+                    <span class="status-label">状态：</span>
+                    <span class="status-value" id="registerStatus">🟢 在线</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">操作员：</span>
+                    <span class="status-value" id="operatorName">张三</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">当前交易：</span>
+                    <span class="status-value" id="transactionCount">#0</span>
+                </div>
+            </div>
+            <div class="register-grid">
+                <div class="register-main">
+                    <div class="register-display">
+                        <div class="display-amount" id="displayAmount">¥0.00</div>
+                        <div class="display-sub" id="displaySub">等待扫描商品...</div>
+                    </div>
+                    <div class="register-actions">
+                        <button class="reg-btn" onclick="window.CashRegisterModule.scanItem()">
+                            <i class="fas fa-barcode"></i> 扫描
+                        </button>
+                        <button class="reg-btn" onclick="window.CashRegisterModule.searchItem()">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                        <button class="reg-btn" onclick="window.CashRegisterModule.applyDiscount()">
+                            <i class="fas fa-percent"></i> 折扣
+                        </button>
+                        <button class="reg-btn" onclick="window.CashRegisterModule.voidItem()">
+                            <i class="fas fa-times-circle"></i> 作废
+                        </button>
+                        <button class="reg-btn" onclick="window.CashRegisterModule.suspendTransaction()">
+                            <i class="fas fa-pause"></i> 挂起
+                        </button>
+                        <button class="reg-btn btn-success" onclick="window.CashRegisterModule.completeTransaction()">
+                            <i class="fas fa-check-circle"></i> 完成
+                        </button>
+                    </div>
+                </div>
+                <div class="register-sidebar">
+                    <div class="sidebar-section">
+                        <h4>📊 今日统计</h4>
+                        <div class="stat-row">
+                            <span>交易数</span>
+                            <span id="todayTransactions">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>销售额</span>
+                            <span id="todaySales">¥0.00</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>退款</span>
+                            <span id="todayRefunds">¥0.00</span>
+                        </div>
+                        <div class="stat-row total">
+                            <span>净收入</span>
+                            <span id="todayNet">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <h4>⚙️ 快捷操作</h4>
+                        <button class="quick-btn" onclick="window.CashRegisterModule.openDrawer()">
+                            <i class="fas fa-box"></i> 开钱箱
+                        </button>
+                        <button class="quick-btn" onclick="window.CashRegisterModule.printXReport()">
+                            <i class="fas fa-file-alt"></i> X报表
+                        </button>
+                        <button class="quick-btn" onclick="window.CashRegisterModule.printZReport()">
+                            <i class="fas fa-file-pdf"></i> Z报表
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="register-items" id="registerItems">
+                <div class="empty-items">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>暂无商品，请扫描或添加</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cash-register-container { max-width: 1200px; margin: 0 auto; }
+    .register-status { display: flex; gap: 30px; padding: 12px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .status-item { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+    .status-label { color: #6b7280; }
+    .status-value { font-weight: 600; }
+    .register-grid { display: grid; grid-template-columns: 1fr 280px; gap: 20px; margin-bottom: 20px; }
+    .register-main { background: #fafafa; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; }
+    .register-display { background: #1a1a2e; color: #00ff88; padding: 20px 24px; border-radius: 8px; margin-bottom: 16px; font-family: 'Courier New', monospace; }
+    .display-amount { font-size: 36px; font-weight: 700; text-align: right; }
+    .display-sub { font-size: 14px; color: #8899aa; text-align: right; margin-top: 4px; }
+    .register-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .reg-btn { padding: 10px; border: none; border-radius: 6px; background: white; border: 1px solid #d1d5db; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .reg-btn:hover { background: #f3f4f6; border-color: #9ca3af; transform: translateY(-1px); }
+    .reg-btn.btn-success { background: #10b981; color: white; border-color: #10b981; }
+    .reg-btn.btn-success:hover { background: #059669; }
+    .register-sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .sidebar-section { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; }
+    .sidebar-section h4 { margin: 0 0 12px 0; font-size: 14px; color: #374151; }
+    .stat-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+    .stat-row.total { border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 4px; font-weight: 700; font-size: 15px; }
+    .quick-btn { width: 100%; padding: 8px 12px; margin-bottom: 6px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .quick-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
+    .register-items { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; min-height: 120px; }
+    .empty-items { text-align: center; padding: 30px 0; color: #9ca3af; }
+    .empty-items i { font-size: 36px; margin-bottom: 8px; }
+    [data-theme="dark"] .register-status { background: #2c2c2e; }
+    [data-theme="dark"] .register-main { background: #2c2c2e; border-color: #48484a; }
+    [data-theme="dark"] .register-sidebar .sidebar-section { background: #2c2c2e; border-color: #48484a; }
+    [data-theme="dark"] .register-items { background: #2c2c2e; border-color: #48484a; }
+    [data-theme="dark"] .reg-btn { background: #3a3a3c; border-color: #48484a; color: #f5f5f7; }
+    [data-theme="dark"] .reg-btn:hover { background: #4a4a4c; }
+    [data-theme="dark"] .quick-btn { background: #3a3a3c; border-color: #48484a; color: #f5f5f7; }
+    [data-theme="dark"] .quick-btn:hover { background: #4a4a4c; }
+    @media (max-width: 768px) { .register-grid { grid-template-columns: 1fr; } .register-actions { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<script>
+    (function() {
+        // 收银机模块
+        window.CashRegisterModule = {
+            items: [],
+            transactionId: 0,
+            total: 0,
+            
+            newTransaction: function() {
+                this.transactionId++;
+                this.items = [];
+                this.total = 0;
+                document.getElementById('transactionCount').textContent = '#' + this.transactionId;
+                document.getElementById('displayAmount').textContent = '¥0.00';
+                document.getElementById('displaySub').textContent = '新交易已创建';
+                this.updateItemsList();
+                alert('新交易已创建 #' + this.transactionId);
+            },
+            
+            scanItem: function() {
+                const name = prompt('输入商品名称：', '洗车服务');
+                if (!name) return;
+                const price = parseFloat(prompt('输入价格：', '68'));
+                if (isNaN(price)) return;
+                
+                this.items.push({ id: Date.now(), name: name, price: price, qty: 1 });
+                this.total += price;
+                document.getElementById('displayAmount').textContent = '¥' + this.total.toFixed(2);
+                document.getElementById('displaySub').textContent = '已添加: ' + name;
+                this.updateItemsList();
+            },
+            
+            searchItem: function() {
+                const query = prompt('输入商品名称搜索：');
+                if (!query) return;
+                const found = this.items.filter(item => item.name.includes(query));
+                if (found.length > 0) {
+                    alert('找到 ' + found.length + ' 个商品:\n' + found.map(i => i.name + ' ¥' + i.price).join('\n'));
+                } else {
+                    alert('未找到商品');
+                }
+            },
+            
+            applyDiscount: function() {
+                const percent = parseFloat(prompt('输入折扣百分比：', '10'));
+                if (isNaN(percent) || percent < 0 || percent > 100) return;
+                const discount = this.total * (percent / 100);
+                this.total -= discount;
+                document.getElementById('displayAmount').textContent = '¥' + this.total.toFixed(2);
+                document.getElementById('displaySub').textContent = '折扣 ' + percent + '% 已应用';
+                alert('折扣已应用: ' + percent + '%');
+            },
+            
+            voidItem: function() {
+                if (this.items.length === 0) {
+                    alert('没有商品可作废');
+                    return;
+                }
+                const list = this.items.map((item, i) => (i+1) + '. ' + item.name + ' ¥' + item.price).join('\n');
+                const idx = prompt('选择要作废的商品编号 (1-' + this.items.length + '):\n' + list);
+                if (!idx) return;
+                const index = parseInt(idx) - 1;
+                if (isNaN(index) || index < 0 || index >= this.items.length) {
+                    alert('无效编号');
+                    return;
+                }
+                const removed = this.items.splice(index, 1)[0];
+                this.total -= removed.price;
+                document.getElementById('displayAmount').textContent = '¥' + this.total.toFixed(2);
+                document.getElementById('displaySub').textContent = '已作废: ' + removed.name;
+                this.updateItemsList();
+            },
+            
+            suspendTransaction: function() {
+                if (this.items.length === 0) {
+                    alert('没有交易可挂起');
+                    return;
+                }
+                const data = {
+                    id: this.transactionId,
+                    items: this.items,
+                    total: this.total
+                };
+                localStorage.setItem('suspended_transaction', JSON.stringify(data));
+                alert('交易已挂起 #' + this.transactionId);
+                this.newTransaction();
+            },
+            
+            completeTransaction: function() {
+                if (this.items.length === 0) {
+                    alert('没有商品，无法完成交易');
+                    return;
+                }
+                const method = confirm('使用现金支付？\n点击"确定"现金，点击"取消"刷卡');
+                const payment = method ? '现金' : '刷卡';
+                const msg = '交易已完成!\n' +
+                          '交易号: #' + this.transactionId + '\n' +
+                          '商品数: ' + this.items.length + '\n' +
+                          '总计: ¥' + this.total.toFixed(2) + '\n' +
+                          '支付方式: ' + payment;
+                alert(msg);
+                // 更新统计
+                const sales = document.getElementById('todaySales');
+                const current = parseFloat(sales.textContent.replace('¥', ''));
+                sales.textContent = '¥' + (current + this.total).toFixed(2);
+                const count = document.getElementById('todayTransactions');
+                count.textContent = parseInt(count.textContent) + 1;
+                const net = document.getElementById('todayNet');
+                const netCurrent = parseFloat(net.textContent.replace('¥', ''));
+                net.textContent = '¥' + (netCurrent + this.total).toFixed(2);
+                this.newTransaction();
+            },
+            
+            openDrawer: function() {
+                alert('💰 钱箱已打开');
+                // 实际项目中会触发硬件钱箱
+            },
+            
+            printXReport: function() {
+                alert('📊 X报表已打印 (当前班次统计)');
+            },
+            
+            printZReport: function() {
+                alert('📊 Z报表已打印 (结算报表)');
+            },
+            
+            updateItemsList: function() {
+                const container = document.getElementById('registerItems');
+                if (this.items.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-items">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>暂无商品，请扫描或添加</p>
+                        </div>
+                    `;
+                    return;
+                }
+                let html = '<div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;font-weight:600;padding:8px 0;border-bottom:2px solid #e5e7eb;">';
+                html += '<span>商品名称</span><span>数量</span><span>金额</span></div>';
+                this.items.forEach(item => {
+                    html += `<div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6;">`;
+                    html += `<span>${item.name}</span><span>${item.qty}</span><span>¥${item.price.toFixed(2)}</span>`;
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+            }
+        };
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('suspended_transaction');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('displaySub').textContent = '有挂起交易 #' + data.id;
+            }
+        });
+    })();
+</script>

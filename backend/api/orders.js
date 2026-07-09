@@ -11,7 +11,7 @@
  */
 
 import express from 'express';
-import { supabase } from '../shared/lib/supabase.js';
+import { supabase, getPagination } from '../shared/lib/supabase.js'; // ✅ 修复：显式导入 getPagination
 import { authenticate } from '../shared/lib/auth.js';
 import { requireRole } from '../shared/lib/auth.js';
 

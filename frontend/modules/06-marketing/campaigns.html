@@ -1,0 +1,395 @@
+<!-- 06-marketing/campaigns.html -->
+<div class="page-container" data-page="06-marketing-campaigns">
+    <div class="page-header">
+        <h1><i class="fas fa-bullhorn"></i> 营销活动</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.CampaignModule.newCampaign()">
+                <i class="fas fa-plus"></i> 新建活动
+            </button>
+            <button class="btn btn-success" onclick="window.CampaignModule.exportCampaigns()">
+                <i class="fas fa-file-excel"></i> 导出
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="campaign-container">
+            <!-- 统计卡片 -->
+            <div class="campaign-stats">
+                <div class="stat-card">
+                    <span class="stat-label">总活动</span>
+                    <span class="stat-number" id="totalCampaigns">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">进行中</span>
+                    <span class="stat-number" id="activeCampaigns">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">待开始</span>
+                    <span class="stat-number" id="pendingCampaigns">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已结束</span>
+                    <span class="stat-number" id="endedCampaigns">0</span>
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="campaign-search">
+                <input type="text" id="campaignSearch" placeholder="搜索活动名称..." 
+                       oninput="window.CampaignModule.search(this.value)" />
+                <select id="campaignStatusFilter" onchange="window.CampaignModule.filterByStatus(this.value)">
+                    <option value="">全部状态</option>
+                    <option value="active">进行中</option>
+                    <option value="pending">待开始</option>
+                    <option value="ended">已结束</option>
+                </select>
+                <button class="btn btn-primary" onclick="window.CampaignModule.searchCampaigns()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+
+            <!-- 活动列表 -->
+            <div class="campaign-grid" id="campaignGrid">
+                <!-- 由JS生成 -->
+            </div>
+
+            <!-- 分页 -->
+            <div class="campaign-pagination" id="campaignPagination">
+                <span id="campaignTotal">共 0 条记录</span>
+                <div class="pagination-btns">
+                    <button onclick="window.CampaignModule.prevPage()"><i class="fas fa-chevron-left"></i></button>
+                    <span id="campaignPageInfo">1/1</span>
+                    <button onclick="window.CampaignModule.nextPage()"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .campaign-container { max-width: 1200px; margin: 0 auto; }
+    
+    .campaign-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .campaign-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .campaign-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .campaign-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .campaign-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .campaign-stats .stat-card:nth-child(2) .stat-number { color: #10B981; }
+    .campaign-stats .stat-card:nth-child(3) .stat-number { color: #F59E0B; }
+    .campaign-stats .stat-card:nth-child(4) .stat-number { color: #EF4444; }
+    
+    .campaign-search { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .campaign-search input { flex: 1; padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; min-width: 200px; }
+    .campaign-search input:focus { outline: none; border-color: #4F46E5; }
+    .campaign-search select { padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; background: white; }
+    
+    .campaign-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .campaign-card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; transition: all 0.3s; }
+    .campaign-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .campaign-card .campaign-header { display: flex; justify-content: space-between; align-items: center; }
+    .campaign-card .campaign-name { font-size: 18px; font-weight: 600; }
+    .campaign-card .campaign-status { padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+    .campaign-card .campaign-status.active { background: #D1FAE5; color: #065F46; }
+    .campaign-card .campaign-status.pending { background: #FEF3C7; color: #92400E; }
+    .campaign-card .campaign-status.ended { background: #F3F4F6; color: #4B5563; }
+    .campaign-card .campaign-desc { font-size: 14px; color: #6B7280; margin: 8px 0; }
+    .campaign-card .campaign-meta { display: flex; gap: 16px; font-size: 13px; color: #6B7280; padding-top: 8px; border-top: 1px solid #F3F4F6; }
+    .campaign-card .campaign-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    
+    .empty-campaigns { grid-column: 1 / -1; text-align: center; padding: 60px 0; color: #9CA3AF; }
+    .empty-campaigns i { font-size: 48px; margin-bottom: 12px; }
+    
+    .campaign-pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 12px; margin-top: 16px; border: 1px solid #e5e7eb; }
+    .campaign-pagination .pagination-btns { display: flex; gap: 4px; align-items: center; }
+    .campaign-pagination button { padding: 4px 12px; border: 1px solid #D1D5DB; border-radius: 4px; background: white; cursor: pointer; }
+    .campaign-pagination button:hover { background: #F3F4F6; }
+    
+    [data-theme="dark"] .campaign-stats .stat-card,
+    [data-theme="dark"] .campaign-card,
+    [data-theme="dark"] .campaign-pagination { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .campaign-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .campaign-search input,
+    [data-theme="dark"] .campaign-search select { background: #3A3A3C; border-color: #48484A; color: #F5F5F7; }
+    
+    @media (max-width: 768px) { .campaign-stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<script>
+    /**
+     * CampaignModule - 营销活动管理模块
+     * @module CampaignModule
+     * @description 管理营销活动的创建、编辑和状态
+     */
+    (function() {
+        'use strict';
+
+        /** @type {Object} CampaignModule - 营销活动管理模块 */
+        window.CampaignModule = {
+            /** @type {Array<Object>} 所有活动数据 */
+            campaigns: [],
+            /** @type {Array<Object>} 筛选后的活动数据 */
+            filteredCampaigns: [],
+            /** @type {number} 当前页码 */
+            page: 1,
+            /** @type {number} 每页显示数量 */
+            pageSize: 10,
+            
+            /**
+             * 初始化模块
+             * @returns {void}
+             */
+            init: function() {
+                this.loadCampaigns();
+                this.render();
+            },
+            
+            /**
+             * 从localStorage加载活动数据
+             * @returns {void}
+             */
+            loadCampaigns: function() {
+                const saved = localStorage.getItem('campaign_data');
+                if (saved) {
+                    try {
+                        this.campaigns = JSON.parse(saved);
+                    } catch (e) {
+                        this.campaigns = this.getMockCampaigns();
+                    }
+                } else {
+                    this.campaigns = this.getMockCampaigns();
+                    localStorage.setItem('campaign_data', JSON.stringify(this.campaigns));
+                }
+                this.filteredCampaigns = [...this.campaigns];
+            },
+            
+            /**
+             * 获取模拟活动数据
+             * @returns {Array<Object>} 活动数组
+             */
+            getMockCampaigns: function() {
+                return [
+                    { id: 'CA-001', name: '夏季促销活动', desc: '夏季洗车服务大促销', status: 'active', startDate: '2024-06-01', endDate: '2024-08-31', reach: 1500, conversion: 12.5 },
+                    { id: 'CA-002', name: '新客引流活动', desc: '新客户首次到店体验', status: 'active', startDate: '2024-01-01', endDate: '2024-12-31', reach: 2300, conversion: 18.2 },
+                    { id: 'CA-003', name: '会员回馈活动', desc: '会员专享折扣活动', status: 'ended', startDate: '2024-03-01', endDate: '2024-05-31', reach: 800, conversion: 25.0 },
+                    { id: 'CA-004', name: '国庆营销活动', desc: '国庆假期促销活动', status: 'pending', startDate: '2024-10-01', endDate: '2024-10-07', reach: 0, conversion: 0 }
+                ];
+            },
+            
+            /**
+             * 渲染活动列表
+             * @returns {void}
+             */
+            render: function() {
+                const grid = document.getElementById('campaignGrid');
+                const start = (this.page - 1) * this.pageSize;
+                const end = start + this.pageSize;
+                const pageData = this.filteredCampaigns.slice(start, end);
+                
+                if (pageData.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-campaigns">
+                            <i class="fas fa-bullhorn"></i>
+                            <p>暂无营销活动</p>
+                        </div>
+                    `;
+                } else {
+                    const statusMap = { active: '进行中', pending: '待开始', ended: '已结束' };
+                    
+                    grid.innerHTML = pageData.map(c => `
+                        <div class="campaign-card">
+                            <div class="campaign-header">
+                                <span class="campaign-name">${c.name}</span>
+                                <span class="campaign-status ${c.status}">${statusMap[c.status] || c.status}</span>
+                            </div>
+                            <div class="campaign-desc">${c.desc || ''}</div>
+                            <div class="campaign-meta">
+                                <span>📅 ${c.startDate || '-'} ~ ${c.endDate || '-'}</span>
+                                <span>👥 触达 ${c.reach || 0}</span>
+                                <span>📈 ${c.conversion || 0}% 转化</span>
+                            </div>
+                            <div class="campaign-actions">
+                                <button class="btn-sm btn-primary" onclick="window.CampaignModule.editCampaign('${c.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-sm btn-danger" onclick="window.CampaignModule.deleteCampaign('${c.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                this.updateStats();
+                this.renderPagination();
+            },
+            
+            /**
+             * 更新统计卡片
+             * @returns {void}
+             */
+            updateStats: function() {
+                document.getElementById('totalCampaigns').textContent = this.campaigns.length;
+                document.getElementById('activeCampaigns').textContent = this.campaigns.filter(c => c.status === 'active').length;
+                document.getElementById('pendingCampaigns').textContent = this.campaigns.filter(c => c.status === 'pending').length;
+                document.getElementById('endedCampaigns').textContent = this.campaigns.filter(c => c.status === 'ended').length;
+            },
+            
+            /**
+             * 渲染分页
+             * @returns {void}
+             */
+            renderPagination: function() {
+                const total = this.filteredCampaigns.length;
+                const totalPages = Math.ceil(total / this.pageSize) || 1;
+                document.getElementById('campaignTotal').textContent = '共 ' + total + ' 条记录';
+                document.getElementById('campaignPageInfo').textContent = this.page + '/' + totalPages;
+            },
+            
+            /**
+             * 新建活动
+             * @returns {void}
+             */
+            newCampaign: function() {
+                const name = prompt('输入活动名称：');
+                if (!name) return;
+                const desc = prompt('输入活动描述：') || '';
+                const startDate = prompt('输入开始日期 (YYYY-MM-DD)：', new Date().toISOString().slice(0, 10));
+                const endDate = prompt('输入结束日期 (YYYY-MM-DD)：');
+                if (!endDate) return;
+                
+                const campaign = {
+                    id: 'CA-' + Date.now().toString().slice(-6),
+                    name: name,
+                    desc: desc,
+                    status: 'pending',
+                    startDate: startDate || new Date().toISOString().slice(0, 10),
+                    endDate: endDate,
+                    reach: 0,
+                    conversion: 0
+                };
+                this.campaigns.push(campaign);
+                this.filteredCampaigns = [...this.campaigns];
+                localStorage.setItem('campaign_data', JSON.stringify(this.campaigns));
+                this.render();
+                alert('活动已创建: ' + name);
+            },
+            
+            /**
+             * 搜索活动
+             * @param {string} query - 搜索关键词
+             * @returns {void}
+             */
+            search: function(query) {
+                if (!query || query.length < 2) {
+                    this.filteredCampaigns = [...this.campaigns];
+                } else {
+                    this.filteredCampaigns = this.campaigns.filter(c => 
+                        c.name.includes(query) || 
+                        (c.desc && c.desc.includes(query))
+                    );
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            /**
+             * 按状态筛选
+             * @param {string} status - 状态值
+             * @returns {void}
+             */
+            filterByStatus: function(status) {
+                if (!status) {
+                    this.filteredCampaigns = [...this.campaigns];
+                } else {
+                    this.filteredCampaigns = this.campaigns.filter(c => c.status === status);
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            /**
+             * 执行搜索
+             * @returns {void}
+             */
+            searchCampaigns: function() {
+                const query = document.getElementById('campaignSearch').value;
+                this.search(query);
+            },
+            
+            /**
+             * 编辑活动
+             * @param {string} id - 活动ID
+             * @returns {void}
+             */
+            editCampaign: function(id) {
+                const campaign = this.campaigns.find(c => c.id === id);
+                if (campaign) {
+                    const newName = prompt('修改活动名称：', campaign.name);
+                    if (newName) {
+                        campaign.name = newName;
+                        localStorage.setItem('campaign_data', JSON.stringify(this.campaigns));
+                        this.render();
+                        alert('活动已更新');
+                    }
+                }
+            },
+            
+            /**
+             * 删除活动
+             * @param {string} id - 活动ID
+             * @returns {void}
+             */
+            deleteCampaign: function(id) {
+                if (!confirm('确认删除该活动？')) return;
+                this.campaigns = this.campaigns.filter(c => c.id !== id);
+                this.filteredCampaigns = [...this.campaigns];
+                localStorage.setItem('campaign_data', JSON.stringify(this.campaigns));
+                this.render();
+                alert('活动已删除');
+            },
+            
+            /**
+             * 导出活动数据
+             * @returns {void}
+             */
+            exportCampaigns: function() {
+                if (this.campaigns.length === 0) {
+                    alert('没有活动数据可导出');
+                    return;
+                }
+                console.log('导出数据:', this.campaigns);
+                alert('数据已导出到控制台');
+            },
+            
+            /**
+             * 上一页
+             * @returns {void}
+             */
+            prevPage: function() {
+                if (this.page > 1) {
+                    this.page--;
+                    this.render();
+                }
+            },
+            
+            /**
+             * 下一页
+             * @returns {void}
+             */
+            nextPage: function() {
+                const totalPages = Math.ceil(this.filteredCampaigns.length / this.pageSize);
+                if (this.page < totalPages) {
+                    this.page++;
+                    this.render();
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.CampaignModule.init();
+        });
+    })();
+</script>

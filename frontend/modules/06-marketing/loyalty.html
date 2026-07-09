@@ -1,0 +1,344 @@
+<!-- 06-marketing/loyalty.html -->
+<div class="page-container" data-page="06-marketing-loyalty">
+    <div class="page-header">
+        <h1><i class="fas fa-star"></i> 积分管理</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.LoyaltyModule.newRule()">
+                <i class="fas fa-plus"></i> 新建规则
+            </button>
+            <button class="btn btn-success" onclick="window.LoyaltyModule.exportLoyalty()">
+                <i class="fas fa-file-excel"></i> 导出
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="loyalty-container">
+            <!-- 统计卡片 -->
+            <div class="loyalty-stats">
+                <div class="stat-card">
+                    <span class="stat-label">总积分发放</span>
+                    <span class="stat-number" id="totalPoints">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已使用积分</span>
+                    <span class="stat-number" id="usedPoints">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">可用积分</span>
+                    <span class="stat-number" id="availablePoints">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">会员数</span>
+                    <span class="stat-number" id="memberCount">0</span>
+                </div>
+            </div>
+
+            <!-- 积分规则 -->
+            <div class="loyalty-rules">
+                <h4>📋 积分规则</h4>
+                <div id="loyaltyRules">
+                    <!-- 由JS生成 -->
+                </div>
+            </div>
+
+            <!-- 积分记录 -->
+            <div class="loyalty-records" style="margin-top:20px;">
+                <h4>📊 积分记录</h4>
+                <div id="loyaltyRecords">
+                    <!-- 由JS生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .loyalty-container { max-width: 1000px; margin: 0 auto; }
+    
+    .loyalty-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .loyalty-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .loyalty-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .loyalty-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .loyalty-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .loyalty-stats .stat-card:nth-child(2) .stat-number { color: #F59E0B; }
+    .loyalty-stats .stat-card:nth-child(3) .stat-number { color: #10B981; }
+    .loyalty-stats .stat-card:nth-child(4) .stat-number { color: #8B5CF6; }
+    
+    .loyalty-rules { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; }
+    .loyalty-rules h4 { margin: 0 0 12px 0; font-size: 15px; }
+    .rule-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #F3F4F6; }
+    .rule-item:last-child { border-bottom: none; }
+    .rule-item .rule-name { font-weight: 500; }
+    .rule-item .rule-value { font-weight: 600; color: #4F46E5; }
+    .rule-item .rule-actions { display: flex; gap: 4px; }
+    
+    .loyalty-records { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; }
+    .loyalty-records h4 { margin: 0 0 12px 0; font-size: 15px; }
+    .record-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+    .record-item:last-child { border-bottom: none; }
+    .record-item .record-customer { font-weight: 500; }
+    .record-item .record-points.income { color: #10B981; font-weight: 600; }
+    .record-item .record-points.expense { color: #EF4444; font-weight: 600; }
+    .record-item .record-date { font-size: 12px; color: #6B7280; }
+    
+    .empty-loyalty { text-align: center; padding: 30px 0; color: #9CA3AF; }
+    .empty-loyalty i { font-size: 32px; margin-bottom: 8px; }
+    
+    [data-theme="dark"] .loyalty-stats .stat-card,
+    [data-theme="dark"] .loyalty-rules,
+    [data-theme="dark"] .loyalty-records { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .loyalty-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .rule-item { border-color: #3A3A3C; }
+    [data-theme="dark"] .record-item { border-color: #3A3A3C; }
+</style>
+
+<script>
+    /**
+     * LoyaltyModule - 积分管理模块
+     * @module LoyaltyModule
+     * @description 管理积分规则和积分记录
+     */
+    (function() {
+        'use strict';
+
+        /** @type {Object} LoyaltyModule - 积分管理模块 */
+        window.LoyaltyModule = {
+            /** @type {Array<Object>} 积分规则 */
+            rules: [],
+            /** @type {Array<Object>} 积分记录 */
+            records: [],
+            
+            /**
+             * 初始化模块
+             * @returns {void}
+             */
+            init: function() {
+                this.loadData();
+                this.render();
+            },
+            
+            /**
+             * 从localStorage加载数据
+             * @returns {void}
+             */
+            loadData: function() {
+                const savedRules = localStorage.getItem('loyalty_rules');
+                if (savedRules) {
+                    try {
+                        this.rules = JSON.parse(savedRules);
+                    } catch (e) {
+                        this.rules = this.getMockRules();
+                    }
+                } else {
+                    this.rules = this.getMockRules();
+                    localStorage.setItem('loyalty_rules', JSON.stringify(this.rules));
+                }
+                
+                const savedRecords = localStorage.getItem('loyalty_records');
+                if (savedRecords) {
+                    try {
+                        this.records = JSON.parse(savedRecords);
+                    } catch (e) {
+                        this.records = this.getMockRecords();
+                    }
+                } else {
+                    this.records = this.getMockRecords();
+                    localStorage.setItem('loyalty_records', JSON.stringify(this.records));
+                }
+            },
+            
+            /**
+             * 获取模拟规则数据
+             * @returns {Array<Object>} 规则数组
+             */
+            getMockRules: function() {
+                return [
+                    { id: 'LR-001', name: '消费积分', desc: '每消费1元得1积分', rate: 1, type: 'earning' },
+                    { id: 'LR-002', name: '注册奖励', desc: '新用户注册赠送积分', rate: 100, type: 'bonus' },
+                    { id: 'LR-003', name: '积分兑换', desc: '100积分兑换10元优惠', rate: 10, type: 'redeem' }
+                ];
+            },
+            
+            /**
+             * 获取模拟记录数据
+             * @returns {Array<Object>} 记录数组
+             */
+            getMockRecords: function() {
+                return [
+                    { id: 'RE-001', customer: '张伟', type: 'income', points: 68, desc: '消费奖励', date: '2024-01-15' },
+                    { id: 'RE-002', customer: '李娜', type: 'income', points: 100, desc: '注册奖励', date: '2024-01-16' },
+                    { id: 'RE-003', customer: '王强', type: 'expense', points: 50, desc: '兑换优惠券', date: '2024-01-17' },
+                    { id: 'RE-004', customer: '刘洋', type: 'income', points: 388, desc: '消费奖励', date: '2024-01-18' }
+                ];
+            },
+            
+            /**
+             * 渲染所有内容
+             * @returns {void}
+             */
+            render: function() {
+                this.renderRules();
+                this.renderRecords();
+                this.updateStats();
+            },
+            
+            /**
+             * 渲染积分规则
+             * @returns {void}
+             */
+            renderRules: function() {
+                const container = document.getElementById('loyaltyRules');
+                if (this.rules.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-loyalty">
+                            <i class="fas fa-star"></i>
+                            <p>暂无积分规则</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const typeMap = { earning: '赚取', bonus: '奖励', redeem: '兑换' };
+                container.innerHTML = this.rules.map(r => `
+                    <div class="rule-item">
+                        <div>
+                            <span class="rule-name">${r.name}</span>
+                            <span style="font-size:13px;color:#6B7280;margin-left:8px;">${r.desc}</span>
+                            <span style="font-size:12px;color:#4F46E5;margin-left:8px;">${typeMap[r.type] || r.type}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span class="rule-value">${r.rate}</span>
+                            <div class="rule-actions">
+                                <button class="btn-sm btn-primary" onclick="window.LoyaltyModule.editRule('${r.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-sm btn-danger" onclick="window.LoyaltyModule.deleteRule('${r.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            /**
+             * 渲染积分记录
+             * @returns {void}
+             */
+            renderRecords: function() {
+                const container = document.getElementById('loyaltyRecords');
+                if (this.records.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-loyalty">
+                            <i class="fas fa-receipt"></i>
+                            <p>暂无积分记录</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = this.records.slice(0, 10).map(r => `
+                    <div class="record-item">
+                        <div>
+                            <span class="record-customer">${r.customer}</span>
+                            <span style="font-size:13px;color:#6B7280;margin-left:8px;">${r.desc}</span>
+                        </div>
+                        <div>
+                            <span class="record-points ${r.type}">${r.type === 'income' ? '+' : '-'}${r.points}</span>
+                            <span class="record-date" style="margin-left:12px;">${r.date}</span>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            /**
+             * 更新统计卡片
+             * @returns {void}
+             */
+            updateStats: function() {
+                const total = this.records.reduce((sum, r) => sum + (r.type === 'income' ? r.points : 0), 0);
+                const used = this.records.reduce((sum, r) => sum + (r.type === 'expense' ? r.points : 0), 0);
+                document.getElementById('totalPoints').textContent = total;
+                document.getElementById('usedPoints').textContent = used;
+                document.getElementById('availablePoints').textContent = total - used;
+                document.getElementById('memberCount').textContent = [...new Set(this.records.map(r => r.customer))].length;
+            },
+            
+            /**
+             * 新建规则
+             * @returns {void}
+             */
+            newRule: function() {
+                const name = prompt('输入规则名称：');
+                if (!name) return;
+                const desc = prompt('输入规则描述：');
+                if (!desc) return;
+                const rate = parseInt(prompt('输入积分值：', '1')) || 1;
+                const type = prompt('类型 (earning/bonus/redeem)：', 'earning');
+                
+                const rule = {
+                    id: 'LR-' + Date.now().toString().slice(-6),
+                    name: name,
+                    desc: desc,
+                    rate: rate,
+                    type: type || 'earning'
+                };
+                this.rules.push(rule);
+                localStorage.setItem('loyalty_rules', JSON.stringify(this.rules));
+                this.render();
+                alert('规则已创建: ' + name);
+            },
+            
+            /**
+             * 编辑规则
+             * @param {string} id - 规则ID
+             * @returns {void}
+             */
+            editRule: function(id) {
+                const rule = this.rules.find(r => r.id === id);
+                if (rule) {
+                    const newName = prompt('修改规则名称：', rule.name);
+                    if (newName) {
+                        rule.name = newName;
+                        localStorage.setItem('loyalty_rules', JSON.stringify(this.rules));
+                        this.render();
+                        alert('规则已更新');
+                    }
+                }
+            },
+            
+            /**
+             * 删除规则
+             * @param {string} id - 规则ID
+             * @returns {void}
+             */
+            deleteRule: function(id) {
+                if (!confirm('确认删除该规则？')) return;
+                this.rules = this.rules.filter(r => r.id !== id);
+                localStorage.setItem('loyalty_rules', JSON.stringify(this.rules));
+                this.render();
+                alert('规则已删除');
+            },
+            
+            /**
+             * 导出积分数据
+             * @returns {void}
+             */
+            exportLoyalty: function() {
+                if (this.records.length === 0) {
+                    alert('没有积分数据可导出');
+                    return;
+                }
+                console.log('导出数据:', this.records);
+                alert('数据已导出到控制台');
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.LoyaltyModule.init();
+        });
+    })();
+</script>

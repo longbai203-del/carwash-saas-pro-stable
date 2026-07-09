@@ -2,16 +2,21 @@
  * api/employees.js - 员工 API
  * GET    /api/employees
  * POST   /api/employees/approve
+ * @module employees
+ * @description 管理员工列表、员工审核、岗位管理。
  */
-// ❌ 旧路径（错误）
-// import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-
-// ✅ 新路径（正确）
+// ✅ 修复：补充缺失的 safeQuery 和 getPagination 导入
 import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
 import { authMiddleware } from '../shared/lib/auth.js';
 import { isRequired } from '../shared/lib/validation.js';
 import { logger } from '../shared/lib/logger.js';
 
+/**
+ * 员工路由主处理器
+ * @param {Object} req - Express请求对象
+ * @param {Object} res - Express响应对象
+ * @returns {Promise<void>}
+ */
 async function handler(req, res) {
     const { method } = req;
     const { action } = req.query;
@@ -34,6 +39,12 @@ async function handler(req, res) {
 }
 
 // ===== 员工列表 =====
+/**
+ * 处理获取员工列表
+ * @param {Object} req - Express请求对象
+ * @param {Object} res - Express响应对象
+ * @returns {Promise<void>}
+ */
 async function handleList(req, res) {
     try {
         const { page = 1, limit = 20, status, role } = req.query;
@@ -88,6 +99,12 @@ async function handleList(req, res) {
 }
 
 // ===== 审核员工 =====
+/**
+ * 处理员工审核
+ * @param {Object} req - Express请求对象
+ * @param {Object} res - Express响应对象
+ * @returns {Promise<void>}
+ */
 async function handleApprove(req, res) {
     try {
         const { userId, status, note } = req.body;

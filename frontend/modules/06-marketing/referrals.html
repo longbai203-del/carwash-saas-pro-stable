@@ -1,0 +1,410 @@
+<!-- 06-marketing/referrals.html -->
+<div class="page-container" data-page="06-marketing-referrals">
+    <div class="page-header">
+        <h1><i class="fas fa-share-alt"></i> 推荐管理</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.ReferralModule.newReferral()">
+                <i class="fas fa-plus"></i> 新建推荐
+            </button>
+            <button class="btn btn-success" onclick="window.ReferralModule.exportReferrals()">
+                <i class="fas fa-file-excel"></i> 导出
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="referral-container">
+            <!-- 统计卡片 -->
+            <div class="referral-stats">
+                <div class="stat-card">
+                    <span class="stat-label">总推荐</span>
+                    <span class="stat-number" id="totalReferrals">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">已转化</span>
+                    <span class="stat-number" id="convertedReferrals">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">待处理</span>
+                    <span class="stat-number" id="pendingReferrals">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">转化率</span>
+                    <span class="stat-number" id="conversionRate">0%</span>
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="referral-search">
+                <input type="text" id="referralSearch" placeholder="搜索推荐人或被推荐人..." 
+                       oninput="window.ReferralModule.search(this.value)" />
+                <select id="referralStatusFilter" onchange="window.ReferralModule.filterByStatus(this.value)">
+                    <option value="">全部状态</option>
+                    <option value="pending">待处理</option>
+                    <option value="converted">已转化</option>
+                    <option value="failed">已失败</option>
+                </select>
+                <button class="btn btn-primary" onclick="window.ReferralModule.searchReferrals()">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+            </div>
+
+            <!-- 推荐列表 -->
+            <div class="referral-list" id="referralList">
+                <!-- 由JS生成 -->
+            </div>
+
+            <!-- 分页 -->
+            <div class="referral-pagination" id="referralPagination">
+                <span id="referralTotal">共 0 条记录</span>
+                <div class="pagination-btns">
+                    <button onclick="window.ReferralModule.prevPage()"><i class="fas fa-chevron-left"></i></button>
+                    <span id="referralPageInfo">1/1</span>
+                    <button onclick="window.ReferralModule.nextPage()"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .referral-container { max-width: 1000px; margin: 0 auto; }
+    
+    .referral-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .referral-stats .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e5e7eb; }
+    .referral-stats .stat-card .stat-label { display: block; font-size: 13px; color: #6B7280; }
+    .referral-stats .stat-card .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1F2937; margin-top: 4px; }
+    .referral-stats .stat-card:nth-child(1) .stat-number { color: #4F46E5; }
+    .referral-stats .stat-card:nth-child(2) .stat-number { color: #10B981; }
+    .referral-stats .stat-card:nth-child(3) .stat-number { color: #F59E0B; }
+    .referral-stats .stat-card:nth-child(4) .stat-number { color: #8B5CF6; }
+    
+    .referral-search { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .referral-search input { flex: 1; padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; min-width: 200px; }
+    .referral-search input:focus { outline: none; border-color: #4F46E5; }
+    .referral-search select { padding: 8px 14px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; background: white; }
+    
+    .referral-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .referral-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F3F4F6; }
+    .referral-item:last-child { border-bottom: none; }
+    .referral-item:hover { background: #F9FAFB; }
+    .referral-item .referral-info { display: flex; flex-direction: column; }
+    .referral-item .referral-info .referral-name { font-weight: 500; }
+    .referral-item .referral-info .referral-detail { font-size: 13px; color: #6B7280; }
+    .referral-item .referral-reward { font-weight: 600; color: #10B981; }
+    .referral-item .referral-status { padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+    .referral-item .referral-status.pending { background: #FEF3C7; color: #92400E; }
+    .referral-item .referral-status.converted { background: #D1FAE5; color: #065F46; }
+    .referral-item .referral-status.failed { background: #FEE2E2; color: #991B1B; }
+    .referral-item .referral-actions { display: flex; gap: 4px; }
+    
+    .empty-referrals { text-align: center; padding: 60px 0; color: #9CA3AF; }
+    .empty-referrals i { font-size: 48px; margin-bottom: 12px; }
+    
+    .referral-pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 12px; margin-top: 16px; border: 1px solid #e5e7eb; }
+    .referral-pagination .pagination-btns { display: flex; gap: 4px; align-items: center; }
+    .referral-pagination button { padding: 4px 12px; border: 1px solid #D1D5DB; border-radius: 4px; background: white; cursor: pointer; }
+    .referral-pagination button:hover { background: #F3F4F6; }
+    
+    [data-theme="dark"] .referral-stats .stat-card,
+    [data-theme="dark"] .referral-list,
+    [data-theme="dark"] .referral-pagination { background: #2C2C2E; border-color: #48484A; }
+    [data-theme="dark"] .referral-stats .stat-card .stat-number { color: #F5F5F7; }
+    [data-theme="dark"] .referral-item { border-color: #3A3A3C; }
+    [data-theme="dark"] .referral-item:hover { background: #3A3A3C; }
+    [data-theme="dark"] .referral-search input,
+    [data-theme="dark"] .referral-search select { background: #3A3A3C; border-color: #48484A; color: #F5F5F7; }
+</style>
+
+<script>
+    /**
+     * ReferralModule - 推荐管理模块
+     * @module ReferralModule
+     * @description 管理推荐记录和转化跟踪
+     */
+    (function() {
+        'use strict';
+
+        /** @type {Object} ReferralModule - 推荐管理模块 */
+        window.ReferralModule = {
+            /** @type {Array<Object>} 所有推荐数据 */
+            referrals: [],
+            /** @type {Array<Object>} 筛选后的推荐数据 */
+            filteredReferrals: [],
+            /** @type {number} 当前页码 */
+            page: 1,
+            /** @type {number} 每页显示数量 */
+            pageSize: 10,
+            
+            /**
+             * 初始化模块
+             * @returns {void}
+             */
+            init: function() {
+                this.loadReferrals();
+                this.render();
+            },
+            
+            /**
+             * 从localStorage加载推荐数据
+             * @returns {void}
+             */
+            loadReferrals: function() {
+                const saved = localStorage.getItem('referral_data');
+                if (saved) {
+                    try {
+                        this.referrals = JSON.parse(saved);
+                    } catch (e) {
+                        this.referrals = this.getMockReferrals();
+                    }
+                } else {
+                    this.referrals = this.getMockReferrals();
+                    localStorage.setItem('referral_data', JSON.stringify(this.referrals));
+                }
+                this.filteredReferrals = [...this.referrals];
+            },
+            
+            /**
+             * 获取模拟推荐数据
+             * @returns {Array<Object>} 推荐数组
+             */
+            getMockReferrals: function() {
+                return [
+                    { id: 'RF-001', referrer: '张伟', referee: '赵明', reward: 50, status: 'converted', date: '2024-01-15' },
+                    { id: 'RF-002', referrer: '李娜', referee: '钱华', reward: 50, status: 'pending', date: '2024-01-16' },
+                    { id: 'RF-003', referrer: '王强', referee: '孙丽', reward: 50, status: 'converted', date: '2024-01-17' },
+                    { id: 'RF-004', referrer: '刘洋', referee: '周涛', reward: 50, status: 'failed', date: '2024-01-18' }
+                ];
+            },
+            
+            /**
+             * 渲染推荐列表
+             * @returns {void}
+             */
+            render: function() {
+                const container = document.getElementById('referralList');
+                const start = (this.page - 1) * this.pageSize;
+                const end = start + this.pageSize;
+                const pageData = this.filteredReferrals.slice(start, end);
+                
+                if (pageData.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-referrals">
+                            <i class="fas fa-share-alt"></i>
+                            <p>暂无推荐记录</p>
+                        </div>
+                    `;
+                } else {
+                    const statusMap = { pending: '待处理', converted: '已转化', failed: '已失败' };
+                    
+                    container.innerHTML = pageData.map(r => `
+                        <div class="referral-item">
+                            <div class="referral-info">
+                                <span class="referral-name">${r.referrer} → ${r.referee}</span>
+                                <span class="referral-detail">📅 ${r.date}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <span class="referral-reward">🎁 +${r.reward} 积分</span>
+                                <span class="referral-status ${r.status}">${statusMap[r.status] || r.status}</span>
+                            </div>
+                            <div class="referral-actions">
+                                ${r.status === 'pending' ? `
+                                    <button class="btn-sm btn-success" onclick="window.ReferralModule.convertReferral('${r.id}')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn-sm btn-danger" onclick="window.ReferralModule.failReferral('${r.id}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn-sm btn-danger" onclick="window.ReferralModule.deleteReferral('${r.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                this.updateStats();
+                this.renderPagination();
+            },
+            
+            /**
+             * 更新统计卡片
+             * @returns {void}
+             */
+            updateStats: function() {
+                document.getElementById('totalReferrals').textContent = this.referrals.length;
+                document.getElementById('convertedReferrals').textContent = this.referrals.filter(r => r.status === 'converted').length;
+                document.getElementById('pendingReferrals').textContent = this.referrals.filter(r => r.status === 'pending').length;
+                const converted = this.referrals.filter(r => r.status === 'converted').length;
+                const rate = this.referrals.length > 0 ? Math.round((converted / this.referrals.length) * 100) : 0;
+                document.getElementById('conversionRate').textContent = rate + '%';
+            },
+            
+            /**
+             * 渲染分页
+             * @returns {void}
+             */
+            renderPagination: function() {
+                const total = this.filteredReferrals.length;
+                const totalPages = Math.ceil(total / this.pageSize) || 1;
+                document.getElementById('referralTotal').textContent = '共 ' + total + ' 条记录';
+                document.getElementById('referralPageInfo').textContent = this.page + '/' + totalPages;
+            },
+            
+            /**
+             * 新建推荐
+             * @returns {void}
+             */
+            newReferral: function() {
+                const referrer = prompt('输入推荐人姓名：');
+                if (!referrer) return;
+                const referee = prompt('输入被推荐人姓名：');
+                if (!referee) return;
+                const reward = parseInt(prompt('输入奖励积分：', '50')) || 50;
+                
+                const referral = {
+                    id: 'RF-' + Date.now().toString().slice(-6),
+                    referrer: referrer,
+                    referee: referee,
+                    reward: reward,
+                    status: 'pending',
+                    date: new Date().toISOString().slice(0, 10)
+                };
+                this.referrals.push(referral);
+                this.filteredReferrals = [...this.referrals];
+                localStorage.setItem('referral_data', JSON.stringify(this.referrals));
+                this.render();
+                alert('推荐已创建: ' + referrer + ' → ' + referee);
+            },
+            
+            /**
+             * 搜索推荐
+             * @param {string} query - 搜索关键词
+             * @returns {void}
+             */
+            search: function(query) {
+                if (!query || query.length < 2) {
+                    this.filteredReferrals = [...this.referrals];
+                } else {
+                    this.filteredReferrals = this.referrals.filter(r => 
+                        r.referrer.includes(query) || 
+                        r.referee.includes(query)
+                    );
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            /**
+             * 按状态筛选
+             * @param {string} status - 状态值
+             * @returns {void}
+             */
+            filterByStatus: function(status) {
+                if (!status) {
+                    this.filteredReferrals = [...this.referrals];
+                } else {
+                    this.filteredReferrals = this.referrals.filter(r => r.status === status);
+                }
+                this.page = 1;
+                this.render();
+            },
+            
+            /**
+             * 执行搜索
+             * @returns {void}
+             */
+            searchReferrals: function() {
+                const query = document.getElementById('referralSearch').value;
+                this.search(query);
+            },
+            
+            /**
+             * 转化推荐
+             * @param {string} id - 推荐ID
+             * @returns {void}
+             */
+            convertReferral: function(id) {
+                const referral = this.referrals.find(r => r.id === id);
+                if (referral) {
+                    referral.status = 'converted';
+                    localStorage.setItem('referral_data', JSON.stringify(this.referrals));
+                    this.render();
+                    alert('推荐已转化！奖励 ' + referral.reward + ' 积分已发放');
+                }
+            },
+            
+            /**
+             * 失败推荐
+             * @param {string} id - 推荐ID
+             * @returns {void}
+             */
+            failReferral: function(id) {
+                const referral = this.referrals.find(r => r.id === id);
+                if (referral) {
+                    referral.status = 'failed';
+                    localStorage.setItem('referral_data', JSON.stringify(this.referrals));
+                    this.render();
+                    alert('推荐已标记为失败');
+                }
+            },
+            
+            /**
+             * 删除推荐
+             * @param {string} id - 推荐ID
+             * @returns {void}
+             */
+            deleteReferral: function(id) {
+                if (!confirm('确认删除该推荐记录？')) return;
+                this.referrals = this.referrals.filter(r => r.id !== id);
+                this.filteredReferrals = [...this.referrals];
+                localStorage.setItem('referral_data', JSON.stringify(this.referrals));
+                this.render();
+                alert('推荐已删除');
+            },
+            
+            /**
+             * 导出推荐数据
+             * @returns {void}
+             */
+            exportReferrals: function() {
+                if (this.referrals.length === 0) {
+                    alert('没有推荐数据可导出');
+                    return;
+                }
+                console.log('导出数据:', this.referrals);
+                alert('数据已导出到控制台');
+            },
+            
+            /**
+             * 上一页
+             * @returns {void}
+             */
+            prevPage: function() {
+                if (this.page > 1) {
+                    this.page--;
+                    this.render();
+                }
+            },
+            
+            /**
+             * 下一页
+             * @returns {void}
+             */
+            nextPage: function() {
+                const totalPages = Math.ceil(this.filteredReferrals.length / this.pageSize);
+                if (this.page < totalPages) {
+                    this.page++;
+                    this.render();
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            window.ReferralModule.init();
+        });
+    })();
+</script>

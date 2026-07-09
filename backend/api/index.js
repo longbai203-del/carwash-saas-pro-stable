@@ -20,8 +20,10 @@ import employeesRoute from './employees.js';
 import permissionsRoute from './permissions.js';
 import attendanceRoute from './attendance.js';
 
-// 导入统一错误处理器 (第二阶段修复的文件)
+// 导入统一错误处理器
 import { errorHandler } from '../shared/lib/auth.js';
+// 导入新增的静态资源配置
+import { setupStaticAssets } from './static.js';
 
 const app = express();
 
@@ -36,7 +38,7 @@ app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true
 }));
-app.use(express.json({ limit: '10mb' })); // 增加JSON大小限制
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 /**
@@ -65,6 +67,10 @@ app.use('/api/employees', employeesRoute);
 app.use('/api/permissions', permissionsRoute);
 app.use('/api/attendance', attendanceRoute);
 
+// --- 【关键补充】在404之前，挂载前端静态资源服务 ---
+// 这样顺序会是：API -> 静态资源(含前端路由) -> 404
+setupStaticAssets(app);
+
 // --- 404 处理器 ---
 app.use((req, res) => {
     res.status(404).json({
@@ -74,28 +80,26 @@ app.use((req, res) => {
     });
 });
 
-// --- 全局错误处理中间件 (必须放在最后) ---
+// --- 全局错误处理中间件 ---
 app.use(errorHandler);
 
 /**
  * 启动服务
- * @description 监听端口，支持优雅关闭
  */
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'test') {
     const server = app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ 后端服务已启动，监听端口 ${PORT}`);
+        console.log(`✅ 企业级后端服务已启动，监听端口 ${PORT}`);
+        console.log(`   Frontend 静态资源: ${process.env.CORS_ORIGIN || `http://localhost:${PORT}`}`);
         console.log(`   Health 检查地址: http://localhost:${PORT}/api/health`);
     });
 
-    // 优雅关闭 (Render/Signal 友好)
     const gracefulShutdown = () => {
         console.log('接收到关闭信号，正在关闭服务器...');
         server.close(() => {
             console.log('服务器已成功关闭');
             process.exit(0);
         });
-        // 如果关闭超时，则强制退出
         setTimeout(() => {
             console.error('服务器关闭超时，强制退出');
             process.exit(1);

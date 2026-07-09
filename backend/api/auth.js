@@ -9,7 +9,14 @@
 import { supabase, getUserById, safeQuery } from '../shared/lib/supabase.js';
 import { isRequired, isValidPassword, isValidPhone } from '../shared/lib/validation.js';
 import { logger } from '../shared/lib/logger.js';
+import jwt from 'jsonwebtoken'; // ✅ 补充：引入JWT库
 
+/**
+ * 认证处理主入口
+ * @param {Object} req - Express请求对象
+ * @param {Object} res - Express响应对象
+ * @returns {Promise<void>}
+ */
 export default async function handler(req, res) {
     const { method } = req;
     const { path } = req.query;
@@ -133,8 +140,18 @@ async function handleLogin(req, res) {
             .update({ last_login_at: new Date().toISOString() })
             .eq('id', user.id);
 
-        // 生成临时 token
-        const token = 'temp_' + Date.now() + '_' + user.id;
+        // ✅ 修复点：生成符合 RFC 标准的 JWT，而非临时字符串
+        const JWT_SECRET = process.env.JWT_SECRET || 'default_secret_change_this';
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                username: user.username, 
+                role: user.role,
+                tenant_id: user.tenant_id
+            },
+            JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
 
         return res.status(200).json({
             success: true,
@@ -269,9 +286,22 @@ async function handleMe(req, res) {
             });
         }
 
-        // 简单解析 token
         const token = authHeader.replace('Bearer ', '');
-        const userId = token.split('_')[2];
+        
+        // ✅ 修复点：补充 JWT 验证流程
+        const JWT_SECRET = process.env.JWT_SECRET || 'default_secret_change_this';
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (jwtError) {
+            return res.status(401).json({
+                success: false,
+                error: '无效的或过期的Token',
+                code: 'INVALID_TOKEN'
+            });
+        }
+
+        const userId = decoded.id;
 
         if (!userId) {
             return res.status(401).json({

@@ -1,0 +1,288 @@
+<!-- 02-pos/receipt.html -->
+<div class="page-container" data-page="02-pos-receipt">
+    <div class="page-header">
+        <h1><i class="fas fa-receipt"></i> 小票打印</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="window.ReceiptModule.newReceipt()">
+                <i class="fas fa-plus"></i> 新建小票
+            </button>
+            <button class="btn btn-success" onclick="window.ReceiptModule.printReceipt()">
+                <i class="fas fa-print"></i> 打印
+            </button>
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="receipt-container">
+            <div class="receipt-grid">
+                <div class="receipt-preview" id="receiptPreview">
+                    <div class="receipt-paper">
+                        <div class="receipt-shop">
+                            <h2>🧼 洗车店</h2>
+                            <p>地址: 市区洗车路88号</p>
+                            <p>电话: 400-888-8888</p>
+                        </div>
+                        <div class="receipt-divider">- - - - - - - - - - - - -</div>
+                        <div class="receipt-info">
+                            <span>订单号: <span id="receiptOrderNo">-</span></span>
+                            <span>日期: <span id="receiptDate">-</span></span>
+                        </div>
+                        <div class="receipt-divider">- - - - - - - - - - - - -</div>
+                        <div class="receipt-items" id="receiptItems">
+                            <div class="empty-receipt">
+                                <i class="fas fa-receipt"></i>
+                                <p>暂无商品</p>
+                            </div>
+                        </div>
+                        <div class="receipt-divider">- - - - - - - - - - - - -</div>
+                        <div class="receipt-totals">
+                            <div class="totals-row"><span>小计</span><span id="receiptSubtotal">¥0.00</span></div>
+                            <div class="totals-row"><span>折扣</span><span id="receiptDiscount">-¥0.00</span></div>
+                            <div class="totals-row"><span>税费</span><span id="receiptTax">¥0.00</span></div>
+                            <div class="totals-row total"><span>总计</span><span id="receiptTotal">¥0.00</span></div>
+                        </div>
+                        <div class="receipt-divider">- - - - - - - - - - - - -</div>
+                        <div class="receipt-footer">
+                            <p>支付方式: <span id="receiptPayment">-</span></p>
+                            <p>客户: <span id="receiptCustomer">散客</span></p>
+                            <p style="margin-top:8px;">感谢光临!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="receipt-settings">
+                    <div class="settings-group">
+                        <h4>⚙️ 设置</h4>
+                        <div class="setting-row">
+                            <label>打印机</label>
+                            <select id="printerSelect">
+                                <option value="default">默认打印机</option>
+                                <option value="thermal">热敏打印机</option>
+                                <option value="pos">POS打印机</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>小票格式</label>
+                            <select id="receiptFormat">
+                                <option value="standard">标准格式</option>
+                                <option value="compact">精简格式</option>
+                                <option value="detailed">详细格式</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>副本数量</label>
+                            <select id="copyCount">
+                                <option value="1">1份</option>
+                                <option value="2">2份</option>
+                                <option value="3">3份</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h4>📊 小票模板</h4>
+                        <div class="template-options">
+                            <button class="template-btn active" onclick="window.ReceiptModule.selectTemplate('default')">
+                                <i class="fas fa-file-alt"></i> 标准
+                            </button>
+                            <button class="template-btn" onclick="window.ReceiptModule.selectTemplate('vip')">
+                                <i class="fas fa-star"></i> VIP
+                            </button>
+                            <button class="template-btn" onclick="window.ReceiptModule.selectTemplate('simple')">
+                                <i class="fas fa-file"></i> 简洁
+                            </button>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <button class="btn btn-primary btn-block" onclick="window.ReceiptModule.printReceipt()">
+                            <i class="fas fa-print"></i> 立即打印
+                        </button>
+                        <button class="btn btn-success btn-block" onclick="window.ReceiptModule.saveReceipt()">
+                            <i class="fas fa-save"></i> 保存小票
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="receipt-history">
+                <h4>📜 小票历史</h4>
+                <div id="receiptHistory">
+                    <div class="empty-history">暂无小票记录</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .receipt-container { max-width: 1200px; margin: 0 auto; }
+    .receipt-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-bottom: 20px; }
+    .receipt-preview { background: #f5f5f7; border-radius: 12px; padding: 20px; display: flex; justify-content: center; align-items: flex-start; min-height: 500px; }
+    .receipt-paper { background: white; width: 320px; padding: 24px; border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); font-family: 'Courier New', monospace; font-size: 12px; }
+    .receipt-paper .receipt-shop { text-align: center; }
+    .receipt-paper .receipt-shop h2 { margin: 0 0 4px 0; font-size: 18px; }
+    .receipt-paper .receipt-shop p { margin: 2px 0; color: #6b7280; font-size: 11px; }
+    .receipt-divider { text-align: center; color: #9ca3af; margin: 8px 0; }
+    .receipt-info { display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; }
+    .receipt-items { min-height: 80px; padding: 4px 0; }
+    .empty-receipt { text-align: center; color: #9ca3af; padding: 20px 0; }
+    .empty-receipt i { font-size: 24px; }
+    .receipt-item { display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; }
+    .receipt-totals .totals-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; }
+    .receipt-totals .total { font-size: 16px; font-weight: 700; border-top: 2px solid #000; padding-top: 6px; margin-top: 2px; }
+    .receipt-footer { text-align: center; font-size: 11px; color: #6b7280; }
+    .receipt-settings { display: flex; flex-direction: column; gap: 16px; }
+    .settings-group { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; }
+    .settings-group h4 { margin: 0 0 12px 0; font-size: 14px; color: #374151; }
+    .setting-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .setting-row label { font-size: 13px; font-weight: 500; color: #6b7280; }
+    .setting-row select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+    .template-options { display: flex; gap: 8px; }
+    .template-btn { flex: 1; padding: 6px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+    .template-btn:hover { border-color: #9ca3af; }
+    .template-btn.active { border-color: #4f46e5; background: #eef2ff; }
+    .btn-block { width: 100%; margin-bottom: 8px; }
+    .receipt-history { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; }
+    .receipt-history h4 { margin: 0 0 12px 0; font-size: 14px; color: #374151; }
+    .empty-history { text-align: center; color: #9ca3af; padding: 20px 0; }
+    .history-item { display: flex; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+    [data-theme="dark"] .receipt-preview { background: #2c2c2e; }
+    [data-theme="dark"] .receipt-paper { background: #1c1c1e; color: #f5f5f7; }
+    [data-theme="dark"] .settings-group,
+    [data-theme="dark"] .receipt-history { background: #2c2c2e; border-color: #48484a; }
+    [data-theme="dark"] .settings-group h4,
+    [data-theme="dark"] .receipt-history h4 { color: #f5f5f7; }
+    [data-theme="dark"] .setting-row select,
+    [data-theme="dark"] .template-btn { background: #3a3a3c; border-color: #48484a; color: #f5f5f7; }
+    [data-theme="dark"] .template-btn.active { background: #1e1e3a; border-color: #4f46e5; }
+    @media (max-width: 768px) { .receipt-grid { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+    (function() {
+        window.ReceiptModule = {
+            receipts: [],
+            currentReceipt: null,
+            template: 'default',
+            
+            newReceipt: function() {
+                const items = [
+                    { name: '标准洗车', price: 68, qty: 1 },
+                    { name: '抛光打蜡', price: 388, qty: 1 }
+                ];
+                const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+                const discount = 0;
+                const tax = subtotal * 0.06;
+                const total = subtotal + tax - discount;
+                
+                this.currentReceipt = {
+                    id: 'RCP-' + Date.now().toString().slice(-8),
+                    items: items,
+                    subtotal: subtotal,
+                    discount: discount,
+                    tax: tax,
+                    total: total,
+                    payment: '现金',
+                    customer: '散客',
+                    date: new Date().toLocaleString()
+                };
+                this.updatePreview();
+            },
+            
+            updatePreview: function() {
+                const receipt = this.currentReceipt;
+                if (!receipt || !receipt.items) {
+                    this.newReceipt();
+                    return;
+                }
+                
+                document.getElementById('receiptOrderNo').textContent = receipt.id;
+                document.getElementById('receiptDate').textContent = receipt.date;
+                document.getElementById('receiptPayment').textContent = receipt.payment;
+                document.getElementById('receiptCustomer').textContent = receipt.customer;
+                document.getElementById('receiptSubtotal').textContent = '¥' + receipt.subtotal.toFixed(2);
+                document.getElementById('receiptDiscount').textContent = '-¥' + receipt.discount.toFixed(2);
+                document.getElementById('receiptTax').textContent = '¥' + receipt.tax.toFixed(2);
+                document.getElementById('receiptTotal').textContent = '¥' + receipt.total.toFixed(2);
+                
+                const container = document.getElementById('receiptItems');
+                if (receipt.items.length === 0) {
+                    container.innerHTML = `<div class="empty-receipt"><i class="fas fa-receipt"></i><p>暂无商品</p></div>`;
+                    return;
+                }
+                let html = '';
+                receipt.items.forEach(item => {
+                    html += `<div class="receipt-item">
+                        <span>${item.name} × ${item.qty}</span>
+                        <span>¥${(item.price * item.qty).toFixed(2)}</span>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            },
+            
+            printReceipt: function() {
+                if (!this.currentReceipt) {
+                    this.newReceipt();
+                }
+                const copy = parseInt(document.getElementById('copyCount').value) || 1;
+                for (let i = 0; i < copy; i++) {
+                    window.print();
+                }
+                // 添加到历史
+                this.receipts.push({ ...this.currentReceipt, printedAt: new Date().toLocaleString() });
+                this.updateHistory();
+                alert('小票已打印 (' + copy + '份)');
+            },
+            
+            saveReceipt: function() {
+                if (!this.currentReceipt) return;
+                this.receipts.push({ ...this.currentReceipt, savedAt: new Date().toLocaleString() });
+                this.updateHistory();
+                localStorage.setItem('receipt_history', JSON.stringify(this.receipts));
+                alert('小票已保存');
+            },
+            
+            selectTemplate: function(template) {
+                this.template = template;
+                document.querySelectorAll('.template-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.trim() === 
+                        (template === 'default' ? '标准' : template === 'vip' ? 'VIP' : '简洁'));
+                });
+                // 应用模板样式
+                const paper = document.querySelector('.receipt-paper');
+                if (paper) {
+                    paper.style.fontSize = template === 'default' ? '12px' : template === 'vip' ? '14px' : '10px';
+                }
+            },
+            
+            updateHistory: function() {
+                const container = document.getElementById('receiptHistory');
+                if (this.receipts.length === 0) {
+                    container.innerHTML = '<div class="empty-history">暂无小票记录</div>';
+                    return;
+                }
+                let html = '';
+                this.receipts.slice().reverse().forEach(r => {
+                    html += `<div class="history-item">
+                        <span>${r.id}</span>
+                        <span>¥${r.total.toFixed(2)}</span>
+                        <span style="font-size:11px;color:#9ca3af;">${r.date || r.savedAt || ''}</span>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载历史
+            const saved = localStorage.getItem('receipt_history');
+            if (saved) {
+                try {
+                    window.ReceiptModule.receipts = JSON.parse(saved);
+                    window.ReceiptModule.updateHistory();
+                } catch (e) {}
+            }
+            // 创建默认小票
+            window.ReceiptModule.newReceipt();
+        });
+    })();
+</script>
