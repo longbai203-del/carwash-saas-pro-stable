@@ -1,10 +1,32 @@
 {
     "version": 2,
     "name": "carwash-saas-pro-stable",
+    "builds": [
+      {
+        "src": "api/index.js",
+        "use": "@vercel/node"
+      }
+    ],
     "routes": [
       {
         "src": "/api/(.*)",
         "dest": "/api/index.js"
+      },
+      {
+        "src": "/js/app.js",
+        "dest": "/frontend/js/app.js"
+      },
+      {
+        "src": "/js/core/(.*)",
+        "dest": "/frontend/js/core/$1"
+      },
+      {
+        "src": "/js/api/(.*)",
+        "dest": "/frontend/js/api/$1"
+      },
+      {
+        "src": "/js/services/(.*)",
+        "dest": "/frontend/js/services/$1"
       },
       {
         "src": "/js/(.*)",
@@ -31,7 +53,11 @@
         "dest": "/frontend/module-map.json"
       },
       {
-        "src": "/(.*)",
+        "src": "/favicon.ico",
+        "dest": "/frontend/favicon.ico"
+      },
+      {
+        "src": "/",
         "dest": "/frontend/index.html"
       }
     ],

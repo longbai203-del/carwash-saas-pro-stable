@@ -238,28 +238,34 @@ class Router {
     async loadModule(moduleKey, moduleFolder, pageName) {
         const basePath = `/modules/${moduleFolder}`;
         
+        console.log(`[Router] 📄 加载模块: ${moduleKey} (${moduleFolder}) -> ${pageName}`);
+        console.log(`[Router] 📂 基础路径: ${basePath}`);
+
         // 尝试多种可能的HTML路径
         const htmlPaths = [
             `${basePath}/${pageName}.html`,
             `${basePath}/${moduleFolder}.html`,
             `${basePath}/index.html`
         ];
-
-        console.log(`[Router] 📄 加载模块: ${moduleKey} (${moduleFolder}) -> ${pageName}`);
+        console.log(`[Router] 🔍 尝试 HTML 路径:`, htmlPaths);
 
         // 1. 加载HTML - 尝试多个路径
         let htmlContent = '';
         let loadedPath = '';
         for (const htmlPath of htmlPaths) {
             try {
+                console.log(`[Router] 🔄 尝试加载 HTML: ${htmlPath}`);
                 const response = await fetch(htmlPath);
                 if (response.ok) {
                     htmlContent = await response.text();
                     loadedPath = htmlPath;
-                    console.log(`[Router] ✅ HTML加载成功: ${htmlPath}`);
+                    console.log(`[Router] ✅ HTML加载成功: ${htmlPath} (大小: ${htmlContent.length} bytes)`);
                     break;
+                } else {
+                    console.warn(`[Router] ⚠️ HTML 加载失败 (${response.status}): ${htmlPath}`);
                 }
             } catch (e) {
+                console.warn(`[Router] ⚠️ HTML 请求异常: ${htmlPath}`, e.message);
                 // 继续尝试下一个路径
             }
         }
@@ -270,7 +276,10 @@ class Router {
 
         // 渲染HTML
         if (this.contentEl) {
+            console.log(`[Router] 🖥️ 渲染 HTML 到 #content (长度: ${htmlContent.length} bytes)`);
             this.contentEl.innerHTML = htmlContent;
+        } else {
+            console.warn('[Router] ⚠️ contentEl 不存在，无法渲染 HTML');
         }
 
         // 2. 加载CSS (如果存在)
@@ -302,11 +311,12 @@ class Router {
             `${basePath}/${moduleFolder}.js`,
             `${basePath}/index.js`
         ];
+        console.log(`[Router] 🔍 尝试 JS 路径:`, jsPaths);
 
         let jsLoaded = false;
         for (const jsPath of jsPaths) {
             try {
-                console.log(`[Router] 🔄 尝试加载JS: ${jsPath}`);
+                console.log(`[Router] 🔄 尝试加载 JS: ${jsPath}`);
                 // 使用动态import
                 const module = await import(/* @vite-ignore */ jsPath);
                 if (module && typeof module.init === 'function') {
@@ -322,6 +332,10 @@ class Router {
                 break;
             } catch (jsError) {
                 console.warn(`[Router] ⚠️ JS加载失败 (${jsPath}):`, jsError.message);
+                if (jsError.message && jsError.message.includes('text/html')) {
+                    console.warn(`[Router] ⚠️ 检测到 MIME 类型错误 - 服务器返回了 HTML 而不是 JavaScript`);
+                    console.warn(`[Router] ⚠️ 请检查 Vercel 路由配置是否正确`);
+                }
                 // 继续尝试下一个JS路径
             }
         }
@@ -345,6 +359,8 @@ class Router {
 
         // 6. 隐藏加载状态
         this.hideLoading();
+        
+        console.log(`[Router] ✅ 模块 ${moduleKey}/${pageName} 加载完成`);
     }
 
     /**
@@ -439,6 +455,14 @@ class Router {
      */
     getModuleConfig(moduleKey) {
         return this.moduleMap[moduleKey] || null;
+    }
+
+    /**
+     * 获取所有模块配置
+     * @returns {Object.<string, ModuleConfig>}
+     */
+    getAllModules() {
+        return this.moduleMap;
     }
 }
 
