@@ -1,113 +1,134 @@
-// backend/api/index.js
+/**
+ * api/index.js - API主路由入口
+ * @module api
+ * @description 统一API路由注册和中间件配置
+ */
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
-// 加载环境变量（必须最先执行）
+// 导入路由模块
+import authRoutes from './auth.js';
+import orderRoutes from './orders.js';
+import productRoutes from './products.js';
+import customerRoutes from './customers.js';
+import employeeRoutes from './employees.js';
+import inventoryRoutes from './inventory.js';
+import reportRoutes from './reports.js';
+import attendanceRoutes from './attendance.js';
+import permissionRoutes from './permissions.js';
+import vehicleMonitorRoutes from './vehicle-monitor.js';
+
 dotenv.config();
-
-// 导入局部路由
-import healthRoute from './health.js';
-import authRoute from './auth.js';
-import ordersRoute from './orders.js';
-import customersRoute from './customers.js';
-import productsRoute from './products.js';
-import inventoryRoute from './inventory.js';
-import reportsRoute from './reports.js';
-import vehicleMonitorRoute from './vehicle-monitor.js';
-import employeesRoute from './employees.js';
-import permissionsRoute from './permissions.js';
-import attendanceRoute from './attendance.js';
-
-// 导入统一错误处理器
-import { errorHandler } from '../shared/lib/auth.js';
-// 导入新增的静态资源配置
-import { setupStaticAssets } from './static.js';
 
 const app = express();
 
-/**
- * 基础中间件配置
- * @description 全局CORS、安全头、JSON解析
- */
+// ============================================================
+// 中间件配置
+// ============================================================
+
+// 安全头
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
 }));
+
+// CORS - 允许前端跨域访问
+const corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    credentials: true
+    origin: corsOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+console.log(`[API] CORS 允许来源: ${corsOrigin}`);
+
+// 请求解析
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-/**
- * 健康检查接口
- * @name GET /api/health
- * @function
- * @returns {Object} 包含服务器状态和时间戳
- */
-app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
+// 请求日志（开发环境）
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        console.log(`[API] ${req.method} ${req.path}`);
+        next();
     });
-});
-
-// --- API 路由挂载 ---
-app.use('/api/auth', authRoute);
-app.use('/api/orders', ordersRoute);
-app.use('/api/customers', customersRoute);
-app.use('/api/products', productsRoute);
-app.use('/api/inventory', inventoryRoute);
-app.use('/api/reports', reportsRoute);
-app.use('/api/vehicle', vehicleMonitorRoute);
-app.use('/api/employees', employeesRoute);
-app.use('/api/permissions', permissionsRoute);
-app.use('/api/attendance', attendanceRoute);
-
-// --- 【关键补充】在404之前，挂载前端静态资源服务 ---
-// 这样顺序会是：API -> 静态资源(含前端路由) -> 404
-setupStaticAssets(app);
-
-// --- 404 处理器 ---
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        code: 'ROUTE_NOT_FOUND',
-        message: `请求的接口 [${req.method}] ${req.originalUrl} 不存在`
-    });
-});
-
-// --- 全局错误处理中间件 ---
-app.use(errorHandler);
-
-/**
- * 启动服务
- */
-const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'test') {
-    const server = app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ 企业级后端服务已启动，监听端口 ${PORT}`);
-        console.log(`   Frontend 静态资源: ${process.env.CORS_ORIGIN || `http://localhost:${PORT}`}`);
-        console.log(`   Health 检查地址: http://localhost:${PORT}/api/health`);
-    });
-
-    const gracefulShutdown = () => {
-        console.log('接收到关闭信号，正在关闭服务器...');
-        server.close(() => {
-            console.log('服务器已成功关闭');
-            process.exit(0);
-        });
-        setTimeout(() => {
-            console.error('服务器关闭超时，强制退出');
-            process.exit(1);
-        }, 10000);
-    };
-
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
 }
 
+// ============================================================
+// 健康检查
+// ============================================================
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        corsOrigin: corsOrigin
+    });
+});
+
+// ============================================================
+// API路由注册
+// ============================================================
+
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/permissions', permissionRoutes);
+app.use('/api/vehicle-monitor', vehicleMonitorRoutes);
+
+// ============================================================
+// 404处理
+// ============================================================
+
+app.use((req, res) => {
+    res.status(404).json({
+        code: 404,
+        message: `API endpoint not found: ${req.method} ${req.path}`,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ============================================================
+// 错误处理
+// ============================================================
+
+app.use((err, req, res, next) => {
+    console.error('[API Error]', err);
+
+    const status = err.status || 500;
+    const message = err.message || 'Internal server error';
+    const details = process.env.NODE_ENV === 'development' ? err.stack : undefined;
+
+    res.status(status).json({
+        code: status,
+        message: message,
+        ...(details && { details }),
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ============================================================
+// 导出（用于 Render）
+// ============================================================
+
 export default app;
+
+// 本地开发服务器
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+        console.log(`🚀 API Server running on http://localhost:${PORT}`);
+        console.log(`📚 Health check: http://localhost:${PORT}/api/health`);
+        console.log(`🔗 CORS allowed origin: ${corsOrigin}`);
+    });
+}
