@@ -1,337 +1,361 @@
-﻿/**
- * app.js - Carwash Pro 统一应用入口 (V2 规范)
+﻿// frontend/app.js
+/**
+ * 应用主入口 - 应用初始化和启动
  * @module app
- * @description 应用程序主入口，负责初始化所有核心模块
- * 
- * @example
- * // 在 DOM 加载完成后自动初始化
- * // 或手动调用
- * const app = new App();
- * await app.init();
  */
 
-import { appStore } from './core/store.js';
+import { store } from './core/store.js';
 import { router } from './core/router.js';
-import { apiClient } from '../../backend/api/api-client.js';
-import { SidebarComponent } from '../components/sidebar.js';
+import { apiClient } from './core/api/api-client.js';
+import { loadModule, loadAllModules, initServices } from './services/services.js';
+import { initSidebar } from './core/sidebar.js';
+import { initTheme, initLanguage, initNotifications } from './core/init.js';
 
 /**
- * 应用程序主类
- * @class App
- * @description 负责协调 Store、Router、Sidebar 等核心组件的初始化
+ * 应用类
  */
 class App {
     constructor() {
-        /** @type {boolean} 是否已初始化 */
         this.initialized = false;
-        /** @type {HTMLElement|null} 侧边栏容器 */
-        this.sidebarContainer = null;
-        /** @type {HTMLElement|null} 内容容器 */
-        this.contentContainer = null;
-        /** @type {string} 应用版本号 */
-        this.version = '2.0.0';
+        this.startTime = Date.now();
+        
+        // 绑定方法
+        this.init = this.init.bind(this);
+        this.ready = this.ready.bind(this);
+        this.handleError = this.handleError.bind(this);
     }
 
     /**
      * 初始化应用
-     * @async
-     * @returns {Promise<void>}
-     * @throws {Error} 初始化失败时抛出错误
      */
     async init() {
-        if (this.initialized) {
-            console.log('[App] 已初始化，跳过重复初始化');
-            return;
-        }
-
-        console.log('🚀 Carwash Pro V2 启动...');
-
         try {
-            // 1. 初始化 Store (同步)
-            appStore.init();
-            console.log('[App] ✅ Store 初始化完成');
-
-            // 2. 设置 DOM 容器 (同步)
-            this.setupContainers();
-            console.log('[App] ✅ 容器设置完成');
-
-            // 3. 初始化 Router (异步 - 关键修复：添加 await)
-            await router.init();
-            console.log('[App] ✅ Router 初始化完成，当前路径:', router.getCurrentPath());
-
-            // 4. 初始化 Sidebar (同步，但依赖 Router 完成)
-            this.initSidebar();
-            console.log('[App] ✅ Sidebar 初始化完成');
-
-            // 5. 加载用户信息 (异步)
-            await this.loadUser();
-            console.log('[App] ✅ 用户信息加载完成');
-
-            // 6. 设置全局错误处理 (同步)
-            this.setupErrorHandler();
-            this.setupResponsive();
-
-            this.initialized = true;
-            console.log('✅ Carwash Pro 应用启动完成 (v' + this.version + ')');
+            console.log('🚀 Carwash Pro 应用启动中...');
+            
+            // 1. 加载应用配置
+            await this.loadConfig();
+            
+            // 2. 初始化核心服务
+            await this.initCoreServices();
+            
+            // 3. 恢复用户会话
+            await this.restoreSession();
+            
+            // 4. 加载模块
+            await this.loadModules();
+            
+            // 5. 初始化UI组件
+            await this.initUI();
+            
+            // 6. 启动路由
+            this.initRouter();
+            
+            // 7. 应用就绪
+            this.ready();
+            
         } catch (error) {
-            console.error('[App] ❌ 初始化失败:', error);
-            this.showFatalError(error.message);
+            console.error('应用启动失败:', error);
+            this.handleError(error);
         }
     }
 
     /**
-     * 设置 DOM 容器
-     * @description 确保 #sidebar 和 #content 元素存在
-     * @returns {void}
+     * 加载应用配置
      */
-    setupContainers() {
-        this.sidebarContainer = document.getElementById('sidebar');
-        this.contentContainer = document.getElementById('content');
-
-        if (!this.sidebarContainer) {
-            this.sidebarContainer = document.createElement('div');
-            this.sidebarContainer.id = 'sidebar';
-            const app = document.getElementById('app');
-            if (app) {
-                app.prepend(this.sidebarContainer);
-            } else {
-                document.body.prepend(this.sidebarContainer);
-            }
-            console.log('[App] ✅ 自动创建 sidebar 容器');
-        }
-
-        if (!this.contentContainer) {
-            this.contentContainer = document.createElement('main');
-            this.contentContainer.id = 'content';
-            const mainWrap = document.querySelector('.main-wrap');
-            if (mainWrap) {
-                mainWrap.appendChild(this.contentContainer);
-            } else {
-                document.body.appendChild(this.contentContainer);
-            }
-            console.log('[App] ✅ 自动创建 content 容器');
-        }
-    }
-
-    /**
-     * 初始化侧边栏
-     * @returns {void}
-     */
-    initSidebar() {
-        if (this.sidebarContainer) {
-            try {
-                SidebarComponent.init(this.sidebarContainer);
-                console.log('[App] ✅ SidebarComponent 初始化成功');
-            } catch (error) {
-                console.warn('[App] ⚠️ SidebarComponent 初始化失败 (不影响核心功能):', error.message);
-            }
-        }
-    }
-
-    /**
-     * 加载当前用户信息
-     * @async
-     * @returns {Promise<Object>} 用户对象
-     */
-    async loadUser() {
+    async loadConfig() {
         try {
-            let user = appStore.get('user');
-            
-            if (!user) {
-                // 尝试从 API 获取
-                try {
-                    console.log('[App] 🔄 尝试从 API 获取用户信息...');
-                    const response = await apiClient.getCurrentUser();
-                    if (response && response.data) {
-                        user = response.data;
-                        appStore.set('user', user);
-                        console.log('[App] ✅ 从 API 加载用户:', user.name || user.username);
-                    }
-                } catch (apiError) {
-                    console.warn('[App] ⚠️ API 获取用户失败，使用默认用户:', apiError.message);
-                }
-                
-                // 如果没有用户，使用默认用户
-                if (!user) {
-                    user = {
-                        id: 'U001',
-                        name: '管理员',
-                        role: 'admin',
-                        email: 'admin@carwash.com',
-                        status: 'active',
-                        avatar: null
-                    };
-                    appStore.set('user', user);
-                    console.log('[App] ✅ 使用默认用户:', user.name);
-                }
+            // 尝试从服务器加载配置
+            const response = await fetch('/config.json');
+            if (response.ok) {
+                const config = await response.json();
+                window.APP_CONFIG = config;
+                store.setMultiple({
+                    appConfig: config,
+                    appName: config.appName || 'Carwash Pro',
+                    appVersion: config.version || '1.0.0'
+                });
             }
-
-            // 更新 UI
-            const userSpan = document.getElementById('currentUserSpan');
-            if (userSpan) {
-                userSpan.textContent = user.name || user.username || '未登录';
-            }
-            
-            return user;
         } catch (error) {
-            console.warn('[App] ❌ 加载用户失败:', error);
-            // 使用默认用户
-            const defaultUser = {
-                id: 'U001',
-                name: '管理员',
-                role: 'admin',
-                email: 'admin@carwash.com',
-                status: 'active'
+            console.warn('加载应用配置失败，使用默认配置');
+            // 使用默认配置
+            window.APP_CONFIG = {
+                appName: 'Carwash Pro',
+                version: '1.0.0',
+                apiBaseUrl: apiClient.getBaseURL()
             };
-            appStore.set('user', defaultUser);
-            return defaultUser;
         }
-    }
-
-    /**
-     * 设置全局错误处理
-     * @returns {void}
-     */
-    setupErrorHandler() {
-        // 捕获全局 JavaScript 错误
-        window.addEventListener('error', (e) => {
-            console.error('[App] 全局错误:', e.error || e.message);
-            if (e.error?.stack) {
-                console.error('[App] 错误堆栈:', e.error.stack);
-            }
-            this.showErrorToast('发生未知错误，请查看控制台');
-        });
-
-        // 捕获未处理的 Promise 拒绝
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('[App] 未处理的 Promise 错误:', e.reason);
-            if (e.reason?.stack) {
-                console.error('[App] 错误堆栈:', e.reason.stack);
-            }
-            this.showErrorToast('操作失败，请重试');
-        });
-    }
-
-    /**
-     * 设置响应式支持
-     * @returns {void}
-     */
-    setupResponsive() {
-        // 移动端菜单切换
-        const toggleBtn = document.getElementById('menuToggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const sidebar = this.sidebarContainer;
-                if (sidebar) {
-                    sidebar.classList.toggle('open');
-                }
-            });
-        }
-
-        // 点击内容区域关闭侧边栏（移动端）
-        const contentEl = this.contentContainer || document.getElementById('content');
-        if (contentEl) {
-            contentEl.addEventListener('click', () => {
-                if (window.innerWidth <= 768 && this.sidebarContainer) {
-                    this.sidebarContainer.classList.remove('open');
-                }
-            });
-        }
-
-        // 窗口大小变化时关闭侧边栏
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768 && this.sidebarContainer) {
-                this.sidebarContainer.classList.remove('open');
-            }
-        });
-    }
-
-    /**
-     * 显示错误提示
-     * @param {string} message - 错误消息
-     * @returns {void}
-     */
-    showErrorToast(message) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: #EF4444;
-            color: white;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 99999;
-            max-width: 400px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: opacity 0.3s ease;
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
         
-        // 3秒后自动消失
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => {
-                if (toast.parentNode) toast.remove();
-            }, 300);
-        }, 3000);
+        // 加载Supabase配置
+        if (window.SUPABASE_CONFIG) {
+            store.set('supabaseConfig', window.SUPABASE_CONFIG);
+        }
     }
 
     /**
-     * 显示致命错误页面
-     * @param {string} message - 错误消息
-     * @returns {void}
+     * 初始化核心服务
      */
-    showFatalError(message) {
-        const container = document.getElementById('app') || document.body;
-        container.innerHTML = `
-            <div style="display:flex;justify-content:center;align-items:center;height:100vh;padding:20px;background:#f1f5f9;">
-                <div style="text-align:center;max-width:400px;background:white;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
-                    <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#EF4444;margin-bottom:16px;"></i>
-                    <h2 style="color:#374151;margin-bottom:8px;">应用启动失败</h2>
-                    <p style="color:#6B7280;word-break:break-all;font-size:14px;">${message}</p>
-                    <div style="margin-top:20px;display:flex;gap:8px;justify-content:center;">
-                        <button onclick="location.reload()" style="padding:8px 24px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;">
-                            <i class="fas fa-redo"></i> 重新加载
-                        </button>
-                        <button onclick="window.location.hash='/dashboard'" style="padding:8px 24px;background:#6B7280;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;">
-                            <i class="fas fa-home"></i> 返回首页
-                        </button>
-                    </div>
+    async initCoreServices() {
+        try {
+            // 初始化服务
+            await initServices();
+            
+            // 设置API客户端的拦截器
+            this.setupApiInterceptors();
+            
+            console.log('✅ 核心服务初始化完成');
+        } catch (error) {
+            console.error('核心服务初始化失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 设置API拦截器
+     */
+    setupApiInterceptors() {
+        // 请求拦截器 - 添加通用参数
+        apiClient.addRequestInterceptor(async (config) => {
+            // 可以在这里添加请求日志或通用处理
+            return config;
+        });
+        
+        // 响应拦截器 - 处理通用响应
+        apiClient.addResponseInterceptor(async (data) => {
+            // 如果响应包含token，保存它
+            if (data && data.token) {
+                apiClient.setToken(data.token);
+            }
+            return data;
+        });
+        
+        // 错误拦截器 - 统一错误处理
+        apiClient.addErrorInterceptor(async (error) => {
+            if (error.isUnauthorized()) {
+                // 未认证，跳转到登录页
+                if (window.location.pathname !== '/login') {
+                    store.remove('authToken');
+                    store.remove('user');
+                    window.location.href = '/login';
+                }
+            } else if (error.isForbidden()) {
+                // 权限不足
+                this.showNotification('您没有权限执行此操作', 'error');
+            } else if (error.isNetwork()) {
+                // 网络错误
+                this.showNotification('网络连接失败，请检查网络', 'error');
+            }
+            return error;
+        });
+    }
+
+    /**
+     * 恢复用户会话
+     */
+    async restoreSession() {
+        try {
+            const token = apiClient.getToken();
+            if (token) {
+                // 验证token是否有效
+                const result = await apiClient.get('/auth/verify');
+                if (result.success && result.data) {
+                    store.set('user', result.data);
+                    store.set('isAuthenticated', true);
+                    
+                    // 加载用户权限
+                    const permResult = await apiClient.get('/permissions/me');
+                    if (permResult.success) {
+                        store.set('permissions', permResult.data.permissions || []);
+                        store.set('role', permResult.data.role);
+                    }
+                    
+                    console.log('✅ 用户会话已恢复:', result.data.name || result.data.email);
+                    return;
+                }
+            }
+            
+            // 没有有效token
+            store.set('isAuthenticated', false);
+            store.set('user', null);
+            
+            // 如果在受保护的页面，跳转到登录
+            const publicPages = ['/login', '/register', '/forgot-password'];
+            const currentPath = window.location.pathname;
+            if (!publicPages.includes(currentPath) && currentPath !== '/') {
+                window.location.href = '/login';
+            }
+            
+        } catch (error) {
+            console.warn('恢复会话失败:', error);
+            store.set('isAuthenticated', false);
+            store.set('user', null);
+        }
+    }
+
+    /**
+     * 加载模块
+     */
+    async loadModules() {
+        try {
+            // 加载所有模块（并行加载核心模块）
+            await loadAllModules();
+            
+            // 预加载常用模块
+            const commonModules = ['dashboard', 'pos', 'orders', 'products', 'customers'];
+            const loadPromises = commonModules.map(name => 
+                loadModule(name).catch(() => null)
+            );
+            await Promise.all(loadPromises);
+            
+            console.log('✅ 模块加载完成');
+        } catch (error) {
+            console.warn('模块加载部分失败:', error);
+        }
+    }
+
+    /**
+     * 初始化UI组件
+     */
+    async initUI() {
+        try {
+            // 初始化侧边栏
+            await initSidebar();
+            
+            // 初始化主题
+            initTheme();
+            
+            // 初始化语言
+            initLanguage();
+            
+            // 初始化通知系统
+            initNotifications();
+            
+            console.log('✅ UI初始化完成');
+        } catch (error) {
+            console.warn('UI初始化部分失败:', error);
+        }
+    }
+
+    /**
+     * 初始化路由
+     */
+    initRouter() {
+        // 路由已经自动初始化
+        console.log('✅ 路由系统已启动');
+    }
+
+    /**
+     * 应用就绪
+     */
+    ready() {
+        this.initialized = true;
+        const loadTime = Date.now() - this.startTime;
+        
+        // 隐藏加载界面
+        const loadingEl = document.getElementById('app-loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+        }
+        
+        // 显示内容
+        const contentEl = document.getElementById('app-content');
+        if (contentEl) {
+            contentEl.style.display = 'block';
+        }
+        
+        console.log(`✅ 应用启动完成 (${loadTime}ms)`);
+        
+        // 触发应用就绪事件
+        const event = new CustomEvent('app:ready', {
+            detail: { loadTime, version: window.APP_CONFIG?.version }
+        });
+        document.dispatchEvent(event);
+        
+        // 检查是否自动跳转到首页
+        const currentPath = window.location.pathname;
+        if (currentPath === '/' || currentPath === '') {
+            router.navigate('/dashboard');
+        }
+    }
+
+    /**
+     * 处理启动错误
+     */
+    handleError(error) {
+        const loadingEl = document.getElementById('app-loading');
+        if (loadingEl) {
+            loadingEl.innerHTML = `
+                <div class="app-error">
+                    <div class="error-icon">⚠️</div>
+                    <h2>应用启动失败</h2>
+                    <p>${error.message || '未知错误'}</p>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        重新加载
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.app.reset()">
+                        重置应用
+                    </button>
+                    <details>
+                        <summary>详细信息</summary>
+                        <pre>${error.stack || error}</pre>
+                    </details>
                 </div>
-            </div>
-        `;
+            `;
+        }
+    }
+
+    /**
+     * 重置应用
+     */
+    async reset() {
+        store.reset();
+        localStorage.clear();
+        location.reload();
+    }
+
+    /**
+     * 显示通知
+     */
+    showNotification(message, type = 'info', duration = 3000) {
+        const event = new CustomEvent('notification:show', {
+            detail: { message, type, duration }
+        });
+        document.dispatchEvent(event);
+        
+        // 如果通知系统还未初始化，使用alert
+        if (!window.notificationSystem) {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
     }
 
     /**
      * 获取应用状态
-     * @returns {Object} 应用状态信息
      */
     getStatus() {
         return {
             initialized: this.initialized,
-            version: this.version,
-            currentPath: router.getCurrentPath(),
-            user: appStore.get('user'),
-            moduleCount: Object.keys(router.moduleMap || {}).length
+            startTime: this.startTime,
+            uptime: Date.now() - this.startTime,
+            version: window.APP_CONFIG?.version,
+            user: store.get('user'),
+            isAuthenticated: store.get('isAuthenticated'),
+            modules: store.get('loadedModules') || []
         };
     }
 }
 
-// ============================================================
-// 自动启动
-// ============================================================
+// 创建应用实例
+export const app = new App();
 
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new App();
+// 全局暴露
+window.app = app;
+
+// DOM加载完成后启动应用
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
     app.init();
-    // 暴露到全局，方便调试
-    window.__APP__ = app;
-    console.log('📦 Carwash Pro V2 已加载 (调试: window.__APP__)');
-});
+} else {
+    document.addEventListener('DOMContentLoaded', () => {
+        app.init();
+    });
+}
 
-export { App };
-export default App;
+export default app;

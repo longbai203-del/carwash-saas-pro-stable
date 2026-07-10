@@ -1,11 +1,45 @@
 /**
- * POS - 收银系统 (精简版)
- * 包含完整购物车功能
+ * @file quick-sale.js
+ * @module quick-sale
+ * @description 快捷销售 - 精简版POS收银系统
+ * 
+ * @example
+ * import { init } from './quick-sale.js';
+ * await init();
+ * 
+ * @author Carwash Pro Team
+ * @version 1.0.0
  */
 
+import { apiClient } from '../../../js/core/api/api-client.js';
+import { store } from '../../../js/core/store.js';
+import { showToast } from '../../../js/core/init.js';
+
+/**
+ * @typedef {Object} QuickSaleItem
+ * @property {string} id - 商品ID
+ * @property {string} name - 商品名称
+ * @property {number} price - 单价
+ * @property {number} qty - 数量
+ */
+
+/**
+ * @typedef {Object} QuickSaleState
+ * @property {QuickSaleItem[]} cart - 购物车
+ * @property {Array<{id: string, name: string, price: number, icon: string, color: string}>} products - 商品列表
+ * @property {Array<{id: string, name: string, phone: string, level: string}>} customers - 客户列表
+ * @property {string|null} selectedCustomer - 选中的客户ID
+ * @property {string} paymentMethod - 支付方式
+ * @property {number} discount - 折扣百分比
+ * @property {number} taxRate - 税率
+ * @property {string} searchQuery - 搜索关键词
+ */
+
+/** @type {QuickSaleState} 状态 */
 const state = {
     cart: [],
     products: [],
+    customers: [],
     selectedCustomer: null,
     paymentMethod: 'cash',
     discount: 0,
@@ -13,32 +47,21 @@ const state = {
     searchQuery: ''
 };
 
+/**
+ * @private
+ * @param {number} amount - 金额
+ * @returns {string} 格式化后的货币字符串
+ */
 function formatCurrency(amount) {
     if (amount === undefined || amount === null) return '0.00';
     return amount.toFixed(2);
 }
 
-function showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed; bottom: 20px; right: 20px; 
-        padding: 12px 24px; border-radius: 8px; 
-        color: white; font-size: 14px; z-index: 10000;
-        background: ${type === 'error' ? '#EF4444' : type === 'warning' ? '#F59E0B' : type === 'success' ? '#10B981' : '#4F46E5'};
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: fadeInUp 0.3s ease;
-        max-width: 400px;
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function getProducts() {
+/**
+ * @private
+ * @returns {Array} 默认商品列表
+ */
+function getDefaultProducts() {
     return [
         { id: 'P001', name: '标准洗车', price: 68, icon: 'fa-car', color: '#4F46E5' },
         { id: 'P002', name: '精致洗车', price: 128, icon: 'fa-car', color: '#4F46E5' },
@@ -55,7 +78,11 @@ function getProducts() {
     ];
 }
 
-function getCustomers() {
+/**
+ * @private
+ * @returns {Array} 默认客户列表
+ */
+function getDefaultCustomers() {
     return [
         { id: 'C001', name: '张伟', phone: '13800001111', level: 'gold' },
         { id: 'C002', name: '李娜', phone: '13800002222', level: 'vip' },
@@ -65,6 +92,10 @@ function getCustomers() {
     ];
 }
 
+/**
+ * @private
+ * @description 渲染商品网格
+ */
 function renderProductGrid() {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -84,6 +115,10 @@ function renderProductGrid() {
     `).join('');
 }
 
+/**
+ * @private
+ * @description 渲染客户下拉
+ */
 function renderCustomerDropdown() {
     const dropdown = document.getElementById('customerSelect');
     if (!dropdown) return;
@@ -101,6 +136,11 @@ function renderCustomerDropdown() {
     });
 }
 
+/**
+ * @private
+ * @param {string} productId - 商品ID
+ * @description 添加到购物车
+ */
 function addToCart(productId) {
     const product = state.products.find(p => p.id === productId);
     if (!product) return;
@@ -116,6 +156,12 @@ function addToCart(productId) {
     showToast(`已添加: ${product.name}`, 'success');
 }
 
+/**
+ * @private
+ * @param {string} productId - 商品ID
+ * @param {number} delta - 变化量
+ * @description 更新购物车数量
+ */
 function updateQty(productId, delta) {
     const item = state.cart.find(i => i.id === productId);
     if (!item) return;
@@ -128,11 +174,21 @@ function updateQty(productId, delta) {
     updateUI();
 }
 
+/**
+ * @private
+ * @param {string} productId - 商品ID
+ * @description 从购物车移除
+ */
 function removeFromCart(productId) {
     state.cart = state.cart.filter(i => i.id !== productId);
     updateUI();
 }
 
+/**
+ * @private
+ * @returns {Object} 总计对象
+ * @description 计算总计
+ */
 function calculateTotals() {
     const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const discountAmount = (subtotal * state.discount) / 100;
@@ -143,6 +199,10 @@ function calculateTotals() {
     return { subtotal, discountAmount, taxable, tax, total };
 }
 
+/**
+ * @private
+ * @description 更新UI
+ */
 function updateUI() {
     const cartItems = document.getElementById('cartItems');
     const subtotalEl = document.getElementById('subtotal');
@@ -151,6 +211,7 @@ function updateUI() {
     const totalEl = document.getElementById('totalAmount');
     const cartCount = document.getElementById('cartCount');
     const totalItems = document.getElementById('totalItems');
+    const checkoutBtn = document.getElementById('checkoutBtn');
 
     if (cartItems) {
         if (state.cart.length === 0) {
@@ -190,17 +251,16 @@ function updateUI() {
     if (cartCount) cartCount.textContent = count;
     if (totalItems) totalItems.textContent = `共 ${count} 件商品`;
 
-    const checkoutBtn = document.getElementById('checkoutBtn');
     if (checkoutBtn) {
         checkoutBtn.disabled = state.cart.length === 0;
     }
 }
 
-function searchProducts(query) {
-    state.searchQuery = query;
-    renderProductGrid();
-}
-
+/**
+ * @private
+ * @param {string} method - 支付方式
+ * @description 选择支付方式
+ */
 function selectPayment(method) {
     state.paymentMethod = method;
     document.querySelectorAll('.payment-btn').forEach(btn => {
@@ -208,36 +268,11 @@ function selectPayment(method) {
     });
 }
 
-function checkout() {
-    if (state.cart.length === 0) {
-        showToast('购物车为空', 'warning');
-        return;
-    }
-
-    const totals = calculateTotals();
-    const orderData = {
-        items: state.cart.map(item => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            qty: item.qty,
-            subtotal: item.price * item.qty
-        })),
-        customerId: state.selectedCustomer || null,
-        subtotal: totals.subtotal,
-        discount: totals.discountAmount,
-        tax: totals.tax,
-        total: totals.total,
-        paymentMethod: state.paymentMethod,
-        paymentStatus: 'paid'
-    };
-
-    showToast('订单支付成功！', 'success');
-    showReceiptModal(orderData);
-    state.cart = [];
-    updateUI();
-}
-
+/**
+ * @private
+ * @param {Object} orderData - 订单数据
+ * @description 显示收据弹窗
+ */
 function showReceiptModal(orderData) {
     const modal = document.getElementById('receiptModal');
     if (!modal) return;
@@ -277,11 +312,53 @@ function showReceiptModal(orderData) {
     modal.style.display = 'flex';
 }
 
+/**
+ * @private
+ * @description 关闭收据
+ */
 function closeReceipt() {
     const modal = document.getElementById('receiptModal');
     if (modal) modal.style.display = 'none';
 }
 
+/**
+ * @private
+ * @description 结账
+ */
+function checkout() {
+    if (state.cart.length === 0) {
+        showToast('购物车为空', 'warning');
+        return;
+    }
+
+    const totals = calculateTotals();
+    const orderData = {
+        items: state.cart.map(item => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            subtotal: item.price * item.qty
+        })),
+        customerId: state.selectedCustomer || null,
+        subtotal: totals.subtotal,
+        discount: totals.discountAmount,
+        tax: totals.tax,
+        total: totals.total,
+        paymentMethod: state.paymentMethod,
+        paymentStatus: 'paid'
+    };
+
+    showToast('订单支付成功！', 'success');
+    showReceiptModal(orderData);
+    state.cart = [];
+    updateUI();
+}
+
+/**
+ * @private
+ * @description 初始化键盘快捷键
+ */
 function initKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'F9') {
@@ -299,11 +376,16 @@ function initKeyboardShortcuts() {
     });
 }
 
+/**
+ * @private
+ * @description 绑定事件
+ */
 function bindEvents() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
-            searchProducts(this.value);
+            state.searchQuery = this.value;
+            renderProductGrid();
         });
     }
 
@@ -327,11 +409,16 @@ function bindEvents() {
     }
 }
 
-export function init() {
-    console.log('✅ POS 已加载 (完整版)');
+/**
+ * @public
+ * @returns {Promise<void>}
+ * @description 初始化快捷销售
+ */
+export async function init() {
+    console.log('✅ 快捷销售 POS 初始化...');
     
-    state.products = getProducts();
-    state.customers = getCustomers();
+    state.products = getDefaultProducts();
+    state.customers = getDefaultCustomers();
     
     renderProductGrid();
     renderCustomerDropdown();
@@ -339,6 +426,7 @@ export function init() {
     initKeyboardShortcuts();
     updateUI();
     
+    // 暴露全局方法
     window.addToCart = addToCart;
     window.updateQty = updateQty;
     window.removeFromCart = removeFromCart;
@@ -346,6 +434,7 @@ export function init() {
     window.closeReceipt = closeReceipt;
 }
 
+// 自动初始化
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
@@ -353,5 +442,9 @@ if (document.readyState === 'loading') {
 }
 
 export default {
-    init
+    init,
+    addToCart,
+    updateQty,
+    removeFromCart,
+    checkout
 };

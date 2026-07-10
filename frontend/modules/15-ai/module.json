@@ -1,0 +1,9 @@
+{
+    "name": "AI",
+    "icon": "brain",
+    "order": 13,
+    "defaultPage": "ai",
+    "pages": [
+      { "path": "ai", "name": "AI助手", "icon": "brain" }
+    ]
+  }

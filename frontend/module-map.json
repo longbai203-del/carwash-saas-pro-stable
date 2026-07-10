@@ -1,116 +1,408 @@
 {
-  "modules": [
-    {
-      "key": "dashboard",
-      "folder": "01-dashboard",
-      "defaultPage": "dashboard",
-      "label": "仪表板",
-      "icon": "fa-gauge-high",
-      "enabled": true
+  "version": "1.0.0",
+  "basePath": "/modules",
+  "defaultModule": "dashboard",
+  "defaultPage": "index",
+  
+  "routes": {
+    "/": {
+      "module": "dashboard",
+      "page": "dashboard",
+      "title": "仪表板",
+      "permissions": ["dashboard:view"]
     },
-    {
-      "key": "pos",
-      "folder": "02-pos",
-      "defaultPage": "quick-sale",
-      "label": "收银台",
-      "icon": "fa-cash-register",
-      "enabled": true
+    "/dashboard": {
+      "module": "dashboard",
+      "page": "dashboard",
+      "title": "仪表板",
+      "permissions": ["dashboard:view"]
     },
-    {
-      "key": "orders",
-      "folder": "03-orders",
-      "defaultPage": "list",
-      "label": "订单管理",
-      "icon": "fa-receipt",
-      "enabled": true
+    "/pos": {
+      "module": "pos",
+      "page": "pos",
+      "title": "POS收银",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "products",
-      "folder": "04-products",
-      "defaultPage": "products",
-      "label": "商品管理",
-      "icon": "fa-boxes-stacked",
-      "enabled": true
+    "/pos/cashier": {
+      "module": "pos",
+      "page": "cashier",
+      "title": "收银台",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "crm",
-      "folder": "05-customers",
-      "defaultPage": "customers",
-      "label": "客户管理",
-      "icon": "fa-users",
-      "enabled": true
+    "/pos/cash-register": {
+      "module": "pos",
+      "page": "cash-register",
+      "title": "收银机",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "marketing",
-      "folder": "06-marketing",
-      "defaultPage": "promotions",
-      "label": "营销中心",
-      "icon": "fa-bullhorn",
-      "enabled": true
+    "/pos/quick-sale": {
+      "module": "pos",
+      "page": "quick-sale",
+      "title": "快捷销售",
+      "permissions": ["pos:create"]
     },
-    {
-      "key": "inventory",
-      "folder": "07-inventory",
-      "defaultPage": "stock",
-      "label": "库存管理",
-      "icon": "fa-warehouse",
-      "enabled": true
+    "/pos/touch-pos": {
+      "module": "pos",
+      "page": "touch-pos",
+      "title": "触屏POS",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "purchasing",
-      "folder": "08-purchase",
-      "defaultPage": "orders",
-      "label": "采购管理",
-      "icon": "fa-truck",
-      "enabled": true
+    "/pos/offline-pos": {
+      "module": "pos",
+      "page": "offline-pos",
+      "title": "离线POS",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "finance",
-      "folder": "09-finance",
-      "defaultPage": "income",
-      "label": "财务管理",
-      "icon": "fa-coins",
-      "enabled": true
+    "/pos/customer-display": {
+      "module": "pos",
+      "page": "customer-display",
+      "title": "客户显示屏",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "hr",
-      "folder": "10-hr",
-      "defaultPage": "employees",
-      "label": "人力资源",
-      "icon": "fa-user-tie",
-      "enabled": true
+    "/pos/kitchen-display": {
+      "module": "pos",
+      "page": "kitchen-display",
+      "title": "厨房显示",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "saas",
-      "folder": "11-saas",
-      "defaultPage": "tenants",
-      "label": "多租户管理",
-      "icon": "fa-building",
-      "enabled": true
+    "/pos/receipt": {
+      "module": "pos",
+      "page": "receipt",
+      "title": "小票打印",
+      "permissions": ["pos:view"]
     },
-    {
-      "key": "system",
-      "folder": "12-system",
-      "defaultPage": "audit-logs",
-      "label": "系统管理",
-      "icon": "fa-gear",
-      "enabled": true
+    "/pos/exchange": {
+      "module": "pos",
+      "page": "exchange",
+      "title": "换货管理",
+      "permissions": ["pos:edit"]
     },
-    {
-      "key": "analytics",
-      "folder": "13-analytics",
-      "defaultPage": "reports",
-      "label": "数据分析",
-      "icon": "fa-chart-line",
-      "enabled": true
+    "/pos/returns": {
+      "module": "pos",
+      "page": "returns",
+      "title": "退货管理",
+      "permissions": ["pos:edit"]
     },
-    {
-      "key": "settings",
-      "folder": "14-settings",
-      "defaultPage": "company",
-      "label": "系统设置",
-      "icon": "fa-sliders",
-      "enabled": true
+    "/orders": {
+      "module": "orders",
+      "page": "list",
+      "title": "订单管理",
+      "permissions": ["orders:view"]
+    },
+    "/orders/list": {
+      "module": "orders",
+      "page": "list",
+      "title": "订单列表",
+      "permissions": ["orders:view"]
+    },
+    "/orders/detail/:id": {
+      "module": "orders",
+      "page": "detail",
+      "title": "订单详情",
+      "permissions": ["orders:view"]
+    },
+    "/orders/refunds": {
+      "module": "orders",
+      "page": "refunds",
+      "title": "退款管理",
+      "permissions": ["orders:edit"]
+    },
+    "/products": {
+      "module": "products",
+      "page": "products",
+      "title": "商品管理",
+      "permissions": ["products:view"]
+    },
+    "/products/list": {
+      "module": "products",
+      "page": "products",
+      "title": "商品列表",
+      "permissions": ["products:view"]
+    },
+    "/products/categories": {
+      "module": "products",
+      "page": "categories",
+      "title": "分类管理",
+      "permissions": ["products:edit"]
+    },
+    "/products/brands": {
+      "module": "products",
+      "page": "brands",
+      "title": "品牌管理",
+      "permissions": ["products:edit"]
+    },
+    "/products/modifiers": {
+      "module": "products",
+      "page": "modifiers",
+      "title": "规格管理",
+      "permissions": ["products:edit"]
+    },
+    "/customers": {
+      "module": "customers",
+      "page": "customers",
+      "title": "客户管理",
+      "permissions": ["customers:view"]
+    },
+    "/customers/list": {
+      "module": "customers",
+      "page": "customers",
+      "title": "客户列表",
+      "permissions": ["customers:view"]
+    },
+    "/customers/vehicles": {
+      "module": "customers",
+      "page": "vehicles",
+      "title": "车辆管理",
+      "permissions": ["customers:view"]
+    },
+    "/customers/wallet": {
+      "module": "customers",
+      "page": "wallet",
+      "title": "钱包管理",
+      "permissions": ["customers:edit"]
+    },
+    "/inventory": {
+      "module": "inventory",
+      "page": "inventory",
+      "title": "库存管理",
+      "permissions": ["inventory:view"]
+    },
+    "/inventory/stock": {
+      "module": "inventory",
+      "page": "stock",
+      "title": "库存盘点",
+      "permissions": ["inventory:view"]
+    },
+    "/inventory/warehouses": {
+      "module": "inventory",
+      "page": "warehouses",
+      "title": "仓库管理",
+      "permissions": ["inventory:edit"]
+    },
+    "/inventory/transfers": {
+      "module": "inventory",
+      "page": "transfers",
+      "title": "调拨管理",
+      "permissions": ["inventory:edit"]
+    },
+    "/inventory/low-stock": {
+      "module": "inventory",
+      "page": "low-stock",
+      "title": "低库存预警",
+      "permissions": ["inventory:view"]
+    },
+    "/finance": {
+      "module": "finance",
+      "page": "finance",
+      "title": "财务管理",
+      "permissions": ["finance:view"]
+    },
+    "/finance/income": {
+      "module": "finance",
+      "page": "income",
+      "title": "收入管理",
+      "permissions": ["finance:view"]
+    },
+    "/finance/expenses": {
+      "module": "finance",
+      "page": "expenses",
+      "title": "支出管理",
+      "permissions": ["finance:view"]
+    },
+    "/finance/reports": {
+      "module": "finance",
+      "page": "reports",
+      "title": "财务报表",
+      "permissions": ["finance:view"]
+    },
+    "/hr": {
+      "module": "hr",
+      "page": "hr",
+      "title": "人力资源管理",
+      "permissions": ["employees:view"]
+    },
+    "/hr/employees": {
+      "module": "hr",
+      "page": "employees",
+      "title": "员工管理",
+      "permissions": ["employees:view"]
+    },
+    "/hr/attendance": {
+      "module": "hr",
+      "page": "attendance",
+      "title": "考勤管理",
+      "permissions": ["attendance:view"]
+    },
+    "/hr/payroll": {
+      "module": "hr",
+      "page": "payroll",
+      "title": "薪资管理",
+      "permissions": ["employees:view"]
+    },
+    "/hr/schedules": {
+      "module": "hr",
+      "page": "schedules",
+      "title": "排班管理",
+      "permissions": ["employees:edit"]
+    },
+    "/marketing": {
+      "module": "marketing",
+      "page": "marketing",
+      "title": "营销管理",
+      "permissions": ["marketing:view"]
+    },
+    "/marketing/campaigns": {
+      "module": "marketing",
+      "page": "campaigns",
+      "title": "营销活动",
+      "permissions": ["marketing:view"]
+    },
+    "/marketing/promotions": {
+      "module": "marketing",
+      "page": "promotions",
+      "title": "促销管理",
+      "permissions": ["marketing:edit"]
+    },
+    "/analytics": {
+      "module": "analytics",
+      "page": "reports",
+      "title": "数据分析",
+      "permissions": ["reports:view"]
+    },
+    "/analytics/reports": {
+      "module": "analytics",
+      "page": "reports",
+      "title": "数据报表",
+      "permissions": ["reports:view"]
+    },
+    "/analytics/forecast": {
+      "module": "analytics",
+      "page": "forecast",
+      "title": "预测分析",
+      "permissions": ["reports:view"]
+    },
+    "/analytics/business-health": {
+      "module": "analytics",
+      "page": "business-health",
+      "title": "经营健康",
+      "permissions": ["reports:view"]
+    },
+    "/settings": {
+      "module": "settings",
+      "page": "settings",
+      "title": "系统设置",
+      "permissions": ["settings:view"]
+    },
+    "/settings/general": {
+      "module": "settings",
+      "page": "general",
+      "title": "常规设置",
+      "permissions": ["settings:view"]
+    },
+    "/settings/permissions": {
+      "module": "settings",
+      "page": "permissions",
+      "title": "权限管理",
+      "permissions": ["settings:edit"]
+    },
+    "/settings/profile": {
+      "module": "settings",
+      "page": "profile",
+      "title": "个人设置",
+      "permissions": ["settings:view"]
+    },
+    "/login": {
+      "module": "auth",
+      "page": "login",
+      "title": "登录",
+      "public": true
+    },
+    "/register": {
+      "module": "auth",
+      "page": "register",
+      "title": "注册",
+      "public": true
+    },
+    "/logout": {
+      "module": "auth",
+      "page": "logout",
+      "title": "退出登录",
+      "public": true
     }
-  ]
+  },
+  
+  "modules": {
+    "dashboard": {
+      "name": "仪表板",
+      "icon": "fa-th-large",
+      "permissions": ["dashboard:view"],
+      "pages": ["dashboard", "executive", "ai", "crm", "finance", "inventory", "marketing", "employee"]
+    },
+    "pos": {
+      "name": "POS收银",
+      "icon": "fa-cash-register",
+      "permissions": ["pos:view"],
+      "pages": ["cashier", "cash-register", "quick-sale", "touch-pos", "offline-pos", "customer-display", "kitchen-display", "receipt", "exchange", "returns"]
+    },
+    "orders": {
+      "name": "订单管理",
+      "icon": "fa-shopping-bag",
+      "permissions": ["orders:view"],
+      "pages": ["list", "detail", "refunds"]
+    },
+    "products": {
+      "name": "商品管理",
+      "icon": "fa-box",
+      "permissions": ["products:view"],
+      "pages": ["products", "categories", "brands", "modifiers"]
+    },
+    "customers": {
+      "name": "客户管理",
+      "icon": "fa-users",
+      "permissions": ["customers:view"],
+      "pages": ["customers", "vehicles", "wallet"]
+    },
+    "inventory": {
+      "name": "库存管理",
+      "icon": "fa-warehouse",
+      "permissions": ["inventory:view"],
+      "pages": ["inventory", "stock", "warehouses", "transfers", "low-stock"]
+    },
+    "finance": {
+      "name": "财务管理",
+      "icon": "fa-coins",
+      "permissions": ["finance:view"],
+      "pages": ["finance", "income", "expenses", "reports"]
+    },
+    "hr": {
+      "name": "人力资源管理",
+      "icon": "fa-user-tie",
+      "permissions": ["employees:view"],
+      "pages": ["hr", "employees", "attendance", "payroll", "schedules"]
+    },
+    "marketing": {
+      "name": "营销管理",
+      "icon": "fa-bullhorn",
+      "permissions": ["marketing:view"],
+      "pages": ["marketing", "campaigns", "promotions"]
+    },
+    "analytics": {
+      "name": "数据分析",
+      "icon": "fa-chart-line",
+      "permissions": ["reports:view"],
+      "pages": ["reports", "forecast", "business-health"]
+    },
+    "settings": {
+      "name": "系统设置",
+      "icon": "fa-cog",
+      "permissions": ["settings:view"],
+      "pages": ["settings", "general", "permissions", "profile"]
+    },
+    "auth": {
+      "name": "认证",
+      "icon": "fa-user",
+      "public": true,
+      "pages": ["login", "register", "logout"]
+    }
+  }
 }

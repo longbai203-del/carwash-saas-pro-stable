@@ -1,31 +1,177 @@
-﻿<div class="container-fluid">
-    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+﻿<!-- ============================================================ -->
+<!-- 数据报表 - Analytics Dashboard                                -->
+<!-- ============================================================ -->
+
+<div class="analytics-container" style="padding:20px;max-width:1400px;margin:0 auto;">
+    <!-- 页面标题 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
-            <h1 class="page-title" style="font-size:24px;font-weight:700;margin:0;">📊 报表管理</h1>
-            <p class="page-subtitle" style="color:#6B7280;margin:4px 0 0 0;">生成和管理各类报表</p>
+            <h1 style="font-size:24px;font-weight:700;margin:0;color:#1F2937;">📊 数据报表</h1>
+            <p style="color:#6B7280;margin:4px 0 0 0;">业务数据分析和可视化</p>
         </div>
-        <button style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;">
-            <i class="fas fa-plus"></i> 生成报表
-        </button>
+        <div style="display:flex;gap:8px;">
+            <button id="refreshAnalytics" style="padding:8px 16px;background:#F3F4F6;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-sync"></i> 刷新
+            </button>
+            <button id="exportReport" style="padding:8px 16px;background:#4F46E5;color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-file-export"></i> 导出报表
+            </button>
+        </div>
     </div>
 
-    <div style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-        <table style="width:100%;border-collapse:collapse;">
-            <thead>
-                <tr style="background:#F9FAFB;">
-                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">报表名称</th>
-                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">类型</th>
-                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">格式</th>
-                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">状态</th>
-                    <th style="padding:12px 16px;text-align:left;font-weight:600;font-size:12px;color:#6B7280;">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="font-weight:500;">2026年度销售报告</div></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#DBEAFE;color:#1E40AF;">销售报表</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#F3F4F6;color:#4B5563;">PDF</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#D1FAE5;color:#065F46;">已完成</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="display:flex;gap:4px;"><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#4F46E5;color:white;"><i class="fas fa-download"></i></button><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#EF4444;color:white;"><i class="fas fa-trash"></i></button></div></td></tr>
-                <tr><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="font-weight:500;">Q2库存分析</div></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#D1FAE5;color:#065F46;">库存报表</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#F3F4F6;color:#4B5563;">Excel</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#D1FAE5;color:#065F46;">已完成</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="display:flex;gap:4px;"><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#4F46E5;color:white;"><i class="fas fa-download"></i></button><button style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;background:#EF4444;color:white;"><i class="fas fa-trash"></i></button></div></td></tr>
-                <tr><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><div style="font-weight:500;">客户增长报告</div></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#EDE9FE;color:#6D28D9;">客户报表</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#F3F4F6;color:#4B5563;">PDF</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;background:#FEF3C7;color:#92400E;">生成中</span></td><td style="padding:12px 16px;border-bottom:1px solid #F3F4F6;"><span style="font-size:12px;color:#6B7280;">等待中...</span></td></tr>
-            </tbody>
-        </table>
+    <!-- 时间筛选 -->
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+        <label style="font-size:14px;font-weight:500;color:#374151;">时间范围：</label>
+        <button class="period-btn active" data-period="7" style="padding:6px 16px;border:1px solid #E5E7EB;border-radius:6px;background:#4F46E5;color:white;cursor:pointer;font-size:13px;">近7天</button>
+        <button class="period-btn" data-period="30" style="padding:6px 16px;border:1px solid #E5E7EB;border-radius:6px;background:white;cursor:pointer;font-size:13px;">近30天</button>
+        <button class="period-btn" data-period="90" style="padding:6px 16px;border:1px solid #E5E7EB;border-radius:6px;background:white;cursor:pointer;font-size:13px;">近90天</button>
+        <button class="period-btn" data-period="custom" style="padding:6px 16px;border:1px solid #E5E7EB;border-radius:6px;background:white;cursor:pointer;font-size:13px;">自定义</button>
+        <input type="date" id="analyticsStartDate" style="padding:6px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px;display:none;" />
+        <span id="analyticsDateRange" style="font-size:13px;color:#6B7280;">2024-01-01 ~ 2024-01-07</span>
     </div>
-    <div style="margin-top:16px;text-align:right;font-size:14px;color:#6B7280;">共 3 条记录</div>
+
+    <!-- 统计卡片 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;" id="statsGrid">
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="color:#6B7280;font-size:14px;">总订单</div>
+                    <div id="statTotalOrders" style="font-size:28px;font-weight:700;color:#1F2937;">0</div>
+                    <div id="statOrderChange" style="font-size:12px;color:#10B981;margin-top:4px;">
+                        <i class="fas fa-arrow-up"></i> 0%
+                    </div>
+                </div>
+                <div style="width:48px;height:48px;background:#EBF5FF;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#3B82F6;">
+                    <i class="fas fa-shopping-bag" style="font-size:20px;"></i>
+                </div>
+            </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="color:#6B7280;font-size:14px;">总收入</div>
+                    <div id="statTotalRevenue" style="font-size:28px;font-weight:700;color:#10B981;">¥0.00</div>
+                    <div id="statRevenueChange" style="font-size:12px;color:#10B981;margin-top:4px;">
+                        <i class="fas fa-arrow-up"></i> 0%
+                    </div>
+                </div>
+                <div style="width:48px;height:48px;background:#ECFDF5;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#10B981;">
+                    <i class="fas fa-coins" style="font-size:20px;"></i>
+                </div>
+            </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="color:#6B7280;font-size:14px;">新客户</div>
+                    <div id="statNewCustomers" style="font-size:28px;font-weight:700;color:#8B5CF6;">0</div>
+                    <div id="statCustomerChange" style="font-size:12px;color:#8B5CF6;margin-top:4px;">
+                        <i class="fas fa-arrow-up"></i> 0%
+                    </div>
+                </div>
+                <div style="width:48px;height:48px;background:#F5F3FF;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#8B5CF6;">
+                    <i class="fas fa-users" style="font-size:20px;"></i>
+                </div>
+            </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="color:#6B7280;font-size:14px;">客单价</div>
+                    <div id="statAvgOrder" style="font-size:28px;font-weight:700;color:#F59E0B;">¥0.00</div>
+                    <div id="statAvgChange" style="font-size:12px;color:#F59E0B;margin-top:4px;">
+                        <i class="fas fa-arrow-up"></i> 0%
+                    </div>
+                </div>
+                <div style="width:48px;height:48px;background:#FFFBEB;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#F59E0B;">
+                    <i class="fas fa-chart-line" style="font-size:20px;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表行 -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;">
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+            <h3 style="margin:0 0 16px 0;font-size:16px;font-weight:600;">📈 收入趋势</h3>
+            <div id="revenueChartContainer" style="height:220px;position:relative;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+            <h3 style="margin:0 0 16px 0;font-size:16px;font-weight:600;">📊 订单分布</h3>
+            <div id="orderChartContainer" style="height:220px;position:relative;">
+                <canvas id="orderChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 报表表格 -->
+    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #E5E7EB;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #E5E7EB;">
+            <h3 style="margin:0;font-size:16px;font-weight:600;">📋 业务明细</h3>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#F9FAFB;">
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">日期</th>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">订单数</th>
+                        <th style="padding:10px 16px;text-align:right;font-size:12px;color:#6B7280;">收入</th>
+                        <th style="padding:10px 16px;text-align:right;font-size:12px;color:#6B7280;">客单价</th>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;color:#6B7280;">状态</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:32px;color:#9CA3AF;">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<style>
+    .period-btn.active {
+        background: #4F46E5;
+        color: white;
+        border-color: #4F46E5;
+    }
+    .period-btn:hover:not(.active) {
+        background: #F3F4F6;
+    }
+    [data-theme="dark"] .analytics-container .stat-card,
+    [data-theme="dark"] .analytics-container .chart-card,
+    [data-theme="dark"] .analytics-container .table-container {
+        background: #2C2C2E;
+        border-color: #48484A;
+    }
+    [data-theme="dark"] .analytics-container #statTotalOrders,
+    [data-theme="dark"] .analytics-container #statTotalRevenue,
+    [data-theme="dark"] .analytics-container #statNewCustomers,
+    [data-theme="dark"] .analytics-container #statAvgOrder {
+        color: #F5F5F7;
+    }
+    [data-theme="dark"] .analytics-container table th {
+        background: #3A3A3C;
+        color: #9CA3AF;
+    }
+    [data-theme="dark"] .analytics-container table td {
+        border-color: #3A3A3C;
+    }
+    [data-theme="dark"] .analytics-container table tr:hover {
+        background: #3A3A3C;
+    }
+    [data-theme="dark"] .analytics-container #refreshAnalytics {
+        background: #3A3A3C;
+        color: #F5F5F7;
+    }
+    [data-theme="dark"] .period-btn:not(.active) {
+        background: #3A3A3C;
+        border-color: #48484A;
+        color: #F5F5F7;
+    }
+</style>

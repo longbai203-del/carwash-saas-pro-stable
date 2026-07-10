@@ -1,149 +1,442 @@
 /**
- * api/permissions.js - 权限 API
- * GET /api/permissions/roles
- * GET /api/permissions/menus
+ * @file permissions.js
+ * @module backend/api/permissions
+ * @description 权限管理API - 角色CRUD、用户权限管理
+ * 
+ * @author Carwash Pro Team
+ * @version 1.0.0
  */
-import { supabase, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
+
+import express from 'express';
+import { requireRole, requirePermission, getCurrentUser } from '../shared/lib/auth.js';
+import { supabase } from '../shared/lib/supabase.js';
 import { logger } from '../shared/lib/logger.js';
 
-async function handler(req, res) {
-    const { method } = req;
-    const { type } = req.query;
+/** @type {import('express').Router} */
+const router = express.Router();
 
-    if (method !== 'GET') {
-        return res.status(405).json({
-            success: false,
-            error: 'Method not allowed',
-            code: 'METHOD_NOT_ALLOWED'
-        });
-    }
+// ============================================================
+// 1. 获取当前用户权限
+// ============================================================
 
-    if (type === 'roles') {
-        return handleRoles(req, res);
-    }
-
-    if (type === 'menus') {
-        return handleMenus(req, res);
-    }
-
-    return res.status(400).json({
-        success: false,
-        error: '请指定类型: roles 或 menus',
-        code: 'INVALID_TYPE'
-    });
-}
-
-// ===== 角色列表 =====
-async function handleRoles(req, res) {
+/**
+ * @route GET /api/permissions/me
+ * @desc 获取当前用户权限信息
+ * @access Private
+ * 
+ * @example
+ * GET /api/permissions/me
+ * Response: {
+ *   success: true,
+ *   data: {
+ *     id: 'user-id',
+ *     email: 'user@example.com',
+ *     role: 'admin',
+ *     permissions: ['*'],
+ *     role_permissions: ['*']
+ *   }
+ * }
+ */
+router.get('/me', getCurrentUser, async (req, res) => {
     try {
-        const userId = req.user?.id;
-        const user = await getUserById(userId);
-        if (!user) {
+        if (!req.user) {
             return res.status(401).json({
                 success: false,
-                error: '未授权',
-                code: 'UNAUTHORIZED'
+                error: '未认证'
             });
         }
 
-        let query = supabase.from('sys_role').select('*');
-
-        if (user?.tenant_id) {
-            query = query.eq('tenant_id', user.tenant_id);
-        }
-
-        query = query.order('sort_order', { ascending: true });
-
-        const result = await safeQuery(() => query);
-
-        if (!result.success) {
-            return res.status(500).json({
-                success: false,
-                error: '获取角色失败',
-                code: 'DB_ERROR'
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: result.data || []
-        });
-
-    } catch (error) {
-        logger.error('[Permissions] 获取角色失败:', error);
-        return res.status(500).json({
-            success: false,
-            error: '获取角色失败',
-            code: 'INTERNAL_ERROR'
-        });
-    }
-}
-
-// ===== 菜单树 =====
-async function handleMenus(req, res) {
-    try {
-        const userId = req.user?.id;
-        const user = await getUserById(userId);
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: '未授权',
-                code: 'UNAUTHORIZED'
-            });
-        }
-
-        let query = supabase
-            .from('sys_menu')
+        // 从Supabase获取用户的完整权限
+        const { data: permissions, error } = await supabase
+            .from('user_permissions')
             .select('*')
-            .eq('is_deleted', false)
-            .eq('is_visible', true);
+            .eq('user_id', req.user.id)
+            .maybeSingle();
 
-        if (user?.tenant_id) {
-            query = query.eq('tenant_id', user.tenant_id);
-        }
-
-        query = query.order('sort_order', { ascending: true });
-
-        const result = await safeQuery(() => query);
-
-        if (!result.success) {
+        if (error && error.code !== 'PGRST116') {
+            logger.error('获取用户权限失败:', error);
             return res.status(500).json({
                 success: false,
-                error: '获取菜单失败',
-                code: 'DB_ERROR'
+                error: '获取权限信息失败'
             });
         }
 
-        const menus = result.data || [];
-        const menuMap = {};
-        const tree = [];
-
-        menus.forEach(m => {
-            menuMap[m.id] = { ...m, children: [] };
-        });
-
-        menus.forEach(m => {
-            if (m.parent_id && menuMap[m.parent_id]) {
-                menuMap[m.parent_id].children.push(menuMap[m.id]);
-            } else {
-                tree.push(menuMap[m.id]);
+        res.json({
+            success: true,
+            data: {
+                ...req.user,
+                permissions: permissions?.permissions || [],
+                role_permissions: permissions?.role_permissions || []
             }
         });
-
-        return res.status(200).json({
-            success: true,
-            data: tree
-        });
-
     } catch (error) {
-        logger.error('[Permissions] 获取菜单失败:', error);
-        return res.status(500).json({
+        logger.error('获取用户权限异常:', error);
+        res.status(500).json({
             success: false,
-            error: '获取菜单失败',
-            code: 'INTERNAL_ERROR'
+            error: '服务器内部错误'
         });
     }
-}
+});
 
-export default authMiddleware(roleMiddleware(['owner', 'admin'])(handler));
+// ============================================================
+// 2. 角色管理
+// ============================================================
+
+/**
+ * @route GET /api/permissions/roles
+ * @desc 获取所有角色列表
+ * @access Admin Only
+ * 
+ * @example
+ * GET /api/permissions/roles
+ * Response: {
+ *   success: true,
+ *   data: [{ id: 'role-id', name: 'admin', description: '管理员', permissions: ['*'] }]
+ * }
+ */
+router.get('/roles', requireRole(['admin']), async (req, res) => {
+    try {
+        const { data: roles, error } = await supabase
+            .from('roles')
+            .select('*')
+            .order('name');
+
+        if (error) {
+            logger.error('获取角色列表失败:', error);
+            return res.status(500).json({
+                success: false,
+                error: '获取角色列表失败'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: roles
+        });
+    } catch (error) {
+        logger.error('获取角色列表异常:', error);
+        res.status(500).json({
+            success: false,
+            error: '服务器内部错误'
+        });
+    }
+});
+
+/**
+ * @route POST /api/permissions/roles
+ * @desc 创建新角色
+ * @access Admin Only
+ * 
+ * @example
+ * POST /api/permissions/roles
+ * Body: { name: 'manager', description: '经理', permissions: ['dashboard:view', 'orders:view'] }
+ */
+router.post('/roles', requireRole(['admin']), async (req, res) => {
+    try {
+        const { name, description, permissions, is_system } = req.body;
+
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                error: '角色名称为必填项'
+            });
+        }
+
+        const { data: role, error } = await supabase
+            .from('roles')
+            .insert({
+                name,
+                description,
+                permissions: permissions || [],
+                is_system: is_system || false,
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (error) {
+            logger.error('创建角色失败:', error);
+            return res.status(500).json({
+                success: false,
+                error: '创建角色失败'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: role
+        });
+    } catch (error) {
+        logger.error('创建角色异常:', error);
+        res.status(500).json({
+            success: false,
+            error: '服务器内部错误'
+        });
+    }
+});
+
+/**
+ * @route PUT /api/permissions/roles/:id
+ * @desc 更新角色
+ * @access Admin Only
+ * 
+ * @example
+ * PUT /api/permissions/roles/role-id
+ * Body: { name: 'manager', description: '经理', permissions: ['dashboard:view'] }
+ */
+router.put('/roles/:id', requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, permissions, is_system } = req.body;
+
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                error: '角色名称为必填项'
+            });
+        }
+
+        // 检查是否是系统角色（系统角色不可修改名称和is_system）
+        const { data: existing, error: checkError } = await supabase
+            .from('roles')
+            .select('is_system')
+            .eq('id', id)
+            .single();
+
+        if (checkError) {
+            logger.error('检查角色失败:', checkError);
+            return res.status(404).json({
+                success: false,
+                error: '角色不存在'
+            });
+        }
+
+        const updateData = {
+            name,
+            description,
+            permissions: permissions || []
+        };
+
+        if (!existing.is_system) {
+            updateData.is_system = is_system || false;
+        }
+
+        const { data: role, error } = await supabase
+            .from('roles')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            logger.error('更新角色失败:', error);
+            return res.status(500).json({
+                success: false,
+                error: '更新角色失败'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: role
+        });
+    } catch (error) {
+        logger.error('更新角色异常:', error);
+        res.status(500).json({
+            success: false,
+            error: '服务器内部错误'
+        });
+    }
+});
+
+/**
+ * @route DELETE /api/permissions/roles/:id
+ * @desc 删除角色
+ * @access Admin Only
+ * 
+ * @example
+ * DELETE /api/permissions/roles/role-id
+ */
+router.delete('/roles/:id', requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 检查是否是系统角色
+        const { data: role, error: checkError } = await supabase
+            .from('roles')
+            .select('is_system')
+            .eq('id', id)
+            .single();
+
+        if (checkError) {
+            return res.status(404).json({
+                success: false,
+                error: '角色不存在'
+            });
+        }
+
+        if (role.is_system) {
+            return res.status(400).json({
+                success: false,
+                error: '系统角色不可删除'
+            });
+        }
+
+        const { error } = await supabase
+            .from('roles')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            logger.error('删除角色失败:', error);
+            return res.status(500).json({
+                success: false,
+                error: '删除角色失败'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '角色已删除'
+        });
+    } catch (error) {
+        logger.error('删除角色异常:', error);
+        res.status(500).json({
+            success: false,
+            error: '服务器内部错误'
+        });
+    }
+});
+
+// ============================================================
+// 3. 用户权限管理
+// ============================================================
+
+/**
+ * @route GET /api/permissions/user/:userId
+ * @desc 获取指定用户的权限
+ * @access Admin/Manager Only
+ * 
+ * @example
+ * GET /api/permissions/user/user-id
+ */
+router.get('/user/:userId', requireRole(['admin', 'manager']), async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const { data: user, error } = await supabase
+            .from('profiles')
+            .select('id, email, role, full_name, tenant_id, business_id')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            return res.status(404).json({
+                success: false,
+                error: '用户不存在'
+            });
+        }
+
+        const { data: permissions, error: permError } = await supabase
+            .from('user_permissions')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (permError && permError.code !== 'PGRST116') {
+            logger.error('获取用户权限失败:', permError);
+            return res.status(500).json({
+                success: false,
+                error: '获取用户权限失败'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                user,
+                permissions: permissions?.permissions || [],
+                role_permissions: permissions?.role_permissions || [],
+                custom_permissions: permissions?.custom_permissions || []
+            }
+        });
+    } catch (error) {
+        logger.error('获取用户权限异常:', error);
+        res.status(500).json({
+            success: false,
+            error: '服务器内部错误'
+        });
+    }
+});
+
+/**
+ * @route PUT /api/permissions/user/:userId
+ * @desc 更新用户权限
+ * @access Admin Only
+ * 
+ * @example
+ * PUT /api/permissions/user/user-id
+ * Body: { role: 'manager', permissions: ['dashboard:view'] }
+ */
+router.put('/user/:userId', requireRole(['admin']), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { role, permissions, custom_permissions } = req.body;
+
+        if (!role) {
+            return res.status(400).json({
+                success: false,
+                error: '角色为必填项'
+            });
+        }
+
+        // 更新用户角色
+        const { error: roleError } = await supabase
+            .from('profiles')
+            .update({ role })
+            .eq('id', userId);
+
+        if (roleError) {
+            logger.error('更新用户角色失败:', roleError);
+            return res.status(500).json({
+                success: false,
+                error: '更新用户角色失败'
+            });
+        }
+
+        // 更新或插入权限记录
+        const { error: permError } = await supabase
+            .from('user_permissions')
+            .upsert({
+                user_id: userId,
+                permissions: permissions || [],
+                custom_permissions: custom_permissions || [],
+                updated_at: new Date().toISOString()
+            });
+
+        if (permError) {
+            logger.error('更新用户权限失败:', permError);
+            return res.status(500).json({
+                success: false,
+                error: '更新用户权限失败'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '用户权限已更新'
+        });
+    } catch (error) {
+        logger.error('更新用户权限异常:', error);
+        res.status(500).json({
+            success: false,
+            error: '服务器内部错误'
+        });
+    }
+});
+
+// ============================================================
+// 4. 导出
+// ============================================================
+
+export default router;

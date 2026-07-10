@@ -1,208 +1,361 @@
 /**
- * shared/lib/auth.js - 认证和授权中间件
- * @module auth
- * @description 提供 JWT 认证、角色授权等中间件
+ * @file auth.js
+ * @module backend/shared/lib/auth
+ * @description 认证和权限服务 - JWT验证、角色权限管理
+ * 
+ * @author Carwash Pro Team
+ * @version 1.0.0
  */
 
-import { supabase, getUserById } from './supabase.js';
+import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 import { logger } from './logger.js';
 
+// ============================================================
+// 1. 配置
+// ============================================================
+
+/** @type {string} Supabase URL */
+const supabaseUrl = process.env.SUPABASE_URL;
+
+/** @type {string} Supabase Service Key */
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+/** @type {import('@supabase/supabase-js').SupabaseClient} Supabase客户端 */
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+/** @type {string} JWT密钥 */
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
 /**
- * 认证中间件 - 验证请求中的 JWT token
- * @param {Object} req - Express 请求对象
- * @param {Object} res - Express 响应对象
- * @param {Function} next - Express 下一个中间件
- * @returns {void}
+ * @typedef {Object} User
+ * @property {string} id - 用户ID
+ * @property {string} email - 邮箱
+ * @property {string} role - 角色
+ * @property {string} name - 姓名
+ * @property {string|null} tenant_id - 租户ID
+ * @property {string|null} business_id - 业务ID
  */
-export async function authenticate(req, res, next) {
+
+/**
+ * @typedef {Object} PermissionResult
+ * @property {User} user - 用户信息
+ * @property {boolean} allowed - 是否有权限
+ */
+
+// ============================================================
+// 2. 角色权限映射
+// ============================================================
+
+/**
+ * @type {Object<string, string[]>}
+ * @description 角色权限映射表
+ */
+const ROLE_PERMISSIONS = {
+    /** 管理员 - 所有权限 */
+    admin: ['*'],
+    
+    /** 经理 - 业务管理权限 */
+    manager: [
+        'dashboard:view',
+        'pos:view', 'pos:create', 'pos:edit',
+        'orders:view', 'orders:create', 'orders:edit', 'orders:delete',
+        'customers:view', 'customers:create', 'customers:edit',
+        'products:view', 'products:create', 'products:edit', 'products:delete',
+        'inventory:view', 'inventory:create', 'inventory:edit',
+        'reports:view', 'reports:export',
+        'employees:view', 'employees:create', 'employees:edit',
+        'attendance:view', 'attendance:create', 'attendance:edit',
+        'finance:view', 'finance:create', 'finance:edit'
+    ],
+    
+    /** 普通员工 - 基本操作权限 */
+    staff: [
+        'dashboard:view',
+        'pos:view', 'pos:create',
+        'orders:view', 'orders:create',
+        'customers:view', 'customers:create',
+        'products:view',
+        'attendance:view'
+    ],
+    
+    /** 收银员 - 收银相关权限 */
+    cashier: [
+        'dashboard:view',
+        'pos:view', 'pos:create',
+        'orders:view',
+        'customers:view', 'customers:create',
+        'products:view'
+    ]
+};
+
+// ============================================================
+// 3. 核心函数
+// ============================================================
+
+/**
+ * @public
+ * @param {string} token - JWT Token
+ * @returns {Promise<User>} 用户信息
+ * @throws {Error} 验证失败时抛出错误
+ * @description 验证JWT Token并返回用户信息
+ * 
+ * @example
+ * const user = await verifyToken(token);
+ * console.log(user.email);
+ */
+export async function verifyToken(token) {
     try {
-        const authHeader = req.headers.authorization;
-        
-        if (!authHeader) {
-            return res.status(401).json({
-                success: false,
-                error: '未授权，请先登录',
-                code: 'UNAUTHORIZED'
-            });
+        if (!token) {
+            throw new Error('Token不存在');
         }
 
-        const token = authHeader.replace('Bearer ', '');
-        
-        // 简单解析 token（生产环境应使用 JWT 验证）
-        const userId = token.split('_')[2];
-        
-        if (!userId) {
-            return res.status(401).json({
-                success: false,
-                error: '无效的认证令牌',
-                code: 'INVALID_TOKEN'
-            });
+        // 尝试从Supabase验证
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error) {
+            // 如果Supabase验证失败，尝试本地JWT验证
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                return {
+                    id: decoded.id,
+                    email: decoded.email,
+                    role: decoded.role || 'staff',
+                    name: decoded.name || decoded.email,
+                    tenant_id: decoded.tenant_id || null,
+                    business_id: decoded.business_id || null
+                };
+            } catch (jwtError) {
+                logger.warn('JWT验证失败:', jwtError.message);
+                throw new Error('Token无效或已过期');
+            }
         }
 
-        const user = await getUserById(userId);
-        
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: '用户不存在',
-                code: 'USER_NOT_FOUND'
-            });
+        // 获取用户角色和业务信息
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role, business_id, full_name, tenant_id')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError) {
+            logger.warn('获取用户资料失败:', profileError.message);
+            // 如果profile不存在，使用默认信息
+            return {
+                id: user.id,
+                email: user.email,
+                role: 'staff',
+                name: user.user_metadata?.full_name || user.email,
+                tenant_id: user.user_metadata?.tenant_id || null,
+                business_id: user.user_metadata?.business_id || null
+            };
         }
 
-        if (user.status !== 'approved') {
-            return res.status(403).json({
-                success: false,
-                error: '账号未激活，请联系管理员',
-                code: 'ACCOUNT_INACTIVE'
-            });
-        }
-
-        req.user = user;
-        next();
+        return {
+            id: user.id,
+            email: user.email,
+            role: profile.role || 'staff',
+            name: profile.full_name || user.email,
+            tenant_id: profile.tenant_id || null,
+            business_id: profile.business_id || null
+        };
     } catch (error) {
-        logger.error('[Auth] 认证失败:', error);
-        return res.status(500).json({
-            success: false,
-            error: '认证失败，请稍后重试',
-            code: 'AUTH_ERROR'
-        });
+        logger.error('验证Token失败:', error.message);
+        throw error;
     }
 }
 
 /**
- * 角色授权中间件 - 检查用户是否有指定角色
- * @param {Array<string>} allowedRoles - 允许的角色列表
- * @returns {Function} Express 中间件 (req, res, next) => void
+ * @public
+ * @param {string|string[]} required - 需要的权限
+ * @returns {Function} Express中间件
+ * @description 验证用户权限（中间件格式）
+ * 
+ * @example
+ * router.get('/admin', requirePermission(['admin:view']), handler);
  */
-export function roleMiddleware(allowedRoles) {
-    // 确保 allowedRoles 是数组
-    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-    
-    return function(req, res, next) {
+export function requirePermission(required) {
+    /**
+     * @param {import('express').Request} req - Express请求对象
+     * @param {import('express').Response} res - Express响应对象
+     * @param {import('express').NextFunction} next - 下一个中间件
+     */
+    return async function(req, res, next) {
         try {
-            // 确保 req.user 存在（先经过 authenticate）
-            if (!req.user) {
+            const token = req.headers.authorization?.replace('Bearer ', '');
+            if (!token) {
                 return res.status(401).json({
                     success: false,
-                    error: '未授权，请先登录',
-                    code: 'UNAUTHORIZED'
+                    error: '未提供认证Token'
                 });
             }
 
-            const userRole = req.user.role;
+            const user = await verifyToken(token);
+            req.user = user;
+
+            // 如果是admin，拥有所有权限
+            if (user.role === 'admin') {
+                return next();
+            }
+
+            // 检查权限
+            const userPermissions = ROLE_PERMISSIONS[user.role] || [];
+            const requiredPermissions = Array.isArray(required) ? required : [required];
             
-            if (!roles.includes(userRole)) {
+            const hasPermission = requiredPermissions.some(perm => 
+                userPermissions.includes('*') || userPermissions.includes(perm)
+            );
+
+            if (!hasPermission) {
+                logger.warn(`用户 ${user.id} (${user.role}) 无权访问: ${requiredPermissions.join(', ')}`);
                 return res.status(403).json({
                     success: false,
-                    error: `权限不足，需要以下角色之一: ${roles.join(', ')}`,
-                    code: 'FORBIDDEN'
+                    error: '权限不足',
+                    required: requiredPermissions,
+                    role: user.role
                 });
             }
 
             next();
         } catch (error) {
-            logger.error('[Role] 角色验证失败:', error);
-            return res.status(500).json({
+            logger.error('权限验证失败:', error.message);
+            return res.status(401).json({
                 success: false,
-                error: '权限验证失败',
-                code: 'ROLE_ERROR'
+                error: error.message || '认证失败'
             });
         }
     };
 }
 
 /**
- * 组合中间件 - 先认证再授权
- * @param {Array<string>} allowedRoles - 允许的角色列表
- * @returns {Array<Function>} 中间件数组
+ * @public
+ * @param {string|string[]} roles - 允许的角色列表
+ * @returns {Function} Express中间件
+ * @description 验证用户角色（中间件格式）
+ * 
+ * @example
+ * router.get('/admin-only', requireRole(['admin']), handler);
  */
-export function authAndRole(allowedRoles) {
-    return [authenticate, roleMiddleware(allowedRoles)];
-}
-
-/**
- * 认证中间件包装器（兼容旧版用法）
- * @param {Function} handler - 路由处理器
- * @returns {Function} 包装后的处理器
- */
-export function authMiddleware(handler) {
+export function requireRole(roles) {
+    /**
+     * @param {import('express').Request} req - Express请求对象
+     * @param {import('express').Response} res - Express响应对象
+     * @param {import('express').NextFunction} next - 下一个中间件
+     */
     return async function(req, res, next) {
         try {
-            // 先执行认证
-            await new Promise((resolve, reject) => {
-                authenticate(req, res, (err) => {
-                    if (err) reject(err);
-                    else resolve();
-                });
-            });
-            // 认证通过后执行原始 handler
-            return handler(req, res, next);
-        } catch (error) {
-            // 如果认证失败，错误响应已在 authenticate 中发送
-            // 这里只捕获其他错误
-            if (error) {
-                logger.error('[AuthMiddleware] 认证失败:', error);
-                return res.status(500).json({
+            const token = req.headers.authorization?.replace('Bearer ', '');
+            if (!token) {
+                return res.status(401).json({
                     success: false,
-                    error: '认证失败',
-                    code: 'AUTH_ERROR'
+                    error: '未提供认证Token'
                 });
             }
+
+            const user = await verifyToken(token);
+            req.user = user;
+
+            const allowedRoles = Array.isArray(roles) ? roles : [roles];
+            
+            if (user.role === 'admin') {
+                return next();
+            }
+
+            if (!allowedRoles.includes(user.role)) {
+                logger.warn(`用户 ${user.id} (${user.role}) 不在允许角色中: ${allowedRoles.join(', ')}`);
+                return res.status(403).json({
+                    success: false,
+                    error: '角色权限不足',
+                    allowed: allowedRoles,
+                    current: user.role
+                });
+            }
+
+            next();
+        } catch (error) {
+            logger.error('角色验证失败:', error.message);
+            return res.status(401).json({
+                success: false,
+                error: error.message || '认证失败'
+            });
         }
     };
 }
 
 /**
- * 角色中间件包装器（兼容旧版用法）
- * @param {Array<string>} allowedRoles - 允许的角色列表
- * @param {Function} handler - 路由处理器
- * @returns {Function} 包装后的处理器
+ * @public
+ * @param {import('express').Request} req - Express请求对象
+ * @param {import('express').Response} res - Express响应对象
+ * @param {import('express').NextFunction} next - 下一个中间件
+ * @description 获取当前用户（中间件）
+ * 
+ * @example
+ * router.get('/me', getCurrentUser, (req, res) => {
+ *   res.json(req.user);
+ * });
  */
-export function roleMiddlewareWrapper(allowedRoles) {
-    return function(handler) {
-        return async function(req, res, next) {
-            try {
-                // 先执行认证
-                await new Promise((resolve, reject) => {
-                    authenticate(req, res, (err) => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
-                });
-                
-                // 再检查角色
-                const userRole = req.user?.role;
-                if (!allowedRoles.includes(userRole)) {
-                    return res.status(403).json({
-                        success: false,
-                        error: `权限不足，需要以下角色之一: ${allowedRoles.join(', ')}`,
-                        code: 'FORBIDDEN'
-                    });
-                }
-                
-                return handler(req, res, next);
-            } catch (error) {
-                logger.error('[RoleMiddleware] 认证失败:', error);
-                return res.status(500).json({
-                    success: false,
-                    error: '认证失败',
-                    code: 'AUTH_ERROR'
-                });
-            }
-        };
-    };
+export async function getCurrentUser(req, res, next) {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            req.user = null;
+            return next();
+        }
+
+        const user = await verifyToken(token);
+        req.user = user;
+        next();
+    } catch (error) {
+        req.user = null;
+        next();
+    }
 }
 
-// 导出默认对象（兼容旧版）
-export default {
-    authenticate,
-    roleMiddleware,
-    authAndRole,
-    authMiddleware,
-    roleMiddlewareWrapper
-};
+/**
+ * @public
+ * @param {string} token - JWT Token
+ * @param {string|string[]} required - 需要的权限
+ * @returns {Promise<PermissionResult>} 验证结果
+ * @throws {Error} 验证失败时抛出错误
+ * @description 验证用户权限（函数调用格式，用于非中间件场景）
+ * 
+ * @example
+ * const { user, allowed } = await validatePermission(token, 'admin:view');
+ * if (!allowed) throw new Error('权限不足');
+ */
+export async function validatePermission(token, required) {
+    try {
+        if (!token) {
+            throw new Error('Token不存在');
+        }
+
+        const user = await verifyToken(token);
+        
+        if (user.role === 'admin') {
+            return { user, allowed: true };
+        }
+
+        const userPermissions = ROLE_PERMISSIONS[user.role] || [];
+        const requiredPermissions = Array.isArray(required) ? required : [required];
+        
+        const allowed = requiredPermissions.some(perm => 
+            userPermissions.includes('*') || userPermissions.includes(perm)
+        );
+
+        return { user, allowed };
+    } catch (error) {
+        throw new Error(`权限验证失败: ${error.message}`);
+    }
+}
 
 // ============================================================
-// 🔥 关键修复：添加 requireRole 别名（兼容 orders.js）
+// 4. 导出
 // ============================================================
-export const requireRole = roleMiddleware;
+
+export default {
+    verifyToken,
+    requirePermission,
+    requireRole,
+    getCurrentUser,
+    validatePermission,
+    ROLE_PERMISSIONS
+};

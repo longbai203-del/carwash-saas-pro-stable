@@ -1,0 +1,123 @@
+<!-- ============================================================ -->
+<!-- AI 智能助手 - AI Assistant                                   -->
+<!-- ============================================================ -->
+
+<div class="ai-container" style="padding:20px;max-width:1200px;margin:0 auto;">
+    <!-- 页面标题 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1 style="font-size:24px;font-weight:700;margin:0;color:#1F2937;">🤖 AI 智能助手</h1>
+            <p style="color:#6B7280;margin:4px 0 0 0;">用自然语言查询业务数据</p>
+        </div>
+        <span style="display:inline-block;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:500;background:#EDE9FE;color:#6D28D9;">
+            ⚡ 实时
+        </span>
+    </div>
+
+    <!-- 聊天区域 -->
+    <div style="background:white;border-radius:12px;border:1px solid #E5E7EB;padding:24px;margin-bottom:24px;">
+        <div id="chatMessages" style="min-height:200px;max-height:400px;overflow-y:auto;margin-bottom:16px;">
+            <div class="chat-message assistant" style="display:flex;gap:12px;padding:12px 16px;border-radius:8px;margin-bottom:8px;background:#EEF2FF;">
+                <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;background:#10B981;color:white;">AI</div>
+                <div style="flex:1;font-size:14px;line-height:1.6;white-space:pre-wrap;" id="welcomeMessage">
+                    👋 你好！我是你的 AI 业务助手。<br><br>
+                    你可以问我关于业务的问题，例如：
+                    • 📊 今天生意怎么样？
+                    • 📦 哪些商品库存不足？
+                    • 👥 VIP 客户有多少？
+                    • 📈 未来一周销售预测？
+                </div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div style="display:flex;gap:12px;">
+            <input id="aiQuestion" type="text" placeholder="输入你的问题..." 
+                   style="flex:1;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;background:white;transition:border-color 0.2s;" />
+            <button id="askBtn" style="padding:10px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;background:#4F46E5;color:white;transition:background 0.2s;">
+                发送
+            </button>
+        </div>
+
+        <!-- 快捷问题 -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            <button onclick="window.askQuick('今天生意怎么样？')" style="padding:6px 14px;border:1px solid #E5E7EB;border-radius:20px;background:white;cursor:pointer;font-size:13px;color:#374151;transition:all 0.2s;">
+                📊 今天生意
+            </button>
+            <button onclick="window.askQuick('哪些商品库存不足？')" style="padding:6px 14px;border:1px solid #E5E7EB;border-radius:20px;background:white;cursor:pointer;font-size:13px;color:#374151;transition:all 0.2s;">
+                📦 库存预警
+            </button>
+            <button onclick="window.askQuick('VIP客户有多少？')" style="padding:6px 14px;border:1px solid #E5E7EB;border-radius:20px;background:white;cursor:pointer;font-size:13px;color:#374151;transition:all 0.2s;">
+                👥 客户分析
+            </button>
+            <button onclick="window.askQuick('未来一周销售预测？')" style="padding:6px 14px;border:1px solid #E5E7EB;border-radius:20px;background:white;cursor:pointer;font-size:13px;color:#374151;transition:all 0.2s;">
+                📈 销售预测
+            </button>
+            <button onclick="window.askQuick('本月利润多少？')" style="padding:6px 14px;border:1px solid #E5E7EB;border-radius:20px;background:white;cursor:pointer;font-size:13px;color:#374151;transition:all 0.2s;">
+                💰 财务报告
+            </button>
+        </div>
+    </div>
+
+    <!-- 业务洞察 -->
+    <div style="margin-bottom:16px;">
+        <h2 style="font-size:18px;font-weight:600;margin:0 0 4px 0;color:#1F2937;">💡 业务洞察</h2>
+        <p style="color:#6B7280;font-size:14px;margin:0;">AI 自动分析生成的业务建议</p>
+    </div>
+    <div id="insightsContainer" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E5E7EB;border-left:4px solid #4F46E5;">
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px;color:#1F2937;"><span style="font-size:18px;margin-right:6px;">⏳</span>加载中...</div>
+            <div style="font-size:14px;color:#6B7280;">正在分析业务数据...</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chat-message.user {
+        justify-content: flex-end;
+    }
+    .chat-message.user > .content {
+        background: #F3F4F6;
+        padding: 8px 16px;
+        border-radius: 8px;
+    }
+    [data-theme="dark"] .ai-container .chat-message.assistant {
+        background: #1E1E3A;
+    }
+    [data-theme="dark"] .ai-container .chat-message.user > .content {
+        background: #3A3A3C;
+        color: #F5F5F7;
+    }
+    [data-theme="dark"] .ai-container #chatMessages {
+        border-color: #48484A;
+    }
+    [data-theme="dark"] .ai-container #aiQuestion {
+        background: #3A3A3C;
+        border-color: #48484A;
+        color: #F5F5F7;
+    }
+    [data-theme="dark"] .ai-container .quick-questions button {
+        background: #3A3A3C;
+        border-color: #48484A;
+        color: #D1D5DB;
+    }
+    [data-theme="dark"] .ai-container .quick-questions button:hover {
+        background: #4A4A4C;
+        border-color: #4F46E5;
+    }
+    [data-theme="dark"] .ai-container .insight-card {
+        background: #2C2C2E;
+        border-color: #48484A;
+    }
+    [data-theme="dark"] .ai-container .insight-card .title {
+        color: #F5F5F7;
+    }
+    [data-theme="dark"] .ai-container .insight-card .description {
+        color: #9CA3AF;
+    }
+    @media (max-width: 768px) {
+        .ai-container .insights-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

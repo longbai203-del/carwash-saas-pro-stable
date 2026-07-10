@@ -1,137 +1,253 @@
-﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carwash Pro - 洗车店管理系统</title>
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
-    <!-- 项目 CSS -->
-    <link rel="stylesheet" href="/css/style.css" />
-    <link rel="stylesheet" href="/css/design-system.css" />
-
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    </script>
-
-    <!-- Supabase 配置 -->
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 应用样式 -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/design-system.css">
+    
+    <!-- 配置 -->
     <script>
-        window.SUPABASE_CONFIG = {
-            url: 'https://ukqhdzvegqlkimxzkfcp.supabase.co',
-            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcWhkenZlZ3Fsa2lteHprZmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjE3OTQsImV4cCI6MjA5ODczNzc5NH0.YuEB1rzpqc8kynZukXU4ANKnVtpIC3JJ9IEacQ2fcQE'
-        };
-        console.log('✅ Supabase 配置已加载');
-        console.log('📌 Supabase URL:', window.SUPABASE_CONFIG.url);
-    </script>
-
-    <!-- ===== 前后端分离配置 ===== -->
-    <script>
-        // 前端全局配置 - 后端 API 基地址（✅ 修改为同源相对路径）
+        /**
+         * @global
+         * @type {Object}
+         * @description 应用配置
+         */
         window.APP_CONFIG = {
-            // 使用相对路径，跟随当前域名和端口，避免跨域并自动适配本地开发与Render生产
-            API_BASE_URL: '/api'
+            appName: 'Carwash Pro',
+            version: '1.0.0',
+            apiBaseUrl: window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/api' 
+                : '/api'
         };
-        console.log('✅ APP_CONFIG 已加载，API_BASE_URL:', window.APP_CONFIG.API_BASE_URL);
+        
+        /**
+         * @global
+         * @type {Object}
+         * @description Supabase配置
+         */
+        window.SUPABASE_CONFIG = {
+            url: 'https://ukqhdzveqklinkzfcp.supabase.co',
+            key: '{{SUPABASE_KEY}}' // 将由后端注入或从环境变量读取
+        };
     </script>
-
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; }
-        #app { display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 260px; min-width: 260px; background: #ffffff; border-right: 1px solid #e9edf4; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; position: sticky; top: 0; z-index: 100; }
-        #sidebar::-webkit-scrollbar { width: 4px; }
-        #sidebar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-        .main-wrap { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
-        #navbar { flex-shrink: 0; background: #ffffff; border-bottom: 1px solid #e9edf4; padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; min-height: 64px; position: sticky; top: 0; z-index: 50; }
-        #navbar .breadcrumb { font-size: 14px; font-weight: 500; color: #1e293b; display: flex; align-items: center; gap: 8px; }
-        #navbar .breadcrumb span { color: #64748b; font-weight: 400; }
-        #navbar .user-area { display: flex; align-items: center; gap: 16px; font-size: 14px; color: #1e293b; }
-        #navbar .user-area .avatar { width: 34px; height: 34px; border-radius: 999px; background: #4f46e5; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
-        #content { flex: 1; padding: 24px 28px 28px 28px; overflow-y: auto; background: #f1f5f9; }
-        #content::-webkit-scrollbar { width: 6px; }
-        #content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
-        .menu-toggle { display: none; background: transparent; border: none; font-size: 20px; cursor: pointer; color: #1e293b; padding: 4px 8px; border-radius: 6px; }
-        .menu-toggle:hover { background: #f1f5f9; }
-        @media (max-width: 768px) {
-            #sidebar { width: 0; min-width: 0; overflow: hidden; border-right: none; }
-            #sidebar.open { width: 280px; min-width: 280px; border-right: 1px solid #e9edf4; box-shadow: 4px 0 20px rgba(0,0,0,0.06); }
-            #navbar { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
-            #content { padding: 16px; }
-            .menu-toggle { display: flex !important; }
-        }
-        .text-muted { color: #64748b; }
-    </style>
 </head>
 <body>
-
-    <!-- ====== HTML 结构 ====== -->
-    <div id="app">
-        <aside id="sidebar"></aside>
-        <div class="main-wrap">
-            <header id="navbar">
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <button class="menu-toggle" id="menuToggle" aria-label="切换侧边栏">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="breadcrumb">
-                        <i class="fas fa-home" style="color:#64748b;font-size:15px;"></i>
-                        <span id="currentPageTitle">仪表板</span>
-                    </div>
+    <!-- ============================================================ -->
+    <!-- 加载状态 -->
+    <!-- ============================================================ -->
+    <div id="app-loading" class="app-loading">
+        <div class="loading-container">
+            <div class="loading-logo">
+                <img src="/assets/images/logo.svg" alt="Carwash Pro" onerror="this.style.display='none'">
+                <h1>Carwash Pro</h1>
+            </div>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>正在加载系统...</p>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
                 </div>
-                <div class="user-area">
-                    <span id="currentUserSpan">管理员</span>
-                    <div class="avatar"><i class="fas fa-user" style="font-size:15px;"></i></div>
-                </div>
-            </header>
-            <main id="content">
-                <div style="text-align:center;padding:60px 20px;">
-                    <h2 style="color:#1e293b;margin-bottom:16px;">🚗 Carwash Pro</h2>
-                    <p style="color:#64748b;">正在加载系统...</p>
-                </div>
-            </main>
+            </div>
+            <div class="loading-tips">
+                <p id="loading-tip">智能洗车管理系统</p>
+            </div>
+            <div class="loading-version">
+                <span>v1.0.0</span>
+            </div>
         </div>
     </div>
 
-    <!-- ====== 移动端侧边栏切换 ====== -->
-    <script>
-        (function() {
-            var sidebar = document.getElementById('sidebar');
-            var toggleBtn = document.getElementById('menuToggle');
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    sidebar.classList.toggle('open');
-                });
-                document.getElementById('content')?.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) sidebar.classList.remove('open');
-                });
-                window.addEventListener('resize', function() {
-                    if (window.innerWidth > 768) sidebar.classList.remove('open');
-                });
+    <!-- ============================================================ -->
+    <!-- 主应用容器 -->
+    <!-- ============================================================ -->
+    <div id="app">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-car-wash"></i>
+                    <span>Carwash Pro</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- 导航菜单由JavaScript动态生成 -->
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name">用户</span>
+                        <span class="user-role" id="user-role">角色</span>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logout-btn" title="退出登录">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main id="main-content">
+            <!-- 顶部导航 -->
+            <header id="topbar" class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item">首页</span>
+                    </div>
+                </div>
+                
+                <div class="topbar-right">
+                    <!-- 搜索 -->
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="搜索..." id="global-search">
+                    </div>
+                    
+                    <!-- 通知 -->
+                    <div class="notification-wrapper">
+                        <button class="notification-btn" id="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge" id="notification-badge">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notification-dropdown">
+                            <div class="notification-header">
+                                <span>通知</span>
+                                <button class="mark-all-read">全部已读</button>
+                            </div>
+                            <div class="notification-list">
+                                <div class="notification-empty">暂无通知</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 主题切换 -->
+                    <button class="theme-toggle" id="theme-toggle" title="切换主题">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- 更多 -->
+                    <button class="more-toggle" id="more-toggle">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- 页面内容 -->
+            <div id="app-content" class="app-content" style="display: none;">
+                <!-- 页面由路由动态渲染 -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- 模态框容器 -->
+    <div id="modal-container" class="modal-container"></div>
+
+    <!-- ============================================================ -->
+    <!-- 核心脚本 -->
+    <!-- ============================================================ -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@core/*": "/js/core/*",
+                "@modules/*": "/js/modules/*",
+                "@utils/*": "/js/utils/*"
             }
-        })();
+        }
     </script>
 
-    <!-- ====== 应用脚本 (V2) ====== -->
-    <script type="module" src="/js/app.js"></script>
+    <!-- 应用脚本 -->
+    <script type="module">
+        import { app } from '/js/app.js';
+        
+        // 暴露应用实例到全局
+        window.app = app;
+        
+        // 处理加载进度
+        const progressFill = document.getElementById('progress-bar')?.querySelector('.progress-fill');
+        if (progressFill) {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress > 90) {
+                    clearInterval(interval);
+                    progress = 90;
+                }
+                progressFill.style.width = Math.min(progress, 90) + '%';
+            }, 200);
+            
+            // 当应用准备好时，完成进度条
+            document.addEventListener('app:ready', () => {
+                clearInterval(interval);
+                progressFill.style.width = '100%';
+                setTimeout(() => {
+                    const loading = document.getElementById('app-loading');
+                    if (loading) {
+                        loading.style.opacity = '0';
+                        setTimeout(() => {
+                            loading.style.display = 'none';
+                        }, 300);
+                    }
+                }, 500);
+            });
+        }
+        
+        // 加载提示轮换
+        const tips = [
+            '🚀 智能洗车管理系统',
+            '📊 实时数据分析',
+            '💼 高效运营管理',
+            '👥 客户关系维护',
+            '📈 业务增长引擎',
+            '🔒 安全可靠的数据保护'
+        ];
+        let tipIndex = 0;
+        const tipElement = document.getElementById('loading-tip');
+        if (tipElement) {
+            setInterval(() => {
+                tipIndex = (tipIndex + 1) % tips.length;
+                tipElement.textContent = tips[tipIndex];
+            }, 3000);
+        }
+    </script>
 
-    <!-- ====== 全局工具函数 ====== -->
+    <!-- 错误捕获 -->
     <script>
-        window.testAPI = function() {
-            fetch('/api/health')
-                .then(res => res.json())
-                .then(data => {
-                    alert('✅ API 响应: ' + JSON.stringify(data, null, 2));
-                })
-                .catch(err => {
-                    alert('❌ API 错误: ' + err.message);
-                });
-        };
-        console.log('✅ 基础脚本已加载');
+        window.addEventListener('error', function(event) {
+            console.error('全局错误:', event.error || event.message);
+        });
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未处理的Promise错误:', event.reason);
+        });
     </script>
-
 </body>
 </html>
