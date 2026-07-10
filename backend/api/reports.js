@@ -170,4 +170,4 @@ async function handleMonthly(req, res) {
     }
 }
 
-export default authMiddleware(roleMiddleware(['owner', 'admin', 'manager'])(handler));
+export default authMiddleware(handler);
