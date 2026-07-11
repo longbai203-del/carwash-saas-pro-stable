@@ -5,8 +5,8 @@
     "description":  "Carwash SaaS Pro 企业级后端API",
     "main":  "api/index.js",
     "scripts":  {
-                    "start":  "node api/index.js",
-                    "dev":  "nodemon api/index.js",
+                    "start":  "node src/api/index.js",
+                    "dev":  "nodemon src/api/index.js",
                     "build":  "echo \u0027无需构建，直接运行\u0027",
                     "test":  "node scripts/test.js",
                     "migrate":  "node database/migrate.js"
