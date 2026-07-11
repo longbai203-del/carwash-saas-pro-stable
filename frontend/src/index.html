@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="洗车SaaS - 一站式洗车店管理系统" />
+    <meta name="theme-color" content="#4fc3f7" />
+    
+    <title>洗车SaaS - 智能洗车管理</title>
+    
+    <!-- 全局样式 -->
+    <link rel="stylesheet" href="./src/styles/index.css" />
+    
+    <!-- 模块加载样式 -->
+    <style>
+        /* ============================================
+           应用加载动画
+           ============================================ */
+        #app-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s ease;
+        }
+        
+        #app-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #app-loader .loader-logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        #app-loader .loader-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        
+        #app-loader .loader-sub {
+            font-size: 14px;
+            color: #8888a0;
+            margin-bottom: 24px;
+        }
+        
+        #app-loader .loader-bar {
+            width: 200px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        #app-loader .loader-bar-inner {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            border-radius: 4px;
+            animation: loadProgress 2s ease-in-out infinite;
+        }
+        
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+        
+        /* ============================================
+           布局
+           ============================================ */
+        #app {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        #sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: #1a1a2e;
+            color: #fff;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+        }
+        
+        #main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+        
+        #content-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+            }
+            
+            #sidebar.open {
+                left: 0;
+            }
+            
+            #main-content {
+                padding: 16px;
+            }
+            
+            #content-container {
+                padding: 16px;
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 加载动画 ===== -->
+    <div id="app-loader">
+        <div class="loader-logo">🚗</div>
+        <div class="loader-title">洗车SaaS</div>
+        <div class="loader-sub">智能洗车管理系统</div>
+        <div class="loader-bar">
+            <div class="loader-bar-inner"></div>
+        </div>
+    </div>
+
+    <!-- ===== 应用容器 ===== -->
+    <div id="app">
+        <div id="sidebar"></div>
+        <div id="main-content">
+            <div id="content-container">
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p>加载模块中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 应用脚本 ===== -->
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
