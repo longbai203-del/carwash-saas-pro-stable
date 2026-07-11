@@ -1,0 +1,1549 @@
+/**
+ * CRM (客户关系管理) 模块样式
+ * 集成在 AI 模块中，提供客户管理界面
+ * 
+ * @module modules/15-ai/crm/crm.css
+ * @version 1.0.0
+ * 
+ * @example
+ * <link rel="stylesheet" href="./crm/crm.css" />
+ */
+
+/* ============================================
+   1. 容器和布局
+   ============================================ */
+
+   .crm-container {
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .crm-container * {
+    box-sizing: border-box;
+  }
+  
+  /* ============================================
+     2. 头部区域
+     ============================================ */
+  
+  .crm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .crm-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .crm-header h2 .badge {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 12px;
+    border-radius: 9999px;
+    background: #e3f2fd;
+    color: #0d47a1;
+  }
+  
+  .crm-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  /* ============================================
+     3. 按钮
+     ============================================ */
+  
+  .crm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  
+  .crm-btn-primary {
+    background: linear-gradient(135deg, #4fc3f7, #0288d1);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
+  }
+  
+  .crm-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(79, 195, 247, 0.4);
+  }
+  
+  .crm-btn-secondary {
+    background: #f5f5f5;
+    color: #1a1a2e;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .crm-btn-secondary:hover {
+    background: #e8e8e8;
+  }
+  
+  .crm-btn-success {
+    background: linear-gradient(135deg, #66bb6a, #2e7d32);
+    color: #fff;
+  }
+  
+  .crm-btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 187, 106, 0.4);
+  }
+  
+  .crm-btn-danger {
+    background: linear-gradient(135deg, #ef5350, #c62828);
+    color: #fff;
+  }
+  
+  .crm-btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(239, 83, 80, 0.4);
+  }
+  
+  .crm-btn-outline {
+    background: transparent;
+    color: #4fc3f7;
+    border: 2px solid #4fc3f7;
+  }
+  
+  .crm-btn-outline:hover {
+    background: #4fc3f7;
+    color: #fff;
+  }
+  
+  .crm-btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+  
+  .crm-btn-lg {
+    padding: 12px 32px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+  
+  .crm-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  /* ============================================
+     4. 统计卡片
+     ============================================ */
+  
+  .crm-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .crm-stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+  }
+  
+  .crm-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+  }
+  
+  .crm-stat-card .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  
+  .crm-stat-card .icon.blue {
+    background: #e3f2fd;
+    color: #0d47a1;
+  }
+  
+  .crm-stat-card .icon.green {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+  
+  .crm-stat-card .icon.gold {
+    background: #fff8e1;
+    color: #f57f17;
+  }
+  
+  .crm-stat-card .icon.purple {
+    background: #f3e5f5;
+    color: #6a1b9a;
+  }
+  
+  .crm-stat-card .icon.orange {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  
+  .crm-stat-card .icon.red {
+    background: #fce4ec;
+    color: #c62828;
+  }
+  
+  .crm-stat-card .info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .crm-stat-card .info .number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1.2;
+  }
+  
+  .crm-stat-card .info .number.small {
+    font-size: 18px;
+  }
+  
+  .crm-stat-card .info .label {
+    font-size: 13px;
+    color: #8888a0;
+    margin-top: 2px;
+  }
+  
+  .crm-stat-card .info .change {
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  
+  .crm-stat-card .info .change.positive {
+    color: #2e7d32;
+  }
+  
+  .crm-stat-card .info .change.negative {
+    color: #d32f2f;
+  }
+  
+  .crm-stat-card .info .change.neutral {
+    color: #f57c00;
+  }
+  
+  /* ============================================
+     5. 搜索和过滤
+     ============================================ */
+  
+  .crm-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    background: #fff;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    align-items: center;
+  }
+  
+  .crm-filters .search-wrapper {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+  }
+  
+  .crm-filters .search-wrapper .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8888a0;
+    font-size: 16px;
+  }
+  
+  .crm-filters .search-wrapper input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 2px solid #e8e8e8;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+    background: #fafafa;
+  }
+  
+  .crm-filters .search-wrapper input:focus {
+    border-color: #4fc3f7;
+    background: #fff;
+  }
+  
+  .crm-filters .search-wrapper input::placeholder {
+    color: #bbb;
+  }
+  
+  .crm-filters select {
+    padding: 10px 16px;
+    border: 2px solid #e8e8e8;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: #fafafa;
+    cursor: pointer;
+    min-width: 120px;
+    transition: border-color 0.3s;
+  }
+  
+  .crm-filters select:focus {
+    border-color: #4fc3f7;
+    background: #fff;
+  }
+  
+  .crm-filters .filter-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .crm-filters .filter-actions .btn-reset {
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: #8888a0;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 8px;
+    transition: all 0.3s;
+  }
+  
+  .crm-filters .filter-actions .btn-reset:hover {
+    background: #f5f5f5;
+    color: #1a1a2e;
+  }
+  
+  /* ============================================
+     6. 客户列表
+     ============================================ */
+  
+  .crm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .crm-list .loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8888a0;
+    font-size: 16px;
+  }
+  
+  .crm-list .loading-state .spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f0f0f0;
+    border-top-color: #4fc3f7;
+    border-radius: 50%;
+    animation: crm-spin 0.8s linear infinite;
+    margin-bottom: 12px;
+  }
+  
+  @keyframes crm-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .crm-list .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8888a0;
+  }
+  
+  .crm-list .empty-state .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  .crm-list .empty-state .empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+  }
+  
+  .crm-list .empty-state .empty-desc {
+    font-size: 14px;
+    color: #8888a0;
+  }
+  
+  /* ============================================
+     7. 客户卡片项
+     ============================================ */
+  
+  .crm-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    gap: 16px;
+    position: relative;
+  }
+  
+  .crm-item:hover {
+    border-color: #4fc3f7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+  
+  .crm-item .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  
+  .crm-item .avatar.bronze {
+    background: linear-gradient(135deg, #fde68a, #d97706);
+  }
+  
+  .crm-item .avatar.silver {
+    background: linear-gradient(135deg, #e5e7eb, #6b7280);
+  }
+  
+  .crm-item .avatar.gold {
+    background: linear-gradient(135deg, #fcd34d, #d97706);
+  }
+  
+  .crm-item .avatar.platinum {
+    background: linear-gradient(135deg, #a5b4fc, #4f46e5);
+  }
+  
+  .crm-item .avatar.diamond {
+    background: linear-gradient(135deg, #67e8f9, #06b6d4);
+  }
+  
+  .crm-item .info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .crm-item .info .name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .crm-item .info .name .tier-badge {
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .crm-item .info .name .tier-badge.bronze {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .crm-item .info .name .tier-badge.silver {
+    background: #f3f4f6;
+    color: #374151;
+  }
+  
+  .crm-item .info .name .tier-badge.gold {
+    background: #fde68a;
+    color: #78350f;
+  }
+  
+  .crm-item .info .name .tier-badge.platinum {
+    background: #c7d2fe;
+    color: #312e81;
+  }
+  
+  .crm-item .info .name .tier-badge.diamond {
+    background: #a5f3fc;
+    color: #0e7490;
+  }
+  
+  .crm-item .info .contact {
+    font-size: 13px;
+    color: #8888a0;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  
+  .crm-item .info .contact span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .crm-item .metrics {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    padding: 0 8px;
+  }
+  
+  .crm-item .metrics .metric {
+    text-align: center;
+  }
+  
+  .crm-item .metrics .metric .value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    display: block;
+    line-height: 1.2;
+  }
+  
+  .crm-item .metrics .metric .label {
+    font-size: 11px;
+    color: #8888a0;
+  }
+  
+  .crm-item .status {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  
+  .crm-item .status.active {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+  
+  .crm-item .status.inactive {
+    background: #f5f5f5;
+    color: #757575;
+  }
+  
+  .crm-item .status.suspended {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  
+  .crm-item .status.banned {
+    background: #fce4ec;
+    color: #c62828;
+  }
+  
+  .crm-item .actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .crm-item:hover .actions {
+    opacity: 1;
+  }
+  
+  .crm-item .actions button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .crm-item .actions button:hover {
+    background: #f5f5f5;
+  }
+  
+  .crm-item .actions button.edit:hover {
+    background: #e3f2fd;
+    color: #0d47a1;
+  }
+  
+  .crm-item .actions button.delete:hover {
+    background: #fce4ec;
+    color: #c62828;
+  }
+  
+  /* ============================================
+     8. 详情视图
+     ============================================ */
+  
+  .crm-detail {
+    padding: 0 4px;
+  }
+  
+  .crm-detail .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .crm-detail .detail-header .back-btn {
+    background: none;
+    border: none;
+    color: #4fc3f7;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 0;
+    transition: color 0.3s;
+  }
+  
+  .crm-detail .detail-header .back-btn:hover {
+    color: #0288d1;
+    text-decoration: underline;
+  }
+  
+  .crm-detail .detail-header .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  /* ============================================
+     9. 客户资料卡片
+     ============================================ */
+  
+  .crm-profile {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 24px;
+    border: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+  }
+  
+  .crm-profile .avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  
+  .crm-profile .avatar-large.bronze {
+    background: linear-gradient(135deg, #fde68a, #d97706);
+  }
+  
+  .crm-profile .avatar-large.silver {
+    background: linear-gradient(135deg, #e5e7eb, #6b7280);
+  }
+  
+  .crm-profile .avatar-large.gold {
+    background: linear-gradient(135deg, #fcd34d, #d97706);
+  }
+  
+  .crm-profile .avatar-large.platinum {
+    background: linear-gradient(135deg, #a5b4fc, #4f46e5);
+  }
+  
+  .crm-profile .avatar-large.diamond {
+    background: linear-gradient(135deg, #67e8f9, #06b6d4);
+  }
+  
+  .crm-profile .profile-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .crm-profile .profile-info h2 {
+    margin: 0 0 4px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+  
+  .crm-profile .profile-info .contact {
+    display: flex;
+    gap: 16px;
+    color: #666;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  
+  .crm-profile .profile-info .contact span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .crm-profile .profile-info .meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .crm-profile .profile-info .meta .tier-badge-large {
+    padding: 4px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .crm-profile .profile-info .meta .tier-badge-large.bronze {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .crm-profile .profile-info .meta .tier-badge-large.silver {
+    background: #f3f4f6;
+    color: #374151;
+  }
+  
+  .crm-profile .profile-info .meta .tier-badge-large.gold {
+    background: #fde68a;
+    color: #78350f;
+  }
+  
+  .crm-profile .profile-info .meta .tier-badge-large.platinum {
+    background: #c7d2fe;
+    color: #312e81;
+  }
+  
+  .crm-profile .profile-info .meta .tier-badge-large.diamond {
+    background: #a5f3fc;
+    color: #0e7490;
+  }
+  
+  .crm-profile .profile-info .meta .stat-tag {
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  /* ============================================
+     10. 详情主体
+     ============================================ */
+  
+  .crm-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .crm-detail-body .section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+  }
+  
+  .crm-detail-body .section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .crm-detail-body .section .section-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  
+  .crm-detail-body .section .section-header .edit-btn {
+    background: none;
+    border: none;
+    color: #4fc3f7;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  
+  .crm-detail-body .section .section-header .edit-btn:hover {
+    text-decoration: underline;
+  }
+  
+  .crm-detail-body .section .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+  }
+  
+  .crm-detail-body .section .info-grid .item .label {
+    font-size: 12px;
+    color: #8888a0;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .crm-detail-body .section .info-grid .item .value {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a2e;
+    margin-top: 2px;
+  }
+  
+  .crm-detail-body .section .info-grid .item .value .status-badge {
+    font-size: 12px;
+    padding: 2px 12px;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+  
+  .crm-detail-body .section .info-grid .item .value .status-badge.active {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+  
+  .crm-detail-body .section .info-grid .item .value .status-badge.inactive {
+    background: #f5f5f5;
+    color: #757575;
+  }
+  
+  .crm-detail-body .section .info-grid .item .value .status-badge.suspended {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  
+  /* ============================================
+     11. 统计网格
+     ============================================ */
+  
+  .crm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  
+  .crm-stats-grid .stat-item {
+    text-align: center;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 8px;
+  }
+  
+  .crm-stats-grid .stat-item .number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    display: block;
+    line-height: 1.2;
+  }
+  
+  .crm-stats-grid .stat-item .label {
+    font-size: 12px;
+    color: #8888a0;
+    margin-top: 2px;
+  }
+  
+  /* ============================================
+     12. 分页
+     ============================================ */
+  
+  .crm-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 16px 0;
+  }
+  
+  .crm-pagination button {
+    padding: 8px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    min-width: 80px;
+  }
+  
+  .crm-pagination button:hover:not(:disabled) {
+    background: #f5f5f5;
+    border-color: #4fc3f7;
+  }
+  
+  .crm-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .crm-pagination .page-info {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .crm-pagination .page-numbers {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .crm-pagination .page-numbers button {
+    min-width: 36px;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+  
+  .crm-pagination .page-numbers button.active {
+    background: #4fc3f7;
+    color: #fff;
+    border-color: #4fc3f7;
+  }
+  
+  .crm-pagination .page-numbers button.active:hover {
+    background: #0288d1;
+    border-color: #0288d1;
+  }
+  
+  /* ============================================
+     13. 弹窗 (Modal)
+     ============================================ */
+  
+  .crm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: crm-fade-in 0.2s ease;
+    backdrop-filter: blur(4px);
+  }
+  
+  .crm-modal-overlay.hidden {
+    display: none;
+  }
+  
+  .crm-modal {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 560px;
+    width: 92%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+    animation: crm-slide-up 0.3s ease;
+  }
+  
+  @keyframes crm-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes crm-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .crm-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .crm-modal .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  
+  .crm-modal .modal-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #8888a0;
+    padding: 0 4px;
+    transition: color 0.2s;
+  }
+  
+  .crm-modal .modal-header .close-btn:hover {
+    color: #1a1a2e;
+  }
+  
+  .crm-modal .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+  }
+  
+  .crm-modal .modal-body .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .crm-modal .modal-body .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+  
+  .crm-modal .modal-body .form-group label .required {
+    color: #d32f2f;
+  }
+  
+  .crm-modal .modal-body .form-group input,
+  .crm-modal .modal-body .form-group select,
+  .crm-modal .modal-body .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: inherit;
+  }
+  
+  .crm-modal .modal-body .form-group input:focus,
+  .crm-modal .modal-body .form-group select:focus,
+  .crm-modal .modal-body .form-group textarea:focus {
+    border-color: #4fc3f7;
+  }
+  
+  .crm-modal .modal-body .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .crm-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  /* ============================================
+     14. Toast 通知
+     ============================================ */
+  
+  .crm-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 100000;
+    animation: crm-toast-in 0.3s ease;
+    max-width: 400px;
+  }
+  
+  .crm-toast.success {
+    background: #2e7d32;
+  }
+  
+  .crm-toast.error {
+    background: #c62828;
+  }
+  
+  .crm-toast.warning {
+    background: #e65100;
+  }
+  
+  .crm-toast.info {
+    background: #0d47a1;
+  }
+  
+  @keyframes crm-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .crm-toast .toast-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+  
+  .crm-toast .toast-close:hover {
+    color: #fff;
+  }
+  
+  /* ============================================
+     15. 暗色主题适配
+     ============================================ */
+  
+  [data-theme="dark"] .crm-container {
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .crm-header h2 {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-stat-card {
+    background: #25253a;
+    border-color: #3a3a4a;
+  }
+  
+  [data-theme="dark"] .crm-stat-card .info .number {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-stat-card .info .label {
+    color: #8888a0;
+  }
+  
+  [data-theme="dark"] .crm-filters {
+    background: #25253a;
+    border-color: #3a3a4a;
+  }
+  
+  [data-theme="dark"] .crm-filters .search-wrapper input {
+    background: #1e1e2e;
+    border-color: #3a3a4a;
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .crm-filters .search-wrapper input:focus {
+    border-color: #4fc3f7;
+    background: #2a2a3a;
+  }
+  
+  [data-theme="dark"] .crm-filters select {
+    background: #1e1e2e;
+    border-color: #3a3a4a;
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .crm-filters select:focus {
+    border-color: #4fc3f7;
+    background: #2a2a3a;
+  }
+  
+  [data-theme="dark"] .crm-item {
+    background: #25253a;
+    border-color: #3a3a4a;
+  }
+  
+  [data-theme="dark"] .crm-item:hover {
+    border-color: #4fc3f7;
+  }
+  
+  [data-theme="dark"] .crm-item .info .name {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-item .info .contact {
+    color: #8888a0;
+  }
+  
+  [data-theme="dark"] .crm-item .metrics .metric .value {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-profile {
+    background: #25253a;
+    border-color: #3a3a4a;
+  }
+  
+  [data-theme="dark"] .crm-profile .profile-info h2 {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-profile .profile-info .contact {
+    color: #8888a0;
+  }
+  
+  [data-theme="dark"] .crm-detail-body .section {
+    background: #25253a;
+    border-color: #3a3a4a;
+  }
+  
+  [data-theme="dark"] .crm-detail-body .section .section-header h3 {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-detail-body .section .info-grid .item .value {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-stats-grid .stat-item {
+    background: #1e1e2e;
+  }
+  
+  [data-theme="dark"] .crm-stats-grid .stat-item .number {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-pagination button {
+    background: #25253a;
+    border-color: #3a3a4a;
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .crm-pagination button:hover:not(:disabled) {
+    background: #1e1e2e;
+  }
+  
+  [data-theme="dark"] .crm-modal {
+    background: #25253a;
+  }
+  
+  [data-theme="dark"] .crm-modal .modal-header {
+    border-color: #3a3a4a;
+  }
+  
+  [data-theme="dark"] .crm-modal .modal-header h3 {
+    color: #f0f0f2;
+  }
+  
+  [data-theme="dark"] .crm-modal .modal-body .form-group label {
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .crm-modal .modal-body .form-group input,
+  [data-theme="dark"] .crm-modal .modal-body .form-group select,
+  [data-theme="dark"] .crm-modal .modal-body .form-group textarea {
+    background: #1e1e2e;
+    border-color: #3a3a4a;
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .crm-modal .modal-body .form-group input:focus,
+  [data-theme="dark"] .crm-modal .modal-body .form-group select:focus,
+  [data-theme="dark"] .crm-modal .modal-body .form-group textarea:focus {
+    border-color: #4fc3f7;
+  }
+  
+  [data-theme="dark"] .crm-modal .modal-footer {
+    border-color: #3a3a4a;
+  }
+  
+  /* ============================================
+     16. 响应式设计
+     ============================================ */
+  
+  /* 平板 */
+  @media (max-width: 1024px) {
+    .crm-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    .crm-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    .crm-item .metrics {
+      display: none;
+    }
+  }
+  
+  /* 手机 */
+  @media (max-width: 768px) {
+    .crm-container {
+      padding: 12px;
+    }
+  
+    .crm-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+  
+    .crm-header h2 {
+      font-size: 20px;
+    }
+  
+    .crm-header-actions {
+      width: 100%;
+    }
+  
+    .crm-header-actions .crm-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  
+    .crm-stats {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+  
+    .crm-stat-card {
+      padding: 12px;
+    }
+  
+    .crm-stat-card .icon {
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+    }
+  
+    .crm-stat-card .info .number {
+      font-size: 18px;
+    }
+  
+    .crm-filters {
+      flex-direction: column;
+      padding: 12px;
+    }
+  
+    .crm-filters .search-wrapper {
+      width: 100%;
+      min-width: auto;
+    }
+  
+    .crm-filters select {
+      width: 100%;
+      min-width: auto;
+    }
+  
+    .crm-filters .filter-actions {
+      width: 100%;
+    }
+  
+    .crm-filters .filter-actions .crm-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  
+    .crm-item {
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      gap: 10px;
+    }
+  
+    .crm-item .avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 14px;
+    }
+  
+    .crm-item .info {
+      flex: 1 1 100%;
+      order: 2;
+    }
+  
+    .crm-item .info .name {
+      font-size: 14px;
+    }
+  
+    .crm-item .info .contact {
+      font-size: 12px;
+      gap: 8px;
+    }
+  
+    .crm-item .status {
+      order: 3;
+      font-size: 11px;
+      padding: 2px 10px;
+    }
+  
+    .crm-item .actions {
+      opacity: 1;
+      order: 4;
+    }
+  
+    .crm-profile {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 16px;
+    }
+  
+    .crm-profile .avatar-large {
+      width: 64px;
+      height: 64px;
+      font-size: 24px;
+    }
+  
+    .crm-profile .profile-info .contact {
+      justify-content: center;
+    }
+  
+    .crm-profile .profile-info .meta {
+      justify-content: center;
+    }
+  
+    .crm-detail-body .section .info-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .crm-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+  
+    .crm-stats-grid .stat-item .number {
+      font-size: 18px;
+    }
+  
+    .crm-detail .detail-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .crm-detail .detail-header .actions {
+      width: 100%;
+    }
+  
+    .crm-detail .detail-header .actions .crm-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  
+    .crm-pagination {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  
+    .crm-pagination .page-numbers {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+    }
+  
+    .crm-modal {
+      width: 96%;
+      margin: 12px;
+    }
+  }
+  
+  /* 小手机 */
+  @media (max-width: 480px) {
+    .crm-stats {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+  
+    .crm-stat-card {
+      padding: 10px;
+      gap: 10px;
+    }
+  
+    .crm-stat-card .icon {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+    }
+  
+    .crm-stat-card .info .number {
+      font-size: 16px;
+    }
+  
+    .crm-stat-card .info .label {
+      font-size: 11px;
+    }
+  
+    .crm-item {
+      padding: 10px 12px;
+    }
+  
+    .crm-item .info .contact {
+      flex-direction: column;
+      gap: 2px;
+    }
+  
+    .crm-stats-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  
+    .crm-detail-body .section {
+      padding: 12px;
+    }
+  }

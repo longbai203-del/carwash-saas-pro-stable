@@ -1,236 +1,199 @@
 /**
- * scripts/setup.js - 项目初始化脚本
- * @module setup
- * @description 初始化项目环境，检查依赖，创建必要目录
+ * 项目初始化脚本
+ * 设置开发环境
  * 
- * 运行: npm run setup
+ * @module scripts/setup
+ * 
+ * @example
+ * node scripts/setup.js
  */
 
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
+const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
-
-// ============================================================
-// 颜色输出
-// ============================================================
+const projectRoot = path.resolve(__dirname, '../..');
 
 const colors = {
-    reset: '\x1b[0m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
-    red: '\x1b[31m',
-    cyan: '\x1b[36m',
-    bold: '\x1b[1m'
+  reset: '\x1b[0m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
 };
 
 function log(message, color = 'reset') {
-    console.log(`${colors[color]}${message}${colors.reset}`);
+  console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
-function logStep(message) {
-    log(`\n📌 ${message}`, 'cyan');
-}
+/**
+ * 检查环境变量
+ */
+async function checkEnvironment() {
+  log('\n📋 检查环境变量...', 'cyan');
 
-function logSuccess(message) {
-    log(`✅ ${message}`, 'green');
-}
+  const envPath = path.join(projectRoot, 'backend/.env');
+  const envExamplePath = path.join(projectRoot, 'backend/.env.example');
 
-function logWarning(message) {
-    log(`⚠️ ${message}`, 'yellow');
-}
-
-function logError(message) {
-    log(`❌ ${message}`, 'red');
-}
-
-// ============================================================
-// 检查Node版本
-// ============================================================
-
-function checkNodeVersion() {
-    logStep('检查Node.js版本...');
-
-    const version = process.version;
-    const major = parseInt(version.slice(1).split('.')[0]);
-
-    if (major < 18) {
-        logError(`Node.js ${version} 版本过低，请升级到 v18 或更高版本`);
-        process.exit(1);
-    }
-
-    logSuccess(`Node.js ${version} 版本符合要求`);
-}
-
-// ============================================================
-// 检查环境变量
-// ============================================================
-
-function checkEnvFile() {
-    logStep('检查环境变量文件...');
-
-    const envPath = path.join(rootDir, '.env');
-    const envExamplePath = path.join(rootDir, '.env.example');
-
-    if (!fs.existsSync(envPath)) {
-        logWarning('.env 文件不存在');
-        if (fs.existsSync(envExamplePath)) {
-            fs.copyFileSync(envExamplePath, envPath);
-            logSuccess('已从 .env.example 创建 .env 文件');
-            log('请编辑 .env 文件填写实际配置值', 'yellow');
-        } else {
-            logError('.env.example 文件不存在');
-            process.exit(1);
-        }
+  // 检查 .env 文件
+  try {
+    await fs.access(envPath);
+    log('  ✅ .env 文件存在', 'green');
+    
+    const content = await fs.readFile(envPath, 'utf8');
+    const requiredVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'JWT_SECRET'];
+    const missing = requiredVars.filter(v => !content.includes(`${v}=`));
+    
+    if (missing.length > 0) {
+      log(`  ⚠️ 缺少环境变量: ${missing.join(', ')}`, 'yellow');
     } else {
-        logSuccess('.env 文件已存在');
+      log('  ✅ 所有必需的环境变量已配置', 'green');
     }
+  } catch {
+    // 创建 .env 文件
+    log('  ⚠️ .env 文件不存在，正在创建...', 'yellow');
+    
+    const exampleContent = await fs.readFile(envExamplePath, 'utf8');
+    await fs.writeFile(envPath, exampleContent, 'utf8');
+    log('  ✅ .env 文件已创建，请编辑并填入实际值', 'green');
+  }
 }
 
-// ============================================================
-// 创建必要目录
-// ============================================================
-
-function createDirectories() {
-    logStep('创建必要目录...');
-
-    const dirs = [
-        'logs',
-        'tmp',
-        'data',
-        'backups'
-    ];
-
-    dirs.forEach(dir => {
-        const dirPath = path.join(rootDir, dir);
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-            logSuccess(`创建目录: ${dir}`);
-        }
-    });
+/**
+ * 安装依赖
+ */
+async function installDependencies() {
+  log('\n📦 安装依赖...', 'cyan');
+  
+  try {
+    log('  安装 backend 依赖...', 'gray');
+    await execAsync('cd backend && npm install', { stdio: 'inherit' });
+    log('  ✅ backend 依赖安装完成', 'green');
+  } catch (error) {
+    log(`  ❌ 安装失败: ${error.message}`, 'red');
+  }
 }
 
-// ============================================================
-// 安装依赖
-// ============================================================
+/**
+ * 创建必要的目录
+ */
+async function createDirectories() {
+  log('\n📁 创建目录结构...', 'cyan');
 
-function installDependencies() {
-    logStep('检查依赖...');
+  const dirs = [
+    'backend/database/archive',
+    'backend/database/migration',
+    'backend/database/schema',
+    'backend/tests/services',
+    'backend/tests/business-core',
+    'frontend/src/components',
+    'frontend/src/config',
+    'frontend/src/hooks',
+    'frontend/src/layouts',
+    'frontend/src/router',
+    'frontend/src/services',
+    'frontend/src/store',
+    'frontend/src/styles',
+    'frontend/src/utils'
+  ];
 
-    const nodeModulesPath = path.join(rootDir, 'node_modules');
-
-    if (!fs.existsSync(nodeModulesPath)) {
-        log('正在安装依赖...', 'yellow');
-        try {
-            execSync('npm install', { stdio: 'inherit', cwd: rootDir });
-            logSuccess('依赖安装完成');
-        } catch (error) {
-            logError('依赖安装失败');
-            process.exit(1);
-        }
-    } else {
-        logSuccess('依赖已安装');
-    }
-}
-
-// ============================================================
-// 检查数据库连接
-// ============================================================
-
-async function checkDatabase() {
-    logStep('检查数据库连接...');
-
+  for (const dir of dirs) {
+    const fullPath = path.join(projectRoot, dir);
     try {
-        const env = await import('dotenv');
-        env.config();
-
-        const supabaseUrl = process.env.SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-        if (!supabaseUrl || !supabaseKey) {
-            logWarning('Supabase配置缺失，跳过数据库检查');
-            return;
-        }
-
-        // 尝试连接
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        const { error } = await supabase.from('users').select('count', { count: 'exact', head: true });
-
-        if (error) {
-            logWarning(`数据库连接失败: ${error.message}`);
-            log('请检查 Supabase 配置是否正确', 'yellow');
-        } else {
-            logSuccess('数据库连接成功');
-        }
-
-    } catch (error) {
-        logWarning(`数据库检查失败: ${error.message}`);
+      await fs.mkdir(fullPath, { recursive: true });
+      log(`  ✅ ${dir}`, 'green');
+    } catch {
+      // 目录已存在
     }
+  }
 }
 
-// ============================================================
-// 生成JWT密钥
-// ============================================================
+/**
+ * 生成 module-map.json
+ */
+async function generateModuleMap() {
+  log('\n📄 生成模块映射...', 'cyan');
 
-function generateJwtSecret() {
-    logStep('检查JWT密钥...');
+  const modules = [
+    { id: '01-dashboard', name: '仪表盘', icon: 'home' },
+    { id: '02-pos', name: 'POS收银', icon: 'cash-register' },
+    { id: '03-orders', name: '订单管理', icon: 'clipboard' },
+    { id: '04-products', name: '商品管理', icon: 'box' },
+    { id: '05-customers', name: '客户管理', icon: 'users' },
+    { id: '06-marketing', name: '营销管理', icon: 'megaphone' },
+    { id: '07-inventory', name: '库存管理', icon: 'package' },
+    { id: '08-purchasing', name: '采购管理', icon: 'truck' },
+    { id: '09-finance', name: '财务管理', icon: 'dollar-sign' },
+    { id: '10-hr', name: '人力资源管理', icon: 'user-plus' },
+    { id: '11-saas', name: 'SaaS管理', icon: 'cloud' },
+    { id: '12-system', name: '系统管理', icon: 'settings' },
+    { id: '13-analytics', name: '数据分析', icon: 'chart-bar' },
+    { id: '14-settings', name: '设置中心', icon: 'cog' },
+    { id: '15-ai', name: 'AI智能分析', icon: 'brain' }
+  ];
 
-    const envPath = path.join(rootDir, '.env');
-    const envContent = fs.readFileSync(envPath, 'utf8');
+  const map = {
+    version: '2.0.0',
+    appName: '洗车SaaS',
+    basePath: '/',
+    defaultModule: 'dashboard',
+    defaultPage: 'dashboard',
+    routes: {},
+    modules: {}
+  };
 
-    if (!envContent.includes('JWT_SECRET=') || envContent.includes('JWT_SECRET=your-super-secret')) {
-        const crypto = await import('crypto');
-        const secret = crypto.randomBytes(32).toString('hex');
+  modules.forEach(m => {
+    map.routes[m.id] = `/modules/${m.id}/${m.id}.html`;
+    map.modules[m.id] = {
+      id: m.id,
+      name: m.name,
+      path: `/modules/${m.id}`,
+      order: parseInt(m.id.split('-')[0]),
+      enabled: true,
+      icon: m.icon,
+      module: m.id
+    };
+  });
 
-        const updatedContent = envContent.replace(
-            /JWT_SECRET=.*/,
-            `JWT_SECRET=${secret}`
-        );
-
-        fs.writeFileSync(envPath, updatedContent);
-        logSuccess('已生成新的JWT密钥');
-    } else {
-        logSuccess('JWT密钥已存在');
-    }
+  const mapPath = path.join(projectRoot, 'frontend/module-map.json');
+  await fs.writeFile(mapPath, JSON.stringify(map, null, 2), 'utf8');
+  log('  ✅ module-map.json 已生成', 'green');
 }
 
-// ============================================================
-// 主函数
-// ============================================================
-
+/**
+ * 主函数
+ */
 async function main() {
-    log('\n========================================', 'cyan');
-    log('🚗 Carwash SaaS Pro - 项目初始化', 'cyan');
-    log('========================================\n', 'cyan');
+  log('========================================', 'cyan');
+  log('  🚀 洗车SaaS - 项目初始化', 'cyan');
+  log('========================================', 'cyan');
 
-    try {
-        checkNodeVersion();
-        checkEnvFile();
-        createDirectories();
-        installDependencies();
-        await generateJwtSecret();
-        await checkDatabase();
+  await createDirectories();
+  await checkEnvironment();
+  await generateModuleMap();
+  await installDependencies();
 
-        log('\n========================================', 'green');
-        logSuccess('🎉 项目初始化完成！');
-        log('\n下一步：', 'cyan');
-        log('1. 编辑 .env 文件填写实际配置', 'white');
-        log('2. 运行 npm run migrate 创建数据库表', 'white');
-        log('3. 运行 npm run dev 启动开发服务器', 'white');
-        log('4. 访问 http://localhost:3001 查看应用', 'white');
-        log('\n========================================\n', 'cyan');
-
-    } catch (error) {
-        logError(`初始化失败: ${error.message}`);
-        process.exit(1);
-    }
+  log('\n========================================', 'green');
+  log('  ✅ 项目初始化完成!', 'green');
+  log('========================================', 'green');
+  log('\n📋 下一步:', 'cyan');
+  log('  1. 编辑 backend/.env 填入实际的 Supabase 配置', 'gray');
+  log('  2. 运行 npm run dev 启动开发服务器', 'gray');
+  log('  3. 访问 http://localhost:3000', 'gray');
 }
 
-// 执行
-main();
+// 如果直接运行此脚本
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(err => {
+    log(`❌ 错误: ${err.message}`, 'red');
+    process.exit(1);
+  });
+}
+
+export default main;

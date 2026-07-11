@@ -1,0 +1,92 @@
+﻿version: '3.8'
+
+services:
+  # ============================================
+  # Backend API 服务
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: carwash-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - SUPABASE_URL=
+      - SUPABASE_ANON_KEY=
+      - SUPABASE_SERVICE_ROLE_KEY=
+      - JWT_SECRET=
+      - CORS_ORIGIN=
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+    networks:
+      - carwash-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # Frontend 静态服务
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: carwash-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://backend:3001
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    depends_on:
+      - backend
+    networks:
+      - carwash-network
+
+  # ============================================
+  # Nginx 反向代理 (生产环境)
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: carwash-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - carwash-network
+    profiles:
+      - production
+
+# ============================================
+# 网络配置
+# ============================================
+networks:
+  carwash-network:
+    driver: bridge
+    name: carwash-network
+
+# ============================================
+# 卷配置
+# ============================================
+volumes:
+  backend-node-modules:
+  frontend-node-modules:

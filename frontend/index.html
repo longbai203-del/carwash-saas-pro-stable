@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚗 洗车SaaS - 智能洗车管理平台</title>
+    
+    <!-- SEO 基础 -->
+    <meta name="description" content="洗车SaaS - 智能洗车管理平台，支持POS收银、订单管理、客户管理、库存管理等完整功能">
+    <meta name="keywords" content="洗车SaaS,洗车管理,洗车POS,汽车美容,汽车服务">
+    <meta name="theme-color" content="#4fc3f7">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="🚗 洗车SaaS - 智能洗车管理平台">
+    <meta property="og:description" content="企业级洗车店管理系统，包含POS收银、订单管理、客户管理等完整功能">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://carwash-saas-pro-stable.vercel.app">
+    
+    <!-- 样式 -->
+    <link rel="stylesheet" href="./src/styles/index.css">
+    
+    <!-- 图标 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
+    
+    <!-- 预加载 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+    <!-- 应用加载器 -->
+    <div id="app-loader">
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p style="color: #666; margin-top: 16px;">🚗 加载应用中...</p>
+            <p style="color: #999; font-size: 12px; margin-top: 8px;">智能洗车管理平台 v2.0</p>
+        </div>
+    </div>
+
+    <!-- 应用根容器 -->
+    <div id="app-root">
+        <!-- 侧边栏 -->
+        <div id="sidebar"></div>
+        
+        <!-- 主内容区域 -->
+        <div id="main-content">
+            <!-- 内容容器 -->
+            <div id="content-container">
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p>加载模块中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 应用启动脚本 -->
+    <script type="module">
+        import app from './src/App.js'
+        import './src/main.js'
+        
+        // 启动应用
+        app.init().then(() => {
+            console.log('🚗 洗车SaaS 应用已启动')
+        }).catch((error) => {
+            console.error('应用启动失败:', error)
+        })
+    </script>
+</body>
+</html>

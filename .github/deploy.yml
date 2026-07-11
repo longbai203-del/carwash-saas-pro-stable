@@ -1,0 +1,180 @@
+# .github/workflows/deploy.yml
+# GitHub Actions CI/CD 工作流 - 自动部署到 Render 和 Vercel
+#
+# 触发条件:
+#   - 推送到 main 分支
+#   - 手动触发 (workflow_dispatch)
+#
+# 工作流程:
+#   1. 检出代码
+#   2. 安装依赖
+#   3. 运行测试
+#   4. 构建应用
+#   5. 部署到 Render 和 Vercel
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # ============================================
+  # 测试阶段
+  # ============================================
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🧪 Run Backend Tests
+        run: |
+          cd backend
+          npm test
+
+  # ============================================
+  # 构建阶段
+  # ============================================
+  build:
+    name: 📦 Build Application
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🔨 Build Backend
+        run: |
+          cd backend
+          npm run build || echo "No build script, skipping"
+
+      - name: 🔨 Build Frontend
+        run: |
+          cd frontend
+          npm run build || echo "No build script, skipping"
+
+      - name: 📤 Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend/
+          retention-days: 7
+
+      - name: 📤 Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+          retention-days: 7
+
+  # ============================================
+  # 部署到 Render
+  # ============================================
+  deploy-render:
+    name: 🚀 Deploy to Render
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to Render
+        uses: render-oss/render-deploy-action@v1
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-success: true
+          timeout: 300
+
+  # ============================================
+  # 部署到 Vercel
+  # ============================================
+  deploy-vercel:
+    name: 🚀 Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: 🚀 Deploy to Vercel
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # ============================================
+  # 部署完成通知
+  # ============================================
+  notify:
+    name: 📢 Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-render, deploy-vercel]
+    if: always()
+    
+    steps:
+      - name: 📢 Notify Success
+        if: needs.deploy-render.result == 'success' && needs.deploy-vercel.result == 'success'
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🔗 Render: https://carwash-backend-api.onrender.com"
+          echo "🔗 Vercel: https://carwash-saas-pro-stable.vercel.app"
+
+      - name: 📢 Notify Failure
+        if: needs.deploy-render.result == 'failure' || needs.deploy-vercel.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Please check the logs for details."
+          exit 1
