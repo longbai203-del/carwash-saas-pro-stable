@@ -1,0 +1,380 @@
+/**
+ * customers.css - 客户管理专用样式
+ * 使用 !important 确保样式生效
+ */
+
+/* ============================================================
+   统计卡片 - 使用 !important 确保生效
+   ============================================================ */
+
+   .crm-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+}
+
+.crm-stat-card {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    transition: all 0.3s !important;
+    min-height: 80px !important;
+}
+
+.crm-stat-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.crm-stat-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    color: white !important;
+    flex-shrink: 0 !important;
+}
+
+.crm-stat-icon.blue { background: #4F46E5 !important; }
+.crm-stat-icon.purple { background: #8B5CF6 !important; }
+.crm-stat-icon.gold { background: #F59E0B !important; }
+.crm-stat-icon.green { background: #10B981 !important; }
+
+.crm-stat-info {
+    flex: 1 !important;
+}
+
+.crm-stat-value {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #1F2937 !important;
+    line-height: 1.2 !important;
+}
+
+.crm-stat-label {
+    font-size: 14px !important;
+    color: #6B7280 !important;
+    margin-top: 2px !important;
+}
+
+/* ============================================================
+   搜索栏
+   ============================================================ */
+
+.crm-search-bar {
+    background: white !important;
+    border-radius: 8px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    margin-bottom: 20px !important;
+}
+
+.crm-search-row {
+    display: flex !important;
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+}
+
+.crm-search-row .crm-form-group {
+    flex: 1 !important;
+    min-width: 150px !important;
+}
+
+.crm-search-row .crm-form-group label {
+    display: block !important;
+    font-size: 12px !important;
+    color: #6B7280 !important;
+    margin-bottom: 4px !important;
+}
+
+.crm-search-row .crm-form-group input,
+.crm-search-row .crm-form-group select {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    border: 1px solid #D1D5DB !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    background: white !important;
+    box-sizing: border-box !important;
+}
+
+.crm-search-row .crm-form-group input:focus,
+.crm-search-row .crm-form-group select:focus {
+    outline: none !important;
+    border-color: #4F46E5 !important;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1) !important;
+}
+
+.crm-search-actions {
+    display: flex !important;
+    gap: 8px !important;
+    padding-top: 4px !important;
+}
+
+/* ============================================================
+   工具栏
+   ============================================================ */
+
+.crm-toolbar {
+    display: flex !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
+}
+
+.crm-toolbar .crm-left {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    flex: 1 !important;
+}
+
+.crm-toolbar .crm-right {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+}
+
+/* ============================================================
+   客户头像
+   ============================================================ */
+
+.crm-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+/* ============================================================
+   等级徽章
+   ============================================================ */
+
+.crm-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 4px 10px !important;
+    border-radius: 9999px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+.crm-badge-vip {
+    background: #EDE9FE !important;
+    color: #6D28D9 !important;
+}
+
+.crm-badge-gold {
+    background: #FEF3C7 !important;
+    color: #92400E !important;
+}
+
+.crm-badge-silver {
+    background: #F3F4F6 !important;
+    color: #4B5563 !important;
+}
+
+.crm-badge-bronze {
+    background: #FDE68A !important;
+    color: #92400E !important;
+}
+
+/* ============================================================
+   弹窗 (Modal)
+   ============================================================ */
+
+.crm-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    animation: crmFadeIn 0.2s ease !important;
+}
+
+.crm-modal-overlay.hidden {
+    display: none !important;
+}
+
+.crm-modal-content {
+    background: white !important;
+    border-radius: 12px !important;
+    max-width: 560px !important;
+    width: 90% !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
+    animation: crmSlideUp 0.3s ease !important;
+}
+
+.crm-modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 24px !important;
+    border-bottom: 1px solid #E5E7EB !important;
+}
+
+.crm-modal-header h3 {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+}
+
+.crm-modal-close {
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: #9CA3AF !important;
+    padding: 0 4px !important;
+    transition: color 0.2s !important;
+}
+
+.crm-modal-close:hover { color: #1F2937 !important; }
+
+.crm-modal-body {
+    padding: 24px !important;
+    overflow-y: auto !important;
+    max-height: calc(90vh - 120px) !important;
+}
+
+.crm-modal-footer {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    padding: 16px 24px !important;
+    border-top: 1px solid #E5E7EB !important;
+}
+
+/* ============================================================
+   表单
+   ============================================================ */
+
+.crm-form-group {
+    margin-bottom: 16px !important;
+}
+
+.crm-form-group label {
+    display: block !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    margin-bottom: 4px !important;
+}
+
+.crm-form-group .crm-required {
+    color: #EF4444 !important;
+}
+
+.crm-form-control {
+    width: 100% !important;
+    padding: 10px 14px !important;
+    border: 1px solid #D1D5DB !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    background: white !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s !important;
+}
+
+.crm-form-control:focus {
+    outline: none !important;
+    border-color: #4F46E5 !important;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1) !important;
+}
+
+textarea.crm-form-control {
+    resize: vertical !important;
+    min-height: 60px !important;
+}
+
+/* ============================================================
+   分页
+   ============================================================ */
+
+.crm-pagination {
+    margin-top: 16px !important;
+}
+
+/* ============================================================
+   动画
+   ============================================================ */
+
+@keyframes crmFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes crmSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .crm-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .crm-search-row .crm-form-group {
+        min-width: 100% !important;
+    }
+
+    .crm-search-actions {
+        width: 100% !important;
+    }
+
+    .crm-search-actions .btn {
+        flex: 1 !important;
+    }
+
+    .crm-modal-content {
+        width: 95% !important;
+        margin: 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .crm-stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .crm-stat-card {
+        padding: 12px !important;
+    }
+    .crm-stat-value {
+        font-size: 18px !important;
+    }
+}

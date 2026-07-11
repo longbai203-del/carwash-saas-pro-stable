@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洗车SaaS - 模块加载测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            height: 100vh;
+        }
+        /* Sidebar样式 */
+        #sidebar {
+            width: 260px;
+            background: #1a1a2e;
+            color: #fff;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar-brand {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-brand h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .sidebar-brand .version {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+            display: block;
+        }
+        .sidebar-nav {
+            padding: 16px 0;
+        }
+        .nav-item {
+            list-style: none;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-link:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+        .nav-item.active .nav-link {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-right: 3px solid #4fc3f7;
+        }
+        .nav-link i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+        
+        /* 主内容区域 */
+        #main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        #content-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4fc3f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .module-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .module-info h3 {
+            color: #0d47a1;
+            margin-bottom: 4px;
+        }
+        .module-info p {
+            color: #1565c0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar"></div>
+    
+    <!-- 主内容 -->
+    <div id="main-content">
+        <div id="content-container">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>加载模块中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { CONFIG } from './src/config/index.js'
+        import { moduleLoader } from './src/core/ModuleLoader.js'
+        import { sidebar } from './src/components/Layout/Sidebar.js'
+
+        // 初始化
+        const container = document.getElementById('content-container')
+        moduleLoader.init(container)
+
+        // 加载默认模块
+        const defaultModule = CONFIG.getDefaultModule()
+        if (defaultModule) {
+            console.log(📋 默认模块: )
+            moduleLoader.navigateTo(defaultModule.id)
+        }
+
+        // 监听导航事件
+        document.addEventListener('navigation', (event) => {
+            const { moduleId, path } = event.detail
+            console.log(🔄 导航到: )
+            moduleLoader.navigateTo(moduleId)
+        })
+
+        console.log('✅ 应用已启动')
+        console.log(📋 可用模块:  个)
+    </script>
+</body>
+</html>

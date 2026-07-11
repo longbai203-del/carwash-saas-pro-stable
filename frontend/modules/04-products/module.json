@@ -1,47 +1,77 @@
 {
-  "name": "Products",
+  "name": "商品管理",
   "icon": "box",
   "order": 4,
+  "defaultPage": "products",
+  "description": "商品信息管理、分类、品牌、变体、价格表、附加项、组合产品",
   "pages": [
     {
       "path": "products",
-      "name": "商品管理",
-      "icon": "box"
+      "name": "商品列表",
+      "icon": "box",
+      "description": "管理所有商品信息"
     },
     {
       "path": "categories",
       "name": "分类管理",
-      "icon": "folder"
+      "icon": "tags",
+      "description": "商品分类管理"
     },
     {
       "path": "brands",
       "name": "品牌管理",
-      "icon": "tag"
+      "icon": "trademark",
+      "description": "商品品牌管理"
     },
     {
       "path": "barcodes",
       "name": "条码管理",
-      "icon": "barcode"
+      "icon": "barcode",
+      "description": "商品条码生成与打印"
     },
     {
       "path": "variants",
       "name": "产品变体",
-      "icon": "code-branch"
-    },
-    {
-      "path": "combos",
-      "name": "组合产品",
-      "icon": "object-group"
-    },
-    {
-      "path": "modifiers",
-      "name": "附加项",
-      "icon": "plus-circle"
+      "icon": "code-branch",
+      "description": "商品规格变体管理"
     },
     {
       "path": "price-lists",
       "name": "价格表",
-      "icon": "tags"
+      "icon": "tags",
+      "description": "多套价格体系管理"
+    },
+    {
+      "path": "modifiers",
+      "name": "附加项",
+      "icon": "plus-circle",
+      "description": "商品附加服务管理"
+    },
+    {
+      "path": "combos",
+      "name": "组合产品",
+      "icon": "object-group",
+      "description": "套餐组合管理"
     }
-  ]
+  ],
+  "permissions": {
+    "view": "查看商品",
+    "create": "创建商品",
+    "edit": "编辑商品",
+    "delete": "删除商品",
+    "export": "导出商品",
+    "import": "导入商品",
+    "manage_categories": "管理分类",
+    "manage_brands": "管理品牌",
+    "manage_variants": "管理变体",
+    "manage_prices": "管理价格"
+  },
+  "settings": {
+    "default_view": "list",
+    "items_per_page": 10,
+    "enable_barcode": true,
+    "enable_variants": true,
+    "enable_modifiers": true,
+    "enable_combos": true
+  }
 }

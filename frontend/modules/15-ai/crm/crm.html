@@ -1,92 +1,520 @@
-<!-- ============================================================ -->
-<!-- CRM Dashboard - CRM 概览                                     -->
-<!-- ============================================================ -->
-
-<style>
-    .crm-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .crm-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    .crm-card .value {
-        font-size: 28px;
-        font-weight: 700;
-        color: #1F2937;
-    }
-    .crm-card .label {
-        font-size: 14px;
-        color: #6B7280;
-        margin-top: 4px;
-    }
-    .crm-card .icon {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
-    @media (max-width: 768px) {
-        .crm-grid {
-            grid-template-columns: repeat(2, 1fr);
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CRM - Carwash Pro</title>
+    <link rel="stylesheet" href="../../../css/design-system.css">
+    <link rel="stylesheet" href="crm.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .crm-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
-    }
-</style>
 
-<div class="container-fluid">
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">👥 CRM 概览</h1>
-            <p class="page-subtitle">客户关系管理数据总览</p>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1F2937;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 .ai-badge {
+            font-size: 12px;
+            background: linear-gradient(135deg, #7C3AED, #4F46E5);
+            color: white;
+            padding: 2px 12px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .page-header .subtitle {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid #E5E7EB;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .stat-card .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1F2937;
+        }
+
+        .stat-card .stat-number.primary { color: #4F46E5; }
+        .stat-card .stat-number.success { color: #10B981; }
+        .stat-card .stat-number.danger { color: #EF4444; }
+        .stat-card .stat-number.warning { color: #F59E0B; }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-top: 2px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .toolbar .search-box {
+            flex: 1;
+            min-width: 160px;
+            padding: 8px 14px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .toolbar .search-box:focus {
+            border-color: #4F46E5;
+            outline: none;
+        }
+
+        .toolbar .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #E5E7EB;
+            overflow: hidden;
+        }
+
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .table-container thead {
+            background: #F9FAFB;
+        }
+
+        .table-container th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #6B7280;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .table-container td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .table-container tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-container tr:hover td {
+            background: #F9FAFB;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .badge-info { background: #DBEAFE; color: #1E40AF; }
+        .badge-secondary { background: #F3F4F6; color: #6B7280; }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-top: 1px solid #F3F4F6;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pagination .info {
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        .pagination .btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .pagination .btn-group button {
+            padding: 4px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .pagination .btn-group button.active {
+            background: #4F46E5;
+            color: white;
+            border-color: #4F46E5;
+        }
+
+        .pagination .btn-group button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* 细分标签 */
+        .segment-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .segment-tag.high { background: #D1FAE5; color: #065F46; }
+        .segment-tag.medium { background: #DBEAFE; color: #1E40AF; }
+        .segment-tag.low { background: #FEF3C7; color: #92400E; }
+        .segment-tag.new { background: #E0E7FF; color: #3730A3; }
+
+        .risk-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+
+        .risk-indicator.high { background: #EF4444; }
+        .risk-indicator.medium { background: #F59E0B; }
+        .risk-indicator.low { background: #10B981; }
+
+        /* AI分析横幅 */
+        .ai-banner {
+            background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
+            border: 1px solid #C7D2FE;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ai-banner .ai-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-banner .ai-text i {
+            font-size: 24px;
+            color: #7C3AED;
+        }
+
+        .ai-banner .ai-text .title {
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        .ai-banner .ai-text .desc {
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .table-container {
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .toolbar {
+                flex-direction: column;
+            }
+            .toolbar .search-box {
+                width: 100%;
+            }
+            .header-actions {
+                width: 100%;
+            }
+            .header-actions button {
+                flex: 1;
+            }
+            .ai-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+            .ai-banner .ai-text {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="crm-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <div>
+                <h1>
+                    <i class="fas fa-users" style="color:#4F46E5;"></i> AI CRM
+                    <span class="ai-badge">AI驱动</span>
+                </h1>
+                <div class="subtitle">智能客户关系管理 · AI客户洞察与分析</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-success" id="crmAddBtn">
+                    <i class="fas fa-user-plus"></i> 添加客户
+                </button>
+                <button class="btn btn-outline" id="crmExportBtn">
+                    <i class="fas fa-file-export"></i> 导出
+                </button>
+                <button class="btn btn-outline" id="crmRefreshBtn">
+                    <i class="fas fa-sync"></i>
+                </button>
+            </div>
         </div>
-        <button onclick="location.reload()" class="btn btn-secondary">
-            <i class="fas fa-sync"></i> 刷新
-        </button>
+
+        <!-- AI分析横幅 -->
+        <div class="ai-banner">
+            <div class="ai-text">
+                <i class="fas fa-brain"></i>
+                <div>
+                    <div class="title">AI智能分析</div>
+                    <div class="desc">识别出 3 个高价值客户 · 2 个流失风险客户</div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-primary" style="background:#7C3AED;border-color:#7C3AED;" onclick="alert('🧠 AI正在分析客户数据...')">
+                <i class="fas fa-chart-bar"></i> 运行分析
+            </button>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number primary">1,284</div>
+                <div class="stat-label">👥 总客户</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number success">856</div>
+                <div class="stat-label">🟢 活跃客户</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number warning">124</div>
+                <div class="stat-label">🆕 新客户</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number danger">12.5%</div>
+                <div class="stat-label">📉 流失率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8.3月</div>
+                <div class="stat-label">⏱️ 平均生命周期</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">¥1,860</div>
+                <div class="stat-label">💰 平均消费</div>
+            </div>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <input type="text" class="search-box" id="crmSearch" placeholder="🔍 搜索姓名、电话...">
+            <select class="filter-select" id="crmSegmentFilter">
+                <option value="">全部细分</option>
+                <option value="高价值">⭐ 高价值</option>
+                <option value="中价值">🌟 中价值</option>
+                <option value="低价值">✨ 低价值</option>
+                <option value="新客户">🆕 新客户</option>
+            </select>
+            <select class="filter-select" id="crmRiskFilter">
+                <option value="">全部风险</option>
+                <option value="高">🔴 高风险</option>
+                <option value="中">🟡 中风险</option>
+                <option value="低">🟢 低风险</option>
+            </select>
+            <button class="btn btn-primary" id="crmSearchBtn">
+                <i class="fas fa-search"></i> 搜索
+            </button>
+            <button class="btn btn-outline" id="crmResetBtn">
+                <i class="fas fa-undo"></i> 重置
+            </button>
+        </div>
+
+        <!-- 客户列表 -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>客户</th>
+                        <th>电话</th>
+                        <th>细分</th>
+                        <th>消费总额</th>
+                        <th>访问次数</th>
+                        <th>最后访问</th>
+                        <th>风险</th>
+                        <th style="text-align:center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="crmTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align:center;padding:40px;color:#9CA3AF;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                            加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <span class="info" id="crmPageInfo">共 0 条，第 1/1 页</span>
+                <div class="btn-group">
+                    <button id="crmPrevPage" disabled><i class="fas fa-chevron-left"></i></button>
+                    <button class="active">1</button>
+                    <button id="crmNextPage" disabled><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="crm-grid">
-        <div class="crm-card">
-            <div class="icon">👥</div>
-            <div class="value">328</div>
-            <div class="label">总客户</div>
-        </div>
-        <div class="crm-card">
-            <div class="icon">👑</div>
-            <div class="value">45</div>
-            <div class="label">VIP 客户</div>
-        </div>
-        <div class="crm-card">
-            <div class="icon">⭐</div>
-            <div class="value">89</div>
-            <div class="label">黄金客户</div>
-        </div>
-        <div class="crm-card">
-            <div class="icon">📈</div>
-            <div class="value">¥245,800</div>
-            <div class="label">累计消费</div>
-        </div>
-    </div>
+    <script type="module">
+        import { init } from './crm.js';
 
-    <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-        <h3 style="margin-bottom:16px;">📋 最近客户</h3>
-        <table class="table">
-            <thead>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('👥 AI CRM页面加载');
+            
+            init().catch(err => {
+                console.warn('CRM模块初始化失败，使用降级数据:', err);
+                renderFallbackCRM();
+            });
+
+            document.getElementById('crmAddBtn')?.addEventListener('click', function() {
+                const name = prompt('请输入客户姓名：');
+                if (name) {
+                    const phone = prompt('请输入电话：');
+                    alert('✅ 客户 ' + name + ' 已添加（模拟）');
+                }
+            });
+
+            document.getElementById('crmRefreshBtn')?.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                icon.classList.add('fa-spin');
+                setTimeout(() => icon.classList.remove('fa-spin'), 800);
+            });
+        });
+
+        function renderFallbackCRM() {
+            const customers = [
+                { name: '王小明', phone: '138****1234', segment: '高价值', spent: 4580, visits: 23, lastVisit: '今天', risk: '低' },
+                { name: '李小红', phone: '139****5678', segment: '中价值', spent: 2150, visits: 12, lastVisit: '昨天', risk: '低' },
+                { name: '张伟', phone: '137****9012', segment: '高价值', spent: 6200, visits: 31, lastVisit: '3天前', risk: '低' },
+                { name: '刘洋', phone: '136****3456', segment: '低价值', spent: 580, visits: 4, lastVisit: '2周前', risk: '高' },
+                { name: '陈静', phone: '135****7890', segment: '新客户', spent: 320, visits: 2, lastVisit: '5天前', risk: '中' },
+                { name: '赵磊', phone: '158****2345', segment: '中价值', spent: 1850, visits: 9, lastVisit: '1周前', risk: '低' }
+            ];
+
+            const tbody = document.getElementById('crmTableBody');
+            const segmentMap = {
+                '高价值': 'high',
+                '中价值': 'medium',
+                '低价值': 'low',
+                '新客户': 'new'
+            };
+            const riskColors = {
+                '高': 'high',
+                '中': 'medium',
+                '低': 'low'
+            };
+
+            tbody.innerHTML = customers.map(c => `
                 <tr>
-                    <th>客户</th>
-                    <th>等级</th>
-                    <th>累计消费</th>
-                    <th>最近访问</th>
+                    <td><strong>${c.name}</strong></td>
+                    <td style="color:#6B7280;">${c.phone}</td>
+                    <td><span class="segment-tag ${segmentMap[c.segment]}">${c.segment}</span></td>
+                    <td style="font-weight:600;color:#4F46E5;">¥${c.spent}</td>
+                    <td>${c.visits}次</td>
+                    <td style="font-size:12px;color:#6B7280;">${c.lastVisit}</td>
+                    <td>
+                        <span class="risk-indicator ${riskColors[c.risk]}"></span>
+                        ${c.risk}
+                    </td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-sm btn-outline"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                <tr><td>张伟</td><td><span class="badge badge-gold">黄金</span></td><td>¥12,500</td><td>2026-07-05</td></tr>
-                <tr><td>李娜</td><td><span class="badge badge-vip">VIP</span></td><td>¥32,800</td><td>2026-07-06</td></tr>
-                <tr><td>王强</td><td><span class="badge badge-silver">白银</span></td><td>¥5,600</td><td>2026-07-04</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+            `).join('');
+
+            document.getElementById('crmPageInfo').textContent = `共 ${customers.length} 条，第 1/1 页`;
+        }
+    </script>
+</body>
+</html>
