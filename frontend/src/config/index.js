@@ -9,7 +9,7 @@
  * const modules = CONFIG.getModules()
  */
 
-import moduleMapData from '../../module-map.json' assert { type: 'json' }
+import moduleMapData from '../../module-map.json'
 
 /**
  * 配置类
