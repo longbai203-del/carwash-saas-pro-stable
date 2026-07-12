@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 常量定义 - 统一导出
  * 
  * @module constants/index

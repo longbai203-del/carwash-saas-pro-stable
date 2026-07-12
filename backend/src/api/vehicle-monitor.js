@@ -1,4 +1,4 @@
-/**
+﻿/**
  * api/vehicle-monitor.js - 车辆监控 API
  * 
  * GET    /api/vehicle-monitor                 - 获取车辆记录列表
@@ -8,7 +8,7 @@
  * POST   /api/vehicle-monitor?action=webhook - NVR 摄像头 Webhook
  */
 import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
+import { authenticate, roleMiddleware } from '../middleware/auth.js';
 import { isRequired, validateVehicleRecord } from '../shared/lib/validation.js';
 import { logger } from '../shared/lib/logger.js';
 
@@ -524,4 +524,4 @@ async function recognizePlateFromUrl(imageUrl) {
 // ============================================================
 // 导出（仅 owner 和 admin 可访问）
 // ============================================================
-export default authMiddleware(roleMiddleware(['owner', 'admin'])(handler));
+export default authenticate(roleMiddleware(['owner', 'admin'])(handler));

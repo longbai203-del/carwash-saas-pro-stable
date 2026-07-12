@@ -1,16 +1,22 @@
-﻿/**
- * API 兼容入口层
- * 重定向到 src/api/index.js
- * 
- * @module api/index
- */
+﻿import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
-// 使用正确的相对路径导入
-import('../src/api/index.js')
-  .then(function(module) {
-    console.log('API 入口加载成功 (兼容层)');
-  })
-  .catch(function(err) {
-    console.error('加载主入口失败:', err.message);
-    process.exit(1);
-  });
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📚 Health: http://localhost:${PORT}/api/health`);
+});
+
+export default app;

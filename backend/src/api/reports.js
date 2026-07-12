@@ -1,10 +1,10 @@
-/**
+﻿/**
  * api/reports.js - 报表 API
  * GET /api/reports/daily
  * GET /api/reports/monthly
  */
 import { supabase, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware, roleMiddleware } from '../shared/lib/auth.js';
+import { authenticate, roleMiddleware } from '../middleware/auth.js';
 import { logger } from '../shared/lib/logger.js';
 
 async function handler(req, res) {
@@ -170,4 +170,4 @@ async function handleMonthly(req, res) {
     }
 }
 
-export default authMiddleware(handler);
+export default authenticate(handler);

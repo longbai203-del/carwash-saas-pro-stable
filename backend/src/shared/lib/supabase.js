@@ -1,4 +1,4 @@
-/**
+﻿/**
  * shared/lib/supabase.js - Supabase数据库客户端
  * @module supabase
  * @description 封装Supabase数据库操作，提供统一的CRUD接口

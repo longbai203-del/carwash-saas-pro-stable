@@ -1,4 +1,4 @@
-/**
+﻿/**
  * api/employees.js - 员工 API
  * GET    /api/employees
  * POST   /api/employees/approve
@@ -7,7 +7,7 @@
  */
 // ✅ 修复：补充缺失的 safeQuery 和 getPagination 导入
 import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware } from '../shared/lib/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import { isRequired } from '../shared/lib/validation.js';
 import { logger } from '../shared/lib/logger.js';
 
@@ -191,4 +191,4 @@ async function handleApprove(req, res) {
     }
 }
 
-export default authMiddleware(handler);
+export default authenticate(handler);

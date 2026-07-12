@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 数据验证工具
  * 统一的输入验证
  * 
@@ -489,3 +489,39 @@ export const schemas = {
   
   export { Validator, validator };
   export default validator;
+
+export function isRequired(value, fieldName) {
+    if (value === undefined || value === null || value === '') {
+        return { error: true, message: (fieldName || '字段') + ' 是必填的' };
+    }
+    return null;
+}
+
+
+export function validateVehicleRecord(data) {
+    const errors = {};
+    if (!data) return { valid: false, errors: { general: '数据不能为空' } };
+    if (!data.plate) errors.plate = '车牌号是必填的';
+    return { valid: Object.keys(errors).length === 0, errors };
+}
+
+
+export function validateInventory(data) {
+    const errors = {};
+    if (!data) return { valid: false, errors: { general: '数据不能为空' } };
+    if (!data.product_id) errors.product_id = '产品ID是必填的';
+    if (data.quantity === undefined || data.quantity === null) {
+        errors.quantity = '数量是必填的';
+    } else if (typeof data.quantity !== 'number' || data.quantity < 0) {
+        errors.quantity = '数量必须是非负数字';
+    }
+    return { valid: Object.keys(errors).length === 0, errors };
+}
+
+
+export function validateOrder(data) {
+    const errors = {};
+    if (!data) return { valid: false, errors: { general: '数据不能为空' } };
+    if (!data.customer_id) errors.customer_id = '客户ID是必填的';
+    return { valid: Object.keys(errors).length === 0, errors };
+}

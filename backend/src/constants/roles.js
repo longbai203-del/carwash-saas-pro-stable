@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 状态常量定义
  * 
  * @module constants/status

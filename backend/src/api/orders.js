@@ -1,4 +1,4 @@
-/**
+﻿/**
  * api/orders.js - 订单API路由
  * @module orders
  * @description 订单的CRUD操作、状态管理、统计
@@ -12,8 +12,8 @@
 
 import express from 'express';
 import { supabase, getPagination } from '../shared/lib/supabase.js'; // ✅ 修复：显式导入 getPagination
-import { authenticate } from '../shared/lib/auth.js';
-import { requireRole } from '../shared/lib/auth.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 

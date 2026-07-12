@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file permissions.js
  * @module backend/api/permissions
  * @description 权限管理API - 角色CRUD、用户权限管理
@@ -8,7 +8,7 @@
  */
 
 import express from 'express';
-import { requireRole, requirePermission, getCurrentUser } from '../shared/lib/auth.js';
+import { requireRole, requirePermission, getCurrentUser } from '../middleware/auth.js';
 import { supabase } from '../shared/lib/supabase.js';
 import { logger } from '../shared/lib/logger.js';
 

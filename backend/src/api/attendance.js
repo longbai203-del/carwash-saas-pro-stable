@@ -1,10 +1,10 @@
-/**
+﻿/**
  * api/attendance.js - 考勤 API
  * GET    /api/attendance
  * POST   /api/attendance/clock
  */
 import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware } from '../shared/lib/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import { isRequired } from '../shared/lib/validation.js';
 import { logger } from '../shared/lib/logger.js';
 
@@ -238,4 +238,4 @@ async function handleClock(req, res) {
     }
 }
 
-export default authMiddleware(handler);
+export default authenticate(handler);

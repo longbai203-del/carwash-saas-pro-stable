@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 客户API路由
  * 处理所有客户相关的HTTP请求
  * 
@@ -36,7 +36,7 @@ const customerService = new CustomerService()
 router.get('/',
   authenticate,
   requirePermission('customers', 'read'),
-  validateQuery(schemas.pagination),
+  validateQuery({}),
   catchAsync(async (req, res) => {
     const { tenant_id, page = 1, limit = 20, search } = req.query
 
@@ -89,7 +89,7 @@ router.get('/',
 router.get('/:id',
   authenticate,
   requirePermission('customers', 'read'),
-  validateParams(Joi.object({ id: Joi.string().uuid().required() })),
+  validateParams({ id: { required: true } }),
   catchAsync(async (req, res) => {
     const { id } = req.params
     const { data, error } = await customerService.findById(id)
@@ -118,7 +118,6 @@ router.get('/:id',
 router.post('/',
   authenticate,
   requirePermission('customers', 'write'),
-  validateBody(schemas.customer.create),
   catchAsync(async (req, res) => {
     const { tenant_id } = req.query
     const customerData = {
@@ -154,8 +153,7 @@ router.post('/',
 router.put('/:id',
   authenticate,
   requirePermission('customers', 'write'),
-  validateParams(Joi.object({ id: Joi.string().uuid().required() })),
-  validateBody(schemas.customer.update),
+  validateParams({ id: { required: true } }),
   catchAsync(async (req, res) => {
     const { id } = req.params
     const { data, error } = await customerService.update(id, req.body)
@@ -185,7 +183,7 @@ router.put('/:id',
 router.delete('/:id',
   authenticate,
   requirePermission('customers', 'delete'),
-  validateParams(Joi.object({ id: Joi.string().uuid().required() })),
+  validateParams({ id: { required: true } }),
   catchAsync(async (req, res) => {
     const { id } = req.params
     const { success, error } = await customerService.delete(id)

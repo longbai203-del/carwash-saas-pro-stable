@@ -1,4 +1,4 @@
-/**
+﻿/**
  * shared/constants/roles.js - 角色常量
  * 前后端共享
  */

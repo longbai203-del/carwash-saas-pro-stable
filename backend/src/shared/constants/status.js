@@ -1,4 +1,4 @@
-/**
+﻿/**
  * shared/constants/status.js - 状态常量
  * 前后端共享
  */

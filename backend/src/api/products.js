@@ -1,4 +1,4 @@
-/**
+﻿/**
  * api/products.js - 商品API路由
  * @module products
  * @description 商品的CRUD操作、分类管理、库存管理
@@ -12,7 +12,7 @@
 
 import express from 'express';
 import { supabase } from '../shared/lib/supabase.js';
-import { authenticate, requireRole } from '../shared/lib/auth.js';
+import { authenticate, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 

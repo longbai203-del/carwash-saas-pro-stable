@@ -1,4 +1,4 @@
-/**
+﻿/**
  * api/inventory.js - 库存 API
  * GET    /api/inventory
  * GET    /api/inventory/:id
@@ -7,7 +7,7 @@
  * POST   /api/inventory/stock-out
  */
 import { supabase, getPagination, safeQuery, getUserById } from '../shared/lib/supabase.js';
-import { authMiddleware } from '../shared/lib/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import { validateInventory } from '../shared/lib/validation.js';
 import { logger } from '../shared/lib/logger.js';
 
@@ -330,4 +330,4 @@ async function handleStockOut(req, res) {
     }
 }
 
-export default authMiddleware(handler);
+export default authenticate(handler);
