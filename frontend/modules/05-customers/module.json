@@ -1,0 +1,42 @@
+{
+  "name": "CRM",
+  "icon": "users",
+  "order": 5,
+  "pages": [
+    {
+      "path": "customers",
+      "name": "客户管理",
+      "icon": "users"
+    },
+    {
+      "path": "vehicles",
+      "name": "车辆管理",
+      "icon": "car"
+    },
+    {
+      "path": "membership",
+      "name": "会员管理",
+      "icon": "crown"
+    },
+    {
+      "path": "coupons",
+      "name": "优惠券",
+      "icon": "ticket-alt"
+    },
+    {
+      "path": "gift-cards",
+      "name": "礼品卡",
+      "icon": "gift"
+    },
+    {
+      "path": "wallet",
+      "name": "电子钱包",
+      "icon": "wallet"
+    },
+    {
+      "path": "feedback",
+      "name": "客户反馈",
+      "icon": "comment-dots"
+    }
+  ]
+}

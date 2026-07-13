@@ -1,0 +1,20 @@
+{
+  "name": "System",
+  "icon": "cog",
+  "order": 12,
+  "defaultPage": "audit-logs",
+  "pages": [
+    { "path": "audit-logs", "name": "审计日志", "icon": "clipboard-list" },
+    { "path": "system-logs", "name": "系统日志", "icon": "file-alt" },
+    { "path": "permissions", "name": "权限管理", "icon": "lock" },
+    { "path": "roles", "name": "角色管理", "icon": "user-tag" },
+    { "path": "settings", "name": "系统设置", "icon": "cog" },
+    { "path": "notifications", "name": "通知管理", "icon": "bell" },
+    { "path": "backup", "name": "备份管理", "icon": "database" },
+    { "path": "restore", "name": "恢复管理", "icon": "undo" },
+    { "path": "api-keys", "name": "API密钥", "icon": "key" },
+    { "path": "webhooks", "name": "Webhook管理", "icon": "webhook" },
+    { "path": "integrations", "name": "集成管理", "icon": "plug" },
+    { "path": "marketplace", "name": "应用市场", "icon": "store" }
+  ]
+}

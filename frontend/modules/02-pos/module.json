@@ -1,0 +1,57 @@
+{
+  "name": "POS",
+  "icon": "cash-register",
+  "order": 2,
+  "pages": [
+    {
+      "path": "cashier",
+      "name": "收银台",
+      "icon": "cash-register"
+    },
+    {
+      "path": "quick-sale",
+      "name": "快速销售",
+      "icon": "bolt"
+    },
+    {
+      "path": "touch-pos",
+      "name": "触屏POS",
+      "icon": "hand-pointer"
+    },
+    {
+      "path": "offline-pos",
+      "name": "离线POS",
+      "icon": "wifi-slash"
+    },
+    {
+      "path": "customer-display",
+      "name": "客户显示屏",
+      "icon": "tv"
+    },
+    {
+      "path": "kitchen-display",
+      "name": "厨房显示",
+      "icon": "utensils"
+    },
+    {
+      "path": "cash-register",
+      "name": "收银机",
+      "icon": "cash-register"
+    },
+    {
+      "path": "receipt",
+      "name": "小票打印",
+      "icon": "receipt"
+    },
+    {
+      "path": "exchange",
+      "name": "换货管理",
+      "icon": "exchange-alt"
+    },
+    {
+      "path": "returns",
+      "name": "退货管理",
+      "icon": "undo-alt"
+    }
+  ]
+}

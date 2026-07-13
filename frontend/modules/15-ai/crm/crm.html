@@ -1,0 +1,129 @@
+<!--
+  CRM (客户关系管理) 模块 HTML
+  由 JavaScript 动态渲染，此文件作为静态模板备用
+  
+  @module modules/15-ai/crm/crm.html
+  @version 1.0.0
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM 客户管理</title>
+  <link rel="stylesheet" href="./crm.css">
+</head>
+<body>
+  <div id="crm-module">
+    <div class="crm-container">
+      <!-- ===== 加载状态 ===== -->
+      <div id="crm-loading" class="crm-loading-state">
+        <div class="spinner"></div>
+        <p>加载客户数据...</p>
+      </div>
+
+      <!-- ===== 主内容 ===== -->
+      <div id="crm-content" style="display: none;">
+        <!-- 头部 -->
+        <div class="crm-header">
+          <h2>
+            👥 客户关系管理 (CRM)
+            <span class="badge">AI 增强</span>
+          </h2>
+          <div class="crm-header-actions">
+            <button class="crm-btn crm-btn-primary" id="crm-add-btn">
+              ➕ 添加客户
+            </button>
+            <button class="crm-btn crm-btn-secondary" id="crm-refresh-btn">
+              🔄 刷新
+            </button>
+            <button class="crm-btn crm-btn-outline" id="crm-export-btn">
+              📤 导出
+            </button>
+          </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="crm-stats" id="crm-stats">
+          <div class="crm-stat-card">
+            <div class="icon blue">👥</div>
+            <div class="info">
+              <div class="number" id="stat-total">0</div>
+              <div class="label">总客户</div>
+            </div>
+          </div>
+          <div class="crm-stat-card">
+            <div class="icon gold">⭐</div>
+            <div class="info">
+              <div class="number" id="stat-platinum">0</div>
+              <div class="label">铂金客户</div>
+            </div>
+          </div>
+          <div class="crm-stat-card">
+            <div class="icon green">💰</div>
+            <div class="info">
+              <div class="number" id="stat-revenue">¥0</div>
+              <div class="label">总消费</div>
+            </div>
+          </div>
+          <div class="crm-stat-card">
+            <div class="icon purple">🔄</div>
+            <div class="info">
+              <div class="number" id="stat-active">0</div>
+              <div class="label">活跃客户</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 搜索和过滤 -->
+        <div class="crm-filters">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="crm-search" placeholder="搜索客户名称/邮箱/电话..." />
+          </div>
+          <select id="crm-tier-filter">
+            <option value="">全部等级</option>
+            <option value="bronze">🥉 青铜</option>
+            <option value="silver">🥈 银牌</option>
+            <option value="gold">🥇 金牌</option>
+            <option value="platinum">💎 铂金</option>
+          </select>
+          <select id="crm-status-filter">
+            <option value="">全部状态</option>
+            <option value="active">● 活跃</option>
+            <option value="inactive">○ 非活跃</option>
+            <option value="suspended">⏸ 已暂停</option>
+          </select>
+          <div class="filter-actions">
+            <button class="crm-btn crm-btn-secondary btn-reset" id="crm-reset-filters">
+              ↺ 重置
+            </button>
+          </div>
+        </div>
+
+        <!-- 客户列表 -->
+        <div class="crm-list" id="crm-list">
+          <!-- 由 JavaScript 动态渲染 -->
+        </div>
+
+        <!-- 分页 -->
+        <div class="crm-pagination" id="crm-pagination">
+          <button id="crm-prev-page">上一页</button>
+          <span class="page-info" id="crm-page-info">第 1 / 1 页</span>
+          <button id="crm-next-page">下一页</button>
+        </div>
+      </div>
+
+      <!-- ===== 客户详情 ===== -->
+      <div id="crm-detail" style="display: none;">
+        <!-- 由 JavaScript 动态渲染 -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // 此文件由 JavaScript 动态渲染，此处仅作静态模板
+    console.log('📋 CRM 模块静态模板已加载');
+  </script>
+</body>
+</html>

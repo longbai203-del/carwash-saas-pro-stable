@@ -1,0 +1,161 @@
+﻿{
+  "version": "2.0.0",
+  "appName": "洗车SaaS",
+  "basePath": "/",
+  "defaultModule": "dashboard",
+  "defaultPage": "dashboard",
+  "routes": {
+    "dashboard": "/modules/01-dashboard/01-dashboard.html",
+    "pos": "/modules/02-pos/02-pos.html",
+    "orders": "/modules/03-orders/03-orders.html",
+    "products": "/modules/04-products/04-products.html",
+    "customers": "/modules/05-customers/05-customers.html",
+    "marketing": "/modules/06-marketing/06-marketing.html",
+    "inventory": "/modules/07-inventory/07-inventory.html",
+    "purchasing": "/modules/08-purchasing/08-purchasing.html",
+    "finance": "/modules/09-finance/09-finance.html",
+    "hr": "/modules/10-hr/10-hr.html",
+    "saas": "/modules/11-saas/11-saas.html",
+    "system": "/modules/12-system/12-system.html",
+    "analytics": "/modules/13-analytics/13-analytics.html",
+    "settings": "/modules/14-settings/14-settings.html",
+    "ai": "/modules/15-ai/15-ai.html"
+  },
+  "modules": {
+    "dashboard": {
+      "id": "dashboard",
+      "name": "仪表盘",
+      "path": "/modules/01-dashboard",
+      "order": 1,
+      "enabled": true,
+      "icon": "home",
+      "module": "01-dashboard"
+    },
+    "pos": {
+      "id": "pos",
+      "name": "POS收银",
+      "path": "/modules/02-pos",
+      "order": 2,
+      "enabled": true,
+      "icon": "cash-register",
+      "module": "02-pos"
+    },
+    "orders": {
+      "id": "orders",
+      "name": "订单管理",
+      "path": "/modules/03-orders",
+      "order": 3,
+      "enabled": true,
+      "icon": "clipboard",
+      "module": "03-orders"
+    },
+    "products": {
+      "id": "products",
+      "name": "商品管理",
+      "path": "/modules/04-products",
+      "order": 4,
+      "enabled": true,
+      "icon": "box",
+      "module": "04-products"
+    },
+    "customers": {
+      "id": "customers",
+      "name": "客户管理",
+      "path": "/modules/05-customers",
+      "order": 5,
+      "enabled": true,
+      "icon": "users",
+      "module": "05-customers"
+    },
+    "marketing": {
+      "id": "marketing",
+      "name": "营销管理",
+      "path": "/modules/06-marketing",
+      "order": 6,
+      "enabled": true,
+      "icon": "megaphone",
+      "module": "06-marketing"
+    },
+    "inventory": {
+      "id": "inventory",
+      "name": "库存管理",
+      "path": "/modules/07-inventory",
+      "order": 7,
+      "enabled": true,
+      "icon": "package",
+      "module": "07-inventory"
+    },
+    "purchasing": {
+      "id": "purchasing",
+      "name": "采购管理",
+      "path": "/modules/08-purchasing",
+      "order": 8,
+      "enabled": true,
+      "icon": "truck",
+      "module": "08-purchasing"
+    },
+    "finance": {
+      "id": "finance",
+      "name": "财务管理",
+      "path": "/modules/09-finance",
+      "order": 9,
+      "enabled": true,
+      "icon": "dollar-sign",
+      "module": "09-finance"
+    },
+    "hr": {
+      "id": "hr",
+      "name": "人力资源管理",
+      "path": "/modules/10-hr",
+      "order": 10,
+      "enabled": true,
+      "icon": "user-plus",
+      "module": "10-hr"
+    },
+    "saas": {
+      "id": "saas",
+      "name": "SaaS管理",
+      "path": "/modules/11-saas",
+      "order": 11,
+      "enabled": true,
+      "icon": "cloud",
+      "module": "11-saas"
+    },
+    "system": {
+      "id": "system",
+      "name": "系统管理",
+      "path": "/modules/12-system",
+      "order": 12,
+      "enabled": true,
+      "icon": "settings",
+      "module": "12-system"
+    },
+    "analytics": {
+      "id": "analytics",
+      "name": "数据分析",
+      "path": "/modules/13-analytics",
+      "order": 13,
+      "enabled": true,
+      "icon": "chart-bar",
+      "module": "13-analytics"
+    },
+    "settings": {
+      "id": "settings",
+      "name": "设置中心",
+      "path": "/modules/14-settings",
+      "order": 14,
+      "enabled": true,
+      "icon": "cog",
+      "module": "14-settings"
+    },
+    "ai": {
+      "id": "ai",
+      "name": "AI智能分析",
+      "path": "/modules/15-ai",
+      "order": 15,
+      "enabled": true,
+      "icon": "brain",
+      "module": "15-ai"
+    }
+  }
+}
